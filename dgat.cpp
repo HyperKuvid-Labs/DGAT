@@ -1,7 +1,6 @@
 #include <bits/stdc++.h>
 #include "json.hpp"
 #include "httplib.h"
-// #include <regex> just to check f regex was avavailable as a package. i think it will already included in the bits/stdc++.h
 
 using namespace std;
 using json = nlohmann::json;
@@ -107,32 +106,24 @@ bool startsWithCompare(const string& mainStr, const string& prefix) {
     return mainStr.compare(0, prefix.length(), prefix) == 0;
 }
 
-bool is_valid_file_node_name(string& file_name){
-  if(file_name.empty()) return false;
-
-  strip(file_name);
-
-  if(find(known_extensionless_filenames.begin(), known_extensionless_filenames.end(), file_name) != known_extensionless_filenames.end()){
-    return true;
+bool is_tree_summary_line(const string& line) {
+  string trimmed = line;
+  strip(trimmed);
+  if (trimmed.empty()) {
+    return false;
   }
 
-  if(file_name.size() > 1 && startsWithCompare(file_name, ".") && file_name.find(".", 1) == string::npos){
-    return true;
-  }
+  static const regex summary_line_pattern(
+    R"(^\d+\s+directories?,\s+\d+\s+files?$)",
+    regex::icase
+  );
 
-  size_t dot_pos = file_name.find_last_of('.');
-  // split the file name into name and extension
-  if(dot_pos != string::npos && dot_pos != file_name.size() - 1){
-    string extension = file_name.substr(dot_pos + 1);
-    if(extension.empty() || extension==".") return false;
-  }
-
-  return true;
+  return regex_match(trimmed, summary_line_pattern);
 }
 
 void mark_file_and_dirs(TreeNode* node){
   if(node->children.empty()){
-    node->is_file = is_valid_file_node_name(node->name);
+    node->is_file = true;
     return;
   }
 
@@ -151,120 +142,89 @@ void print_tree(TreeNode* node, const string& prefix = "") {
 }
 
 TreeNode* generate_tree(const string& tree_command_output, const string& project_name = "root"){
-  regex tree_line_pattern(
-    R"(^(?:[│|]\s*)*(?:├──\s*|└──\s*|\|--\s*|\+--\s*|`--\s*|\|___\s*)?([^│├└|+#\n]+?)(?:/)?(?:\s*#.*)?$)",
-    regex::icase // Equivalent to re.IGNORECASE
-  );
+  string content = tree_command_output;
+  strip(content);
+  size_t fence_pos;
+  while ((fence_pos = content.find("```") ) != string::npos) {
+    content.erase(fence_pos, 3);
+  }
+  strip(content);
 
-  regex tree_representation_pattern(
-    R"(^[│├└─|`+\-\s]+)"
-  );
+  vector<string> lines = to_lines(content, false);
+  vector<TreeNode*> stack;
+  TreeNode* root = new TreeNode(project_name);
 
-  smatch matches;
+  for (const string& raw_line : lines) {
+    string line = raw_line;
+    size_t nbsp_pos;
+    while ((nbsp_pos = line.find("\xC2\xA0")) != string::npos) {
+      line.replace(nbsp_pos, 2, " ");
+    }
 
-  vector<string> lines = to_lines(tree_command_output);
-
-  string root_name = project_name;
-  int root_line_index = -1;
-
-  for(auto& line : lines){
-    if(line.empty()){
+    if (line.empty()) {
       continue;
     }
 
-    regex_search(line, matches, tree_line_pattern);
-    if(matches.size() > 1){
-      string raw_name = matches[1].str();
-      root_name = regex_replace(raw_name, tree_representation_pattern, "");
-      strip(root_name);
-      rstrip(root_name, "/");
-    }else{
-      strip(line);
-      root_name = line;
-      if(find(root_name.begin(), root_name.end(), '#') != root_name.end()){
-        root_name = root_name.substr(0, root_name.find("#"));
-        strip(root_name);
-      }
-      root_name = regex_replace(root_name, tree_representation_pattern, "");
-      strip(root_name);
-      rstrip(root_name, "/");
+    string trimmed_line = line;
+    strip(trimmed_line);
+    if (trimmed_line.empty()) {
+      continue;
     }
 
-    if(root_name != project_name){
-      root_line_index++;
-      break;
-    }
-  }
-
-  replace(root_name.begin(), root_name.end(), ' ', '_');
-  TreeNode* root = new TreeNode(root_name);
-
-  vector<TreeNode*> tree_stack;
-
-  for(int i=root_line_index+1; i<lines.size();i++){
-    string line = lines[i];
-    if(line.empty()) continue;
-
-    int indent_level = 0;
+    int indent = 0;
     string temp_line = line;
-
-    while(true){
-      if(startsWithCompare(temp_line, "│   ") || startsWithCompare(temp_line, "|   ") || startsWithCompare(temp_line, "    ")){
-        indent_level++;
-        temp_line = temp_line.substr(4);
-      }else if(startsWithCompare(temp_line, "| ") || startsWithCompare(temp_line, "│ ")){
-        indent_level++;
-        temp_line = temp_line.substr(2);
-      }else if(startsWithCompare(temp_line, "\t")){
-        indent_level++;
-        temp_line = temp_line.substr(1);
-      }else {
+    while (
+      startsWithCompare(temp_line, "│   ") ||
+      startsWithCompare(temp_line, "    ") ||
+      startsWithCompare(temp_line, "│ ")
+    ) {
+      if (temp_line.size() < 4) {
         break;
       }
+      temp_line = temp_line.substr(4);
+      indent += 1;
     }
 
-    smatch matches;
-    regex_search(line, matches, tree_line_pattern);
-
-    string file_name;
-
-    if(matches.size()>1){
-      string raw_name = matches[1].str();
-      file_name = regex_replace(raw_name, tree_representation_pattern, "");
-    }else{
-      strip(line);
-      if(find(line.begin(), line.end(), '#') != line.end()){
-        line = line.substr(0, line.find("#"));
-        strip(line);
-      }
-      file_name = regex_replace(line, tree_representation_pattern, "");
+    string name = trimmed_line;
+    size_t hash_pos = name.find('#');
+    if (hash_pos != string::npos) {
+      name = name.substr(0, hash_pos);
+      strip(name);
     }
 
-    strip(file_name);
+    size_t pos;
+    while ((pos = name.find("│")) != string::npos) {
+      name.erase(pos, string("│").size());
+    }
+    while ((pos = name.find("├──")) != string::npos) {
+      name.erase(pos, string("├──").size());
+    }
+    while ((pos = name.find("└──")) != string::npos) {
+      name.erase(pos, string("└──").size());
+    }
+    strip(name);
 
-    rstrip(file_name, "/");
-    replace(file_name.begin(), file_name.end(), ' ', '_');
-
-    if(file_name.empty()){
+    if (name.empty() || name == project_name || is_tree_summary_line(name)) {
       continue;
     }
 
-    TreeNode* new_node = new TreeNode(file_name);
-    new_node->is_file = is_valid_file_node_name(file_name);
+    TreeNode* node = new TreeNode(name);
+    node->is_file = false;
 
-    int parent_index = min(max(indent_level, 0), (int)tree_stack.size()-1);
-    TreeNode* parent_node = parent_index >= 0 ? tree_stack[parent_index] : root;
+    if (indent == 0) {
+      root->children.push_back(node);
+      stack.clear();
+      stack.push_back(root);
+      stack.push_back(node);
+    } else {
+      while ((int)stack.size() > indent + 1) {
+        stack.pop_back();
+      }
 
-    while(parent_index >= 0 && is_valid_file_node_name(parent_node->name)){
-      parent_index -= 1;
-      parent_node = tree_stack[parent_index];
-    }
-
-    parent_node->children.push_back(new_node);
-
-    tree_stack.resize(parent_index + 1);
-    if (!new_node->is_file) {
-      tree_stack.push_back(new_node);
+      if (!stack.empty()) {
+        stack.back()->children.push_back(node);
+      }
+      stack.push_back(node);
     }
   }
 
@@ -284,6 +244,8 @@ int main(){
 
   string tree_content((istreambuf_iterator<char>(tree_file)), istreambuf_iterator<char>());
   tree_file.close();
+
+  system("rm tree_output.txt");
 
   TreeNode* root = generate_tree(tree_content, "DGAT_Project");
 

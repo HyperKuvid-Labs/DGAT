@@ -1,25 +1,32 @@
 #include <bits/stdc++.h>
+#include <filesystem>
 #include "json.hpp"
 #include "httplib.h"
 
 using namespace std;
 using json = nlohmann::json;
+namespace fs = std::filesystem;
 
 struct TreeNode {
     string name;
-    int version; // for version constrol, not has significance as of now
-    string hash; // hash to onitor the version of the file
-    string abs_path; // abs path from the file to the root of the project
-    vector<TreeNode*> children;
-    bool is_file; // this is to clssify whether the given one is file or a folder
-    vector<json> error_traces; // this will be like [{"error": "file not found", "timestamp": "2024-06-01T12:00:00Z", "solution": "gnwodf"}, ]
-    string description; // the file description, only for file tho, as we can have more context then
+  int version; // id i use while writing dot nodes
+  string hash; // can be used later to track file version changes
+  string abs_path; // full path in system
+  string rel_path; // path from project root (this one is key)
+  vector<unique_ptr<TreeNode>> children;
+  bool is_file; // true = file, false = folder
+  vector<json> error_traces; // like [{"error": "...", "timestamp": "...", "solution": "..."}]
+  string description; // extra file context if needed later
 
-    TreeNode(const string& abs_path, bool is_file)
-        : version(0), abs_path(abs_path), is_file(is_file) {}
-
-    TreeNode(const string& name)
-        : name(name), version(0), is_file(false) {}
+    TreeNode(const string& name,
+             const string& abs_path,
+             const string& rel_path,
+             bool is_file)
+        : name(name),
+          version(0),
+          abs_path(abs_path),
+          rel_path(rel_path),
+          is_file(is_file) {}
 };
 
 vector<string> dep_files_to_skip = {
@@ -55,68 +62,7 @@ vector<string> known_extensionless_filenames = {
   "Jenkinsfile",
 };
 
-vector<string> to_lines(const string& content, bool skip_empty = true) {
-  vector<string> lines;
-  istringstream stream(content);
-  string line;
-
-  while (getline(stream, line)) {
-    if (skip_empty && line.empty()) {
-      continue;
-    }
-    lines.push_back(line);
-  }
-
-  return lines;
-}
-
-void lstrip(string& s, const string& delimiters = " \t\n\r\f\v") {
-  if (s.empty() || delimiters.empty()) return;
-
-  size_t start = s.find_first_not_of(delimiters);
-  if (start == string::npos) {
-    s.clear();
-    return;
-  }
-
-  s.erase(0, start);
-}
-
-void rstrip(string& s, const string& delimiters = " \t\n\r\f\v") {
-  if (s.empty() || delimiters.empty()) return;
-
-  size_t end = s.find_last_not_of(delimiters);
-  if (end == string::npos) {
-    s.clear();
-    return;
-  }
-
-  s.erase(end + 1);
-}
-
-void strip(string& s, const string& delimiters = " \t\n\r\f\v") {
-  lstrip(s, delimiters);
-  rstrip(s, delimiters);
-}
-
-bool startsWithCompare(const string& mainStr, const string& prefix) {
-    return mainStr.compare(0, prefix.length(), prefix) == 0;
-}
-
-bool is_tree_summary_line(const string& line) {
-  string trimmed = line;
-  strip(trimmed);
-  if (trimmed.empty()) return false;
-
-  static const regex summary_line_pattern(
-    R"(^\d+\s+directories?,\s+\d+\s+files?$)",
-    regex::icase
-  );
-
-  return regex_match(trimmed, summary_line_pattern);
-}
-
-// better classification: avoids marking empty dirs as files
+// quick heuristic helper, keeping it for later use
 bool is_probably_file(const string& name) {
   if (find(known_extensionless_filenames.begin(),
            known_extensionless_filenames.end(),
@@ -127,141 +73,150 @@ bool is_probably_file(const string& name) {
   return name.find('.') != string::npos;
 }
 
-void mark_file_and_dirs(TreeNode* node){
-  if(node->children.empty()){
-    node->is_file = is_probably_file(node->name);
-    return;
+// core tree build from filesystem only (no parsing nonsense)
+unique_ptr<TreeNode> build_tree(const fs::path& current_path,
+                const fs::path& root_path) {
+
+  string fname = current_path.filename().string();
+  if (fname == ".git") {
+    return nullptr;
+  }
+  if (find(dep_files_to_skip.begin(), dep_files_to_skip.end(), fname) != dep_files_to_skip.end()) {
+    return nullptr;
   }
 
-  for(auto child : node->children){
-    mark_file_and_dirs(child);
-  }
+  string name = (current_path == root_path)
+    ? fs::absolute(root_path).filename().string()
+    : current_path.filename().string();
+  if (name.empty()) name = "root";
 
-  node->is_file = false;
+    string abs_path = fs::absolute(current_path).string();
+    string rel_path = fs::relative(current_path, root_path).string();
+  if (rel_path.empty()) rel_path = ".";
+
+    bool is_file = fs::is_regular_file(current_path);
+
+  auto node = make_unique<TreeNode>(name, abs_path, rel_path, is_file);
+
+  // symlink loop guard (avoid recursive trap)
+  if (fs::is_symlink(current_path)) return node;
+
+  // if folder, recurse children in stable order
+    if (fs::is_directory(current_path)) {
+    vector<fs::directory_entry> entries;
+    for (const auto& entry : fs::directory_iterator(current_path)) {
+      entries.push_back(entry);
+    }
+
+    sort(entries.begin(), entries.end(),
+       [](const auto& a, const auto& b) {
+         return a.path().filename().string() < b.path().filename().string();
+       });
+
+    for (const auto& entry : entries) {
+      auto child = build_tree(entry.path(), root_path);
+      if (child) node->children.push_back(move(child));
+        }
+        node->is_file = false;
+    }
+
+    return node;
 }
 
-void print_tree(TreeNode* node, const string& prefix = "") {
-    cout << prefix << (node->is_file ? "File: " : "Dir: ") << node->name << endl;
-    for (auto child : node->children) {
-        print_tree(child, prefix + "    ");
+void print_tree(TreeNode* node) {
+    if (!node) return;
+
+    if (!node->children.empty()) {
+        cout << node->name << " -> ";
+        for (size_t i = 0; i < node->children.size(); i++) {
+            cout << node->children[i]->name;
+            if (i != node->children.size() - 1) cout << ", ";
+        }
+        cout << endl;
+    }
+
+    for (const auto& child : node->children) {
+      print_tree(child.get());
     }
 }
 
-TreeNode* generate_tree(const string& tree_command_output, const string& project_name = "root"){
-  string content = tree_command_output;
-  strip(content);
+string escape_dot_label(const string& input) {
+  string escaped;
+  escaped.reserve(input.size());
 
-  // remove ``` fences if present
-  size_t fence_pos;
-  while ((fence_pos = content.find("```")) != string::npos) {
-    content.erase(fence_pos, 3);
+  for (char c : input) {
+    if (c == '"' || c == '\\') {
+      escaped.push_back('\\');
+    }
+    escaped.push_back(c);
   }
 
-  strip(content);
+  return escaped;
+}
 
-  vector<string> lines = to_lines(content, false);
-  vector<TreeNode*> stack;
+void write_dot_nodes_and_edges(TreeNode* node, ofstream& out, int& next_id) {
+  if (!node) return;
 
-  TreeNode* root = new TreeNode(project_name);
-  stack.push_back(root);
+  int current_id = next_id++;
+  node->version = current_id;
 
-  for (const string& raw_line : lines) {
-    string line = raw_line;
+  string shape = node->is_file ? "note" : "folder";
 
-    // normalize nbsp
-    size_t nbsp_pos;
-    while ((nbsp_pos = line.find("\xC2\xA0")) != string::npos) {
-      line.replace(nbsp_pos, 2, " ");
-    }
+  // keep rel_path in label so mapping back is super easy
+  out << "  n" << current_id
+      << " [label=\"" << escape_dot_label(node->name + "\\n" + node->rel_path)
+      << "\", shape=" << shape << "];\n";
 
-    if (line.empty()) continue;
-
-    string trimmed_line = line;
-    strip(trimmed_line);
-    if (trimmed_line.empty()) continue;
-
-    // FIXED indent logic (strict 4-char blocks only)
-    int indent = 0;
-    string temp_line = line;
-
-    while (
-      startsWithCompare(temp_line, "│   ") ||
-      startsWithCompare(temp_line, "    ")
-    ) {
-      temp_line = temp_line.substr(4);
-      indent++;
-    }
-
-    // extract name safely
-    string name = temp_line;
-
-    // remove tree connectors only from start
-    if (startsWithCompare(name, "├── ")) {
-      name = name.substr(4);
-    } else if (startsWithCompare(name, "└── ")) {
-      name = name.substr(4);
-    }
-
-    strip(name);
-
-    // remove comments
-    size_t hash_pos = name.find('#');
-    if (hash_pos != string::npos) {
-      name = name.substr(0, hash_pos);
-      strip(name);
-    }
-
-    if (name.empty() || name == project_name || is_tree_summary_line(name)) {
-      continue;
-    }
-
-    TreeNode* node = new TreeNode(name);
-
-    // FIXED stack logic
-    if (indent == 0) {
-      root->children.push_back(node);
-
-      stack.resize(1); // keep only root
-      stack.push_back(node);
-    } else {
-      while ((int)stack.size() > indent + 1) {
-        stack.pop_back();
-      }
-
-      if (!stack.empty()) {
-        stack.back()->children.push_back(node);
-      }
-
-      stack.push_back(node);
-    }
+  for (const auto& child : node->children) {
+    write_dot_nodes_and_edges(child.get(), out, next_id);
+    out << "  n" << current_id << " -> n" << child->version << ";\n";
   }
+}
 
-  mark_file_and_dirs(root);
-  return root;
+bool export_tree_as_dot(TreeNode* root, const string& output_path) {
+  ofstream out(output_path);
+  if (!out.is_open()) return false;
+
+  out << "digraph DGATTree {\n";
+  out << "  rankdir=TB;\n";
+  out << "  node [fontname=\"Helvetica\"];\n";
+
+  int next_id = 0;
+  write_dot_nodes_and_edges(root, out, next_id);
+
+  out << "}\n";
+  return true;
 }
 
 int main(){
-  // assumes tree is installed and folder exists
-  system("tree . > tree_output.txt");
+  fs::path root_path = "."; // set this if you want a different project root
 
-  ifstream tree_file("tree_output.txt");
-  if (!tree_file.is_open()) {
-    cerr << "Failed to open tree_output.txt" << endl;
+  auto root = build_tree(root_path, root_path);
+  if (!root) {
+    cerr << "Failed to build tree from root path." << endl;
     return 1;
   }
 
-  cout << "tree output: " << endl;
+  const string dot_file = "tree_visualization.dot";
+  if (!export_tree_as_dot(root.get(), dot_file)) {
+    cerr << "Failed to write visualization file: " << dot_file << endl;
+    return 1;
+  }
 
-  string tree_content((istreambuf_iterator<char>(tree_file)), istreambuf_iterator<char>());
-  tree_file.close();
+  cout << "Tree visualization written to: " << dot_file << endl;
 
-  cout << tree_content << endl;
-
-  system("rm tree_output.txt");
-
-  TreeNode* root = generate_tree(tree_content, "DGAT_Project");
-
-  print_tree(root);
+  int dot_available = system("command -v dot > /dev/null 2>&1");
+  if (dot_available == 0) {
+    const string png_file = "tree_visualization.png";
+    string render_cmd = "dot -Tpng " + dot_file + " -o " + png_file;
+    if (system(render_cmd.c_str()) == 0) {
+      cout << "PNG visualization written to: " << png_file << endl;
+    } else {
+      cerr << "Failed to render PNG from DOT file" << endl;
+    }
+  } else {
+    cout << "Graphviz not found; install 'dot' to render PNG from the DOT file." << endl;
+  }
 
   return 0;
 }

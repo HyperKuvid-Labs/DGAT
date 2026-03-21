@@ -13,12 +13,13 @@ struct TreeNode {
     vector<TreeNode*> children;
     bool is_file; // this is to clssify whether the given one is file or a folder
     vector<json> error_traces; // this will be like [{"error": "file not found", "timestamp": "2024-06-01T12:00:00Z", "solution": "gnwodf"}, ]
+    string description; // the file description, only for file tho, as we can have more context then
 
     TreeNode(const string& abs_path, bool is_file)
         : version(0), abs_path(abs_path), is_file(is_file) {}
 
     TreeNode(const string& name)
-        : name(name) {}
+        : name(name), version(0), is_file(false) {}
 };
 
 vector<string> dep_files_to_skip = {
@@ -42,16 +43,16 @@ vector<string> languages = {
 
 vector<string> known_extensionless_filenames = {
   "Dockerfile",
-    "Makefile",
-    "GNUmakefile",
-    "README",
-    "LICENSE",
-    "Procfile",
-    "Rakefile",
-    "Gemfile",
-    "Pipfile",
-    "Vagrantfile",
-    "Jenkinsfile",
+  "Makefile",
+  "GNUmakefile",
+  "README",
+  "LICENSE",
+  "Procfile",
+  "Rakefile",
+  "Gemfile",
+  "Pipfile",
+  "Vagrantfile",
+  "Jenkinsfile",
 };
 
 vector<string> to_lines(const string& content, bool skip_empty = true) {
@@ -70,9 +71,7 @@ vector<string> to_lines(const string& content, bool skip_empty = true) {
 }
 
 void lstrip(string& s, const string& delimiters = " \t\n\r\f\v") {
-  if (s.empty() || delimiters.empty()) {
-    return;
-  }
+  if (s.empty() || delimiters.empty()) return;
 
   size_t start = s.find_first_not_of(delimiters);
   if (start == string::npos) {
@@ -84,9 +83,7 @@ void lstrip(string& s, const string& delimiters = " \t\n\r\f\v") {
 }
 
 void rstrip(string& s, const string& delimiters = " \t\n\r\f\v") {
-  if (s.empty() || delimiters.empty()) {
-    return;
-  }
+  if (s.empty() || delimiters.empty()) return;
 
   size_t end = s.find_last_not_of(delimiters);
   if (end == string::npos) {
@@ -109,9 +106,7 @@ bool startsWithCompare(const string& mainStr, const string& prefix) {
 bool is_tree_summary_line(const string& line) {
   string trimmed = line;
   strip(trimmed);
-  if (trimmed.empty()) {
-    return false;
-  }
+  if (trimmed.empty()) return false;
 
   static const regex summary_line_pattern(
     R"(^\d+\s+directories?,\s+\d+\s+files?$)",
@@ -121,9 +116,20 @@ bool is_tree_summary_line(const string& line) {
   return regex_match(trimmed, summary_line_pattern);
 }
 
+// better classification: avoids marking empty dirs as files
+bool is_probably_file(const string& name) {
+  if (find(known_extensionless_filenames.begin(),
+           known_extensionless_filenames.end(),
+           name) != known_extensionless_filenames.end()) {
+    return true;
+  }
+
+  return name.find('.') != string::npos;
+}
+
 void mark_file_and_dirs(TreeNode* node){
   if(node->children.empty()){
-    node->is_file = true;
+    node->is_file = is_probably_file(node->name);
     return;
   }
 
@@ -136,85 +142,86 @@ void mark_file_and_dirs(TreeNode* node){
 
 void print_tree(TreeNode* node, const string& prefix = "") {
     cout << prefix << (node->is_file ? "File: " : "Dir: ") << node->name << endl;
-    for (size_t i = 0; i < node->children.size(); ++i) {
-        print_tree(node->children[i], prefix + "    ");
+    for (auto child : node->children) {
+        print_tree(child, prefix + "    ");
     }
 }
 
 TreeNode* generate_tree(const string& tree_command_output, const string& project_name = "root"){
   string content = tree_command_output;
   strip(content);
+
+  // remove ``` fences if present
   size_t fence_pos;
-  while ((fence_pos = content.find("```") ) != string::npos) {
+  while ((fence_pos = content.find("```")) != string::npos) {
     content.erase(fence_pos, 3);
   }
+
   strip(content);
 
   vector<string> lines = to_lines(content, false);
   vector<TreeNode*> stack;
+
   TreeNode* root = new TreeNode(project_name);
+  stack.push_back(root);
 
   for (const string& raw_line : lines) {
     string line = raw_line;
+
+    // normalize nbsp
     size_t nbsp_pos;
     while ((nbsp_pos = line.find("\xC2\xA0")) != string::npos) {
       line.replace(nbsp_pos, 2, " ");
     }
 
-    if (line.empty()) {
-      continue;
-    }
+    if (line.empty()) continue;
 
     string trimmed_line = line;
     strip(trimmed_line);
-    if (trimmed_line.empty()) {
-      continue;
-    }
+    if (trimmed_line.empty()) continue;
 
+    // FIXED indent logic (strict 4-char blocks only)
     int indent = 0;
     string temp_line = line;
+
     while (
       startsWithCompare(temp_line, "│   ") ||
-      startsWithCompare(temp_line, "    ") ||
-      startsWithCompare(temp_line, "│ ")
+      startsWithCompare(temp_line, "    ")
     ) {
-      if (temp_line.size() < 4) {
-        break;
-      }
       temp_line = temp_line.substr(4);
-      indent += 1;
+      indent++;
     }
 
-    string name = trimmed_line;
+    // extract name safely
+    string name = temp_line;
+
+    // remove tree connectors only from start
+    if (startsWithCompare(name, "├── ")) {
+      name = name.substr(4);
+    } else if (startsWithCompare(name, "└── ")) {
+      name = name.substr(4);
+    }
+
+    strip(name);
+
+    // remove comments
     size_t hash_pos = name.find('#');
     if (hash_pos != string::npos) {
       name = name.substr(0, hash_pos);
       strip(name);
     }
 
-    size_t pos;
-    while ((pos = name.find("│")) != string::npos) {
-      name.erase(pos, string("│").size());
-    }
-    while ((pos = name.find("├──")) != string::npos) {
-      name.erase(pos, string("├──").size());
-    }
-    while ((pos = name.find("└──")) != string::npos) {
-      name.erase(pos, string("└──").size());
-    }
-    strip(name);
-
     if (name.empty() || name == project_name || is_tree_summary_line(name)) {
       continue;
     }
 
     TreeNode* node = new TreeNode(name);
-    node->is_file = false;
 
+    // FIXED stack logic
     if (indent == 0) {
       root->children.push_back(node);
-      stack.clear();
-      stack.push_back(root);
+
+      stack.resize(1); // keep only root
       stack.push_back(node);
     } else {
       while ((int)stack.size() > indent + 1) {
@@ -224,16 +231,17 @@ TreeNode* generate_tree(const string& tree_command_output, const string& project
       if (!stack.empty()) {
         stack.back()->children.push_back(node);
       }
+
       stack.push_back(node);
     }
   }
 
   mark_file_and_dirs(root);
-
   return root;
 }
 
 int main(){
+  // assumes tree is installed and folder exists
   system("tree . > tree_output.txt");
 
   ifstream tree_file("tree_output.txt");
@@ -242,8 +250,12 @@ int main(){
     return 1;
   }
 
+  cout << "tree output: " << endl;
+
   string tree_content((istreambuf_iterator<char>(tree_file)), istreambuf_iterator<char>());
   tree_file.close();
+
+  cout << tree_content << endl;
 
   system("rm tree_output.txt");
 

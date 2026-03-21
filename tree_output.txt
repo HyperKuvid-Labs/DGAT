@@ -1,0 +1,16 @@
+.
+├── dgat.cpp
+├── httplib.h
+├── install1.sh
+├── install.sh
+├── json.hpp
+├── README.md
+├── read.py
+├── test.cpp
+├── test.sh
+├── tmp
+│   ├── dgat_test_bin
+│   └── test_lines_bin
+└── tree_output.txt
+
+2 directories, 12 files

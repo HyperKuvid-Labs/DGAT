@@ -3,15 +3,46 @@
 #include "inja.hpp"
 #include "json.hpp"
 #include "httplib.h"
+#include "xxhash.h"
 
 using namespace std;
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
+// using XXH128_hash_t (two uint64_t)
+using digest_t = XXH128_hash_t;
+
+digest_t fast_fingerprint(const string& file_content){
+  XXH3_state_t* state = XXH3_createState();
+  if (!state) {
+      throw std::runtime_error("Failed to create XXH3 state");
+  }
+
+  XXH3_128bits_reset(state);
+  XXH3_128bits_update(state, file_content.data(), file_content.size());
+
+  digest_t digest = XXH3_128bits_digest(state);
+  XXH3_freeState(state);
+
+  return digest;
+}
+
+void print_digest(const digest_t& d) {
+  std::cout << std::hex << std::setfill('0')
+            << std::setw(16) << d.high64
+            << std::setw(16) << d.low64
+            << std::dec << "\n";
+}
+
+bool check_digests(const digest_t& d1, const digest_t& d2) {
+  if (d1.high64 == d2.high64 && d1.low64 == d2.low64) return true;
+  return false;
+}
+
 struct TreeNode {
     string name;
   int version; // id i use while writing dot nodes
-  string hash; // can be used later to track file version changes
+  digest_t hash; // can be used later to track file version changes, chnaged to digest_t for better hashing
   string abs_path; // full path in system
   string rel_path; // path from project root (this one is key)
   vector<unique_ptr<TreeNode>> children;
@@ -313,10 +344,17 @@ string extract_assistant_text(const json& response_json) {
 json tree_to_json(const TreeNode* node) {
   if (!node) return json::object();
 
+  // Convert digest_t hash to hex string
+  ostringstream hash_stream;
+  hash_stream << std::hex << std::setfill('0')
+              << std::setw(16) << node->hash.high64
+              << std::setw(16) << node->hash.low64;
+  string hash_str = hash_stream.str();
+
   json result = {
     {"name", node->name},
     {"version", node->version},
-    {"hash", node->hash},
+    {"hash", hash_str},
     {"abs_path", node->abs_path},
     {"rel_path", node->rel_path},
     {"is_file", node->is_file},
@@ -854,6 +892,9 @@ void populate_descriptions(TreeNode* node, string rc="", string folder_structure
       file_content = sanitize_utf8(file_content);
     }
   }
+
+  digest_t hash = fast_fingerprint(file_content);
+  node->hash = hash;
 
   const string file_descriptor_prompt_template = R"J2(You are an exceptional Principal Software Architect with deep expertise in software design and architecture. Your task is to analyze the user's request and generate a detailed file descriptor for a specific file within the project. This descriptor should include both the precise metadata description of its purpose and functionality and language used.
 

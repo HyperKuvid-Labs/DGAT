@@ -954,29 +954,30 @@ void create_dgat_blueprint(TreeNode* root){
 
   // except the readme.md, i just wanna collect all file descriptions and populate the blueprint of the full project, not relying on incomplete readme files
 
-  const string blueprint_prompt_template = R"J2(You are an exceptional Principal Software Architect with deep expertise in software design and architecture. Your task is to analyze the provided file descriptors and generate a comprehensive software blueprint for the entire project. This blueprint should include a high-level overview of the project's architecture, key components, and their interactions, as well as any relevant technical details.
+  const string blueprint_prompt_template = R"J2(You are a professional software architect. Read the file descriptions and write a clear software blueprint for this project.
 
   ### Folder Structure
-  The project has the following directory structure:
+  Project directory structure:
   {{ folder_structure }}
 
   ### File Descriptors
-  You have the following file descriptors available, which provide insights into the purpose and functionality of various
-files within the project:
+  File descriptions (purpose and behavior of each file):
   {{ file_descriptors_pretty }}
 
-  Return ONLY markdown content (no JSON, no code fences around the whole response) using this exact structure:
+  Use simple and professional language. Keep only relevant information.
+
+  Return ONLY markdown content (no JSON and no outer code fence) using this exact structure:
 
   # DGAT Software Blueprint
 
   ## Project Overview
-  (concise summary of the project's main purpose and functionality)
+  (short summary of what the project does)
 
   ## Architecture
-  (high-level description of architecture, key components, and interactions)
+  (main parts of the system and how they work together)
 
   ## Technical Details
-  (relevant implementation details, constraints, and considerations))J2";
+  (important implementation details, limits, and notes))J2";
 
   vector<json> file_descriptors;
 
@@ -1120,6 +1121,8 @@ int main(int argc, char** argv){
 
   populate_descriptions(root.get());
   create_dgat_blueprint(root.get());
+
+  // update_tree();
 
   if (gui_mode) {
     run_tree_gui_server(root.get(), gui_port);

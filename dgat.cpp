@@ -802,7 +802,10 @@ string extract_folder_structure() {
   array<char, 128> buffer;
   string result;
 
-  unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+  auto close_pipe = [](FILE* stream) {
+    if (stream) pclose(stream);
+  };
+  unique_ptr<FILE, decltype(close_pipe)> pipe(popen(cmd.c_str(), "r"), close_pipe);
   if (!pipe) {
     cerr << "Failed to run tree command" << endl;
     return "";
@@ -946,9 +949,122 @@ void populate_descriptions(TreeNode* node, string rc="", string folder_structure
   cout<<"description for file "<<node->rel_path<<": "<<node->description<<endl;
 }
 
+void create_dgat_blueprint(TreeNode* root){
+  string root_path = root->abs_path;
+
+  // except the readme.md, i just wanna collect all file descriptions and populate the blueprint of the full project, not relying on incomplete readme files
+
+  const string blueprint_prompt_template = R"J2(You are an exceptional Principal Software Architect with deep expertise in software design and architecture. Your task is to analyze the provided file descriptors and generate a comprehensive software blueprint for the entire project. This blueprint should include a high-level overview of the project's architecture, key components, and their interactions, as well as any relevant technical details.
+
+  ### Folder Structure
+  The project has the following directory structure:
+  {{ folder_structure }}
+
+  ### File Descriptors
+  You have the following file descriptors available, which provide insights into the purpose and functionality of various
+files within the project:
+  {{ file_descriptors_pretty }}
+
+  Return ONLY markdown content (no JSON, no code fences around the whole response) using this exact structure:
+
+  # DGAT Software Blueprint
+
+  ## Project Overview
+  (concise summary of the project's main purpose and functionality)
+
+  ## Architecture
+  (high-level description of architecture, key components, and interactions)
+
+  ## Technical Details
+  (relevant implementation details, constraints, and considerations))J2";
+
+  vector<json> file_descriptors;
+
+  function<void(TreeNode*)> collect_descriptors = [&](TreeNode* node) {
+    if (!node) return;
+    if (node->is_file) {
+      file_descriptors.push_back({
+        {"file_name", node->rel_path},
+        {"description", node->description}
+      });
+    }
+    for (const auto& child : node->children) {
+      collect_descriptors(child.get());
+    }
+  };
+
+  collect_descriptors(root);
+
+  json prompt_data = {
+    {"folder_structure", extract_folder_structure()},
+    {"file_descriptors_pretty", json(file_descriptors).dump(2)}
+  };
+
+  inja::Environment env;
+  string rendered_prompt = env.render(blueprint_prompt_template, prompt_data);
+
+  // now we'll make request to vllm with this rendered prompt and get the response
+  json request_payload = {
+    {"model", "Qwen/Qwen3.5-2B"},
+    {"messages", {
+      {
+        {"role", "user"},
+        {"content", rendered_prompt}
+      }
+    }
+  }};
+
+  httplib::Client cli("localhost", 8000);
+  auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+
+  if(res && res->status == 200){
+    cout<<"response from vllm successful for blueprint generation"<<endl;
+    cout<<"response body: "<<res->body<<endl;
+  }else{
+    cerr<<"response from vllm failed for blueprint generation"<<endl;
+    if(res){
+      cerr<<"status code: "<<res->status<<endl;
+      cerr<<"response body: "<<res->body<<endl;
+    }else{
+      cerr<<"error code: "<<res.error()<<endl;
+    }
+  }
+
+  if (!(res && res->status == 200)) return;
+
+  string file_name = "dgat_blueprint.md";
+  ofstream outfile(file_name);
+  if(!outfile.is_open()){
+    cerr<<"Failed to write DGAT blueprint to file: "<<file_name<<endl;
+    return;
+  }
+
+  string markdown_output;
+  try {
+    json response_json = json::parse(res->body);
+    string assistant_text = extract_assistant_text(response_json);
+    if (assistant_text.empty()) {
+      markdown_output = "# DGAT Software Blueprint\n\nModel returned no usable text payload.";
+    } else {
+      markdown_output = extract_fenced_block_or_raw(assistant_text);
+    }
+  } catch (const std::exception& e) {
+    cerr << "Failed to parse blueprint response: " << e.what() << endl;
+    markdown_output = "# DGAT Software Blueprint\n\nFailed to parse model response.";
+  }
+
+  if (trim_copy(markdown_output).empty()) {
+    markdown_output = "# DGAT Software Blueprint\n\nModel returned empty markdown output.";
+  }
+
+  outfile << markdown_output;
+  outfile.close();
+  cout<<"DGAT blueprint written to: "<<file_name<<endl;
+}
+
 int main(int argc, char** argv){
   fs::path root_path = ".";
-  bool gui_mode = false;
+  bool gui_mode = true;
   int gui_port = 8080;
 
   for (int i = 1; i < argc; i++) {
@@ -1003,6 +1119,7 @@ int main(int argc, char** argv){
   }
 
   populate_descriptions(root.get());
+  create_dgat_blueprint(root.get());
 
   if (gui_mode) {
     run_tree_gui_server(root.get(), gui_port);

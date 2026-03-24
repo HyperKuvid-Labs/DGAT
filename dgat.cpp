@@ -662,7 +662,40 @@ json tree_to_json(const TreeNode* node) {
   return result;
 }
 
-string build_tree_gui_html() {
+bool read_text_file(const fs::path& file_path, string& content) {
+  ifstream infile(file_path);
+  if (!infile.is_open()) {
+    return false;
+  }
+
+  stringstream buffer;
+  buffer << infile.rdbuf();
+  content = buffer.str();
+  return true;
+}
+
+string load_tree_gui_html() {
+  vector<fs::path> candidates;
+
+  const char* env_html = getenv("DGAT_GUI_HTML");
+  if (env_html && *env_html) {
+    candidates.emplace_back(env_html);
+  }
+
+  candidates.emplace_back("tree_gui.html");
+  candidates.emplace_back("assets/tree_gui.html");
+  candidates.emplace_back("../tree_gui.html");
+  candidates.emplace_back("../assets/tree_gui.html");
+  candidates.emplace_back("/usr/local/share/dgat/tree_gui.html");
+  candidates.emplace_back("/usr/share/dgat/tree_gui.html");
+
+  string html;
+  for (const auto& path : candidates) {
+    if (read_text_file(path, html)) {
+      return html;
+    }
+  }
+
   return R"HTML(<!doctype html>
 <html lang="en">
 <head>
@@ -670,381 +703,16 @@ string build_tree_gui_html() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DGAT Tree Visualizer</title>
   <style>
-    :root {
-      --bg: #0b0b0d;
-      --panel: #141418;
-      --panel-alt: #1d1d23;
-      --text: #efefef;
-      --muted: #a4a7b0;
-      --accent: #6ea8fe;
-      --folder: #f5c45a;
-      --file: #77e4c8;
-      --border: #2a2a33;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 14px;
-    }
-
-    .card {
-      background: linear-gradient(180deg, var(--panel), var(--panel-alt));
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      min-height: 82vh;
-    }
-
-    .header {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .title {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-    }
-
-    .subtle {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    button {
-      background: #1f2330;
-      color: var(--text);
-      border: 1px solid #323646;
-      border-radius: 8px;
-      padding: 7px 10px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    button:hover { border-color: var(--accent); }
-
-    input[type="search"] {
-      flex: 1;
-      min-width: 170px;
-      background: #111219;
-      border: 1px solid #303342;
-      border-radius: 8px;
-      color: var(--text);
-      padding: 7px 10px;
-      font-size: 12px;
-      outline: none;
-    }
-
-    input[type="search"]:focus { border-color: var(--accent); }
-
-    .tree-wrap {
-      padding: 10px 14px 16px;
-      max-height: calc(82vh - 112px);
-      overflow: auto;
-    }
-
-    ul.tree,
-    ul.tree ul {
-      list-style: none;
-      margin: 0;
-      padding-left: 18px;
-      border-left: 1px dashed #2b2f3f;
-    }
-
-    ul.tree { border-left: none; padding-left: 2px; }
-
-    .node {
-      margin: 3px 0;
-    }
-
-    .row {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      padding: 4px 6px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .row:hover { border-color: #2f3a55; background: #181b26; }
-    .row.active { border-color: var(--accent); background: #1b2336; }
-
-    .caret {
-      width: 13px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 44px;
-      border-radius: 999px;
-      padding: 2px 8px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      color: #0d0f15;
-    }
-
-    .badge.folder { background: var(--folder); }
-    .badge.file { background: var(--file); }
-
-    .name {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text);
-      max-width: 300px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .details {
-      padding: 14px 16px;
-      overflow: auto;
-      max-height: calc(82vh - 55px);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .kv {
-      margin-bottom: 11px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 9px 10px;
-      background: #12141c;
-    }
-
-    .k {
-      color: var(--muted);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-bottom: 4px;
-    }
-
-    .v {
-      word-break: break-word;
-      color: var(--text);
-      font-size: 13px;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-style: italic;
-    }
-
-    .hidden { display: none; }
-
-    @media (max-width: 980px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-
-      .card {
-        min-height: auto;
-      }
-
-      .tree-wrap,
-      .details {
-        max-height: 55vh;
-      }
-    }
+    body { font-family: Inter, system-ui, sans-serif; padding: 24px; background: #0f172a; color: #e2e8f0; }
+    .box { max-width: 760px; margin: 40px auto; padding: 20px; border: 1px solid #334155; border-radius: 12px; background: #111827; }
+    code { color: #93c5fd; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <section class="card">
-      <div class="header">
-        <h1 class="title">Tree Nodes</h1>
-        <span class="subtle" id="nodeCount">0 nodes</span>
-      </div>
-      <div class="controls">
-        <button id="expandAll">Expand All</button>
-        <button id="collapseAll">Collapse All</button>
-        <input id="search" type="search" placeholder="Search by file/folder name..." />
-      </div>
-      <div class="tree-wrap">
-        <ul id="tree" class="tree"></ul>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="header">
-        <h2 class="title">Node Details</h2>
-        <span class="subtle">select a node</span>
-      </div>
-      <div class="details" id="details">
-        <div class="muted">No node selected.</div>
-      </div>
-    </section>
+  <div class="box">
+    <h1>DGAT Tree Visualizer</h1>
+    <p>Could not load external GUI file. Create <code>tree_gui.html</code> in the working directory, or set <code>DGAT_GUI_HTML</code> to a valid path.</p>
   </div>
-
-  <script>
-    const treeRootEl = document.getElementById('tree');
-    const detailsEl = document.getElementById('details');
-    const nodeCountEl = document.getElementById('nodeCount');
-    const searchEl = document.getElementById('search');
-    const expandAllBtn = document.getElementById('expandAll');
-    const collapseAllBtn = document.getElementById('collapseAll');
-
-    let totalNodes = 0;
-    let activeRow = null;
-
-    function safeText(v) {
-      if (v === null || v === undefined) return '';
-      return String(v);
-    }
-
-    function setDetails(node) {
-      const traces = Array.isArray(node.error_traces) ? node.error_traces : [];
-      const description = safeText(node.description).trim();
-
-      detailsEl.innerHTML = `
-        <div class="kv"><div class="k">Name</div><div class="v">${safeText(node.name) || '-'}</div></div>
-        <div class="kv"><div class="k">Type</div><div class="v">${node.is_file ? 'File' : 'Folder'}</div></div>
-        <div class="kv"><div class="k">Relative Path</div><div class="v">${safeText(node.rel_path) || '-'}</div></div>
-        <div class="kv"><div class="k">Absolute Path</div><div class="v">${safeText(node.abs_path) || '-'}</div></div>
-        <div class="kv"><div class="k">Version</div><div class="v">${safeText(node.version)}</div></div>
-        <div class="kv"><div class="k">Hash</div><div class="v">${safeText(node.hash) || '-'}</div></div>
-        <div class="kv"><div class="k">Description</div><div class="v">${description || '-'}</div></div>
-        <div class="kv"><div class="k">Error Traces</div><div class="v">${traces.length ? safeText(JSON.stringify(traces, null, 2)) : 'None'}</div></div>
-      `;
-    }
-
-    function makeNodeElement(node) {
-      totalNodes += 1;
-      const li = document.createElement('li');
-      li.className = 'node';
-
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.dataset.name = safeText(node.name).toLowerCase();
-
-      const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-      const caret = document.createElement('span');
-      caret.className = 'caret';
-      caret.textContent = hasChildren ? '▾' : '·';
-
-      const badge = document.createElement('span');
-      badge.className = `badge ${node.is_file ? 'file' : 'folder'}`;
-      badge.textContent = node.is_file ? 'FILE' : 'FOLDER';
-
-      const name = document.createElement('span');
-      name.className = 'name';
-      name.title = `${safeText(node.name)}  (${safeText(node.rel_path)})`;
-      name.textContent = safeText(node.name);
-
-      row.appendChild(caret);
-      row.appendChild(badge);
-      row.appendChild(name);
-      li.appendChild(row);
-
-      let childList = null;
-      if (hasChildren) {
-        childList = document.createElement('ul');
-        for (const child of node.children) {
-          childList.appendChild(makeNodeElement(child));
-        }
-        li.appendChild(childList);
-      }
-
-      row.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (activeRow) activeRow.classList.remove('active');
-        activeRow = row;
-        row.classList.add('active');
-        setDetails(node);
-
-        if (!childList) return;
-        const hidden = childList.classList.toggle('hidden');
-        caret.textContent = hidden ? '▸' : '▾';
-      });
-
-      return li;
-    }
-
-    function setAllExpanded(expanded) {
-      const allLists = treeRootEl.querySelectorAll('ul');
-      const allCarets = treeRootEl.querySelectorAll('.caret');
-      allLists.forEach((list) => {
-        list.classList.toggle('hidden', !expanded);
-      });
-      allCarets.forEach((caret) => {
-        if (caret.textContent !== '·') caret.textContent = expanded ? '▾' : '▸';
-      });
-    }
-
-    function applySearch(query) {
-      const q = safeText(query).trim().toLowerCase();
-      const rows = treeRootEl.querySelectorAll('.row');
-
-      rows.forEach((row) => {
-        const match = q.length === 0 || row.dataset.name.includes(q);
-        const nodeLi = row.closest('li.node');
-        if (nodeLi) nodeLi.style.display = match ? '' : 'none';
-      });
-    }
-
-    async function bootstrap() {
-      const response = await fetch('/api/tree');
-      if (!response.ok) throw new Error(`Failed to fetch tree: ${response.status}`);
-      const treeData = await response.json();
-
-      totalNodes = 0;
-      treeRootEl.innerHTML = '';
-      treeRootEl.appendChild(makeNodeElement(treeData));
-      nodeCountEl.textContent = `${totalNodes} nodes`;
-
-      setDetails(treeData);
-      const firstRow = treeRootEl.querySelector('.row');
-      if (firstRow) {
-        activeRow = firstRow;
-        firstRow.classList.add('active');
-      }
-    }
-
-    expandAllBtn.addEventListener('click', () => setAllExpanded(true));
-    collapseAllBtn.addEventListener('click', () => setAllExpanded(false));
-    searchEl.addEventListener('input', () => applySearch(searchEl.value));
-
-    bootstrap().catch((err) => {
-      detailsEl.innerHTML = `<div class="muted">${safeText(err.message)}</div>`;
-    });
-  </script>
 </body>
 </html>
 )HTML";
@@ -1052,7 +720,7 @@ string build_tree_gui_html() {
 
 void run_tree_gui_server(TreeNode* root, int port) {
   httplib::Server server;
-  const string html = build_tree_gui_html();
+  const string html = load_tree_gui_html();
   const json tree_json = tree_to_json(root);
 
   server.Get("/", [html](const httplib::Request&, httplib::Response& response) {
@@ -1399,7 +1067,7 @@ void create_dgat_blueprint(TreeNode* root){
 int main(int argc, char** argv){
   fs::path root_path = ".";
   bool gui_mode = true;
-  int gui_port = 8080;
+  int gui_port = 8090;
 
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];

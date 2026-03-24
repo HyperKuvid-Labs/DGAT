@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DGAT Tree Visualizer</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --border: #dbe3ef;
+      --folder-bg: #fff7d6;
+      --folder-text: #8a5b00;
+      --file-bg: #dff7ef;
+      --file-text: #0f766e;
+      --shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top right, #e5eeff 0%, var(--bg) 40%, var(--bg) 100%);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1260px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 410px 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 84vh;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(6px);
+    }
+
+    .title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+      color: #0b1220;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #fbfdff;
+    }
+
+    button {
+      background: #f8fbff;
+      color: #1e293b;
+      border: 1px solid #cad8ec;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.18s ease;
+    }
+
+    button:hover {
+      border-color: #9bb5db;
+      background: #eef4ff;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    input[type="search"] {
+      flex: 1;
+      min-width: 180px;
+      background: #ffffff;
+      border: 1px solid #cad8ec;
+      border-radius: 10px;
+      color: #0f172a;
+      padding: 8px 11px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    input[type="search"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .tree-wrap {
+      padding: 10px 14px 16px;
+      max-height: calc(84vh - 118px);
+      overflow: auto;
+    }
+
+    ul.tree,
+    ul.tree ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 18px;
+      border-left: 1px dashed #c6d5e9;
+    }
+
+    ul.tree {
+      border-left: none;
+      padding-left: 2px;
+    }
+
+    .node { margin: 4px 0; }
+
+    .row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 5px 7px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.18s ease;
+    }
+
+    .row:hover {
+      border-color: #c8daf4;
+      background: #f2f7ff;
+    }
+
+    .row.active {
+      border-color: #9fc2f8;
+      background: #e9f1ff;
+      box-shadow: inset 0 0 0 1px #d3e5ff;
+    }
+
+    .caret {
+      width: 13px;
+      text-align: center;
+      color: #64748b;
+      font-size: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 50px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      border: 1px solid transparent;
+    }
+
+    .badge.folder {
+      background: var(--folder-bg);
+      color: var(--folder-text);
+      border-color: #f2d48e;
+    }
+
+    .badge.file {
+      background: var(--file-bg);
+      color: var(--file-text);
+      border-color: #a7e6d6;
+    }
+
+    .name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f172a;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .details {
+      padding: 14px 16px;
+      overflow: auto;
+      max-height: calc(84vh - 58px);
+      font-size: 13px;
+      line-height: 1.5;
+      background: #fcfdff;
+    }
+
+    .kv {
+      margin-bottom: 11px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 11px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .k {
+      color: #64748b;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .v {
+      word-break: break-word;
+      color: #0f172a;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .muted {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 980px) {
+      body { padding: 14px; }
+
+      .container { grid-template-columns: 1fr; }
+
+      .card { min-height: auto; }
+
+      .tree-wrap,
+      .details { max-height: 56vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="card">
+      <div class="header">
+        <h1 class="title">Tree Nodes</h1>
+        <span class="subtle" id="nodeCount">0 nodes</span>
+      </div>
+      <div class="controls">
+        <button id="expandAll">Expand All</button>
+        <button id="collapseAll">Collapse All</button>
+        <input id="search" type="search" placeholder="Search by file or folder name" />
+      </div>
+      <div class="tree-wrap">
+        <ul id="tree" class="tree"></ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="header">
+        <h2 class="title">Node Details</h2>
+        <span class="subtle">select a node</span>
+      </div>
+      <div class="details" id="details">
+        <div class="muted">No node selected.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const treeRootEl = document.getElementById('tree');
+    const detailsEl = document.getElementById('details');
+    const nodeCountEl = document.getElementById('nodeCount');
+    const searchEl = document.getElementById('search');
+    const expandAllBtn = document.getElementById('expandAll');
+    const collapseAllBtn = document.getElementById('collapseAll');
+
+    let totalNodes = 0;
+    let activeRow = null;
+
+    function safeText(value) {
+      if (value === null || value === undefined) return '';
+      return String(value);
+    }
+
+    function setDetails(node) {
+      const traces = Array.isArray(node.error_traces) ? node.error_traces : [];
+      const description = safeText(node.description).trim();
+
+      detailsEl.innerHTML = `
+        <div class="kv"><div class="k">Name</div><div class="v">${safeText(node.name) || '-'}</div></div>
+        <div class="kv"><div class="k">Type</div><div class="v">${node.is_file ? 'File' : 'Folder'}</div></div>
+        <div class="kv"><div class="k">Relative Path</div><div class="v">${safeText(node.rel_path) || '-'}</div></div>
+        <div class="kv"><div class="k">Absolute Path</div><div class="v">${safeText(node.abs_path) || '-'}</div></div>
+        <div class="kv"><div class="k">Version</div><div class="v">${safeText(node.version)}</div></div>
+        <div class="kv"><div class="k">Hash</div><div class="v">${safeText(node.hash) || '-'}</div></div>
+        <div class="kv"><div class="k">Description</div><div class="v">${description || '-'}</div></div>
+        <div class="kv"><div class="k">Error Traces</div><div class="v">${traces.length ? safeText(JSON.stringify(traces, null, 2)) : 'None'}</div></div>
+      `;
+    }
+
+    function makeNodeElement(node) {
+      totalNodes += 1;
+
+      const li = document.createElement('li');
+      li.className = 'node';
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.dataset.name = safeText(node.name).toLowerCase();
+
+      const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+
+      const caret = document.createElement('span');
+      caret.className = 'caret';
+      caret.textContent = hasChildren ? '▾' : '·';
+
+      const badge = document.createElement('span');
+      badge.className = `badge ${node.is_file ? 'file' : 'folder'}`;
+      badge.textContent = node.is_file ? 'FILE' : 'FOLDER';
+
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.title = `${safeText(node.name)}  (${safeText(node.rel_path)})`;
+      name.textContent = safeText(node.name);
+
+      row.appendChild(caret);
+      row.appendChild(badge);
+      row.appendChild(name);
+      li.appendChild(row);
+
+      let childList = null;
+      if (hasChildren) {
+        childList = document.createElement('ul');
+        for (const child of node.children) {
+          childList.appendChild(makeNodeElement(child));
+        }
+        li.appendChild(childList);
+      }
+
+      row.addEventListener('click', (event) => {
+        event.stopPropagation();
+
+        if (activeRow) activeRow.classList.remove('active');
+        activeRow = row;
+        row.classList.add('active');
+        setDetails(node);
+
+        if (!childList) return;
+        const hidden = childList.classList.toggle('hidden');
+        caret.textContent = hidden ? '▸' : '▾';
+      });
+
+      return li;
+    }
+
+    function setAllExpanded(expanded) {
+      const allLists = treeRootEl.querySelectorAll('ul');
+      const allCarets = treeRootEl.querySelectorAll('.caret');
+
+      allLists.forEach((list) => {
+        list.classList.toggle('hidden', !expanded);
+      });
+
+      allCarets.forEach((caret) => {
+        if (caret.textContent !== '·') {
+          caret.textContent = expanded ? '▾' : '▸';
+        }
+      });
+    }
+
+    function applySearch(query) {
+      const q = safeText(query).trim().toLowerCase();
+      const rows = treeRootEl.querySelectorAll('.row');
+
+      rows.forEach((row) => {
+        const match = q.length === 0 || row.dataset.name.includes(q);
+        const nodeLi = row.closest('li.node');
+        if (nodeLi) nodeLi.style.display = match ? '' : 'none';
+      });
+    }
+
+    async function bootstrap() {
+      const response = await fetch('/api/tree');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tree: ${response.status}`);
+      }
+
+      const treeData = await response.json();
+
+      totalNodes = 0;
+      treeRootEl.innerHTML = '';
+      treeRootEl.appendChild(makeNodeElement(treeData));
+      nodeCountEl.textContent = `${totalNodes} nodes`;
+
+      setDetails(treeData);
+      const firstRow = treeRootEl.querySelector('.row');
+      if (firstRow) {
+        activeRow = firstRow;
+        firstRow.classList.add('active');
+      }
+    }
+
+    expandAllBtn.addEventListener('click', () => setAllExpanded(true));
+    collapseAllBtn.addEventListener('click', () => setAllExpanded(false));
+    searchEl.addEventListener('input', () => applySearch(searchEl.value));
+
+    bootstrap().catch((error) => {
+      detailsEl.innerHTML = `<div class="muted">${safeText(error.message)}</div>`;
+    });
+  </script>
+</body>
+</html>

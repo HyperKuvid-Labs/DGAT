@@ -63,6 +63,8 @@ install_tree_sitter_grammars() {
   mkdir -p "$GRAMMARS_DIR"
   cd "$GRAMMARS_DIR"
 
+  local npm_quiet_flags=(--no-fund --no-audit --loglevel=error)
+
   local grammars=(
     "tree-sitter-c"
     "tree-sitter-cpp"
@@ -88,11 +90,11 @@ install_tree_sitter_grammars() {
     if [ -d "$grammar" ]; then
       info "Updating $grammar..."
       cd "$grammar"
-      git pull --rebase --autostash 2>/dev/null || npm update 2>/dev/null || true
+      git pull --rebase --autostash >/dev/null 2>&1 || npm update "${npm_quiet_flags[@]}" >/dev/null 2>&1 || true
       cd "$GRAMMARS_DIR"
     else
       info "Installing $grammar..."
-      git clone "https://github.com/$grammar" 2>/dev/null || npm install "$grammar" 2>/dev/null || {
+      git clone "https://github.com/$grammar" >/dev/null 2>&1 || npm install "${npm_quiet_flags[@]}" "$grammar" >/dev/null 2>&1 || {
         warn "Failed to install $grammar, skipping..."
       }
     fi
@@ -200,7 +202,14 @@ install_dgat() {
   info "Installing DGAT..."
 
   cd "$BUILD_DIR"
-  make install
+
+  local install_target="$INSTALL_PREFIX/bin"
+  if [ -w "$install_target" ] || [ -w "$INSTALL_PREFIX" ]; then
+    make install
+  else
+    info "Using sudo for installation to $INSTALL_PREFIX"
+    sudo make install
+  fi
 
   info "DGAT installed to $INSTALL_PREFIX"
 }

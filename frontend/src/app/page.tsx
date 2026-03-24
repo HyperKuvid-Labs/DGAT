@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
+import axios from "axios";
 import type { DepGraph, TreeNode } from "@/lib/types";
 import { FileTree } from "@/components/FileTree";
 import { DetailPanel } from "@/components/DetailPanel";
@@ -29,19 +30,12 @@ export default function Home() {
       try {
         setLoading(true);
         const [graphRes, treeRes] = await Promise.all([
-          fetch(`${API_BASE}/api/dep-graph`),
-          fetch(`${API_BASE}/api/tree`),
+          axios.get<DepGraph>(`${API_BASE}/api/dep-graph`),
+          axios.get<TreeNode>(`${API_BASE}/api/tree`),
         ]);
 
-        if (!graphRes.ok || !treeRes.ok) {
-          throw new Error("Failed to fetch data from server");
-        }
-
-        const graphJson = await graphRes.json();
-        const treeJson = await treeRes.json();
-
-        setGraphData(graphJson);
-        setTreeData(treeJson);
+        setGraphData(graphRes.data);
+        setTreeData(treeRes.data);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");

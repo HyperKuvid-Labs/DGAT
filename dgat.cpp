@@ -1,5 +1,11 @@
 #include <bits/stdc++.h>
 #include <filesystem>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <functional>
+#include <future>
+#include <queue>
 #include "inja.hpp"
 #include "json.hpp"
 #include "httplib.h"
@@ -8,6 +14,68 @@
 using namespace std;
 using json = nlohmann::json;
 namespace fs = std::filesystem;
+
+class ThreadPool {
+private:
+    vector<thread> workers;
+    queue<function<void()>> tasks;
+    mutex queue_mutex;
+    condition_variable condition;
+    bool stop_flag;
+
+public:
+    explicit ThreadPool(size_t num_threads) : stop_flag(false) {
+        for (size_t i = 0; i < num_threads; ++i) {
+            workers.emplace_back([this] {
+                while (true) {
+                    function<void()> task;
+                    {
+                        unique_lock<mutex> lock(this->queue_mutex);
+                        this->condition.wait(lock, [this] { 
+                            return this->stop_flag || !this->tasks.empty(); 
+                        });
+                        if (this->stop_flag && this->tasks.empty()) return;
+                        task = move(this->tasks.front());
+                        this->tasks.pop();
+                    }
+                    task();
+                }
+            });
+        }
+    }
+
+    template<typename F>
+    auto enqueue(F&& f) -> future<typename result_of<F()>::type> {
+        using return_type = typename result_of<F()>::type;
+        auto task = make_shared<packaged_task<return_type()>>(forward<F>(f));
+        future<return_type> result = task->get_future();
+        {
+            unique_lock<mutex> lock(queue_mutex);
+            if (stop_flag) throw runtime_error("Enqueue on stopped ThreadPool");
+            tasks.emplace([task]() { (*task)(); });
+        }
+        condition.notify_one();
+        return result;
+    }
+
+    ~ThreadPool() {
+        {
+            unique_lock<mutex> lock(queue_mutex);
+            stop_flag = true;
+        }
+        condition.notify_all();
+        for (thread& worker : workers) {
+            worker.join();
+        }
+    }
+};
+
+string get_language_from_ext(const string& file_path);
+bool is_likely_binary_file(const string& file_path);
+string sanitize_utf8(const string& input);
+vector<string> extract_imports(const string& file_path, const string& content);
+string normalize_import_path(const string& imp, const string& src_file);
+bool is_path_in_gitignore(const string& rel_path);
 
 // using XXH128_hash_t (two uint64_t)
 using digest_t = XXH128_hash_t;
@@ -61,6 +129,61 @@ struct TreeNode {
           is_file(is_file) {}
 };
 
+struct DepNode {
+  string name;
+  string rel_path;
+  string description;
+  bool is_gitignored;
+  DepNode() : is_gitignored(false) {}
+};
+
+struct DepEdge {
+  string from_path;
+  string to_path;
+  string import_stmt;
+  string description;
+};
+
+struct DepGraph {
+  vector<DepNode> nodes;
+  vector<DepEdge> edges;
+  unordered_map<string, int> path_to_node;
+};
+
+void print_dep_graph(const DepGraph& graph) {
+  cout << "\n========================================" << endl;
+  cout << "    DEPENDENCY GRAPH SUMMARY" << endl;
+  cout << "========================================" << endl;
+  cout << "Total Nodes: " << graph.nodes.size() << endl;
+  cout << "Total Edges: " << graph.edges.size() << endl;
+  cout << "----------------------------------------" << endl;
+  cout << "Nodes:" << endl;
+  for (size_t i = 0; i < graph.nodes.size(); i++) {
+    const auto& node = graph.nodes[i];
+    cout << "  [" << i << "] " << node.name;
+    if (node.is_gitignored) cout << " (gitignored)";
+    cout << endl;
+    cout << "      Path: " << node.rel_path << endl;
+    cout << "      Desc: " << node.description << endl;
+  }
+  if (graph.nodes.empty()) {
+    cout << "  (no nodes)" << endl;
+  }
+  cout << "----------------------------------------" << endl;
+  cout << "Edges:" << endl;
+  for (size_t i = 0; i < graph.edges.size(); i++) {
+    const auto& edge = graph.edges[i];
+    cout << "  [" << i << "] " << edge.from_path << " -> " << edge.to_path << endl;
+    if (!edge.import_stmt.empty()) {
+      cout << "      Import: " << edge.import_stmt << endl;
+    }
+  }
+  if (graph.edges.empty()) {
+    cout << "  (no edges)" << endl;
+  }
+  cout << "========================================\n" << endl;
+}
+
 vector<string> dep_files_to_skip = {
   "requirements.txt", "requirements-dev.txt", "requirements-test.txt",
   "Pipfile", "Pipfile.lock", "pyproject.toml", "poetry.lock", "setup.py", "setup.cfg",
@@ -75,6 +198,49 @@ vector<string> dep_files_to_skip = {
   "CMakeLists.txt", "conanfile.txt", "vcpkg.json",
   "rebar.config", "rebar.lock",
 };
+
+vector<string> build_artifacts_to_skip = {
+  "build", "dist", "target", "out", "bin", "obj",
+  "CMakeCache.txt", "CMakeFiles", "cmake_install.cmake",
+  "Makefile", "GNUmakefile",
+  ".cmake", "CMakeError.log", "CMakeOutput.log",
+  "compile_commands.json",
+};
+
+unordered_set<string> python_stdlib = {
+  "os", "sys", "re", "json", "math", "time", "datetime", "random", "collections",
+  "itertools", "functools", "operator", "string", "pathlib", "typing", "abc",
+  "io", "csv", "logging", "warnings", "threading", "multiprocessing", "asyncio",
+  "socket", "ssl", "http", "urllib", "email", "html", "xml", "webbrowser",
+  "dataclasses", "enum", "copy", "pprint", "textwrap", "unittest", "doctest",
+  "argparse", "optparse", "getopt", "shutil", "glob", "fnmatch", "tempfile",
+  "platform", "errno", "ctypes", "weakref", "gc", "inspect", "traceback",
+  "code", "codeop", "subprocess", "popen2", "signal", "mmap", "msvcrt",
+  "posixpath", "ntpath", "genericpath", "posix", "nt", "_thread", "_io",
+  "hashlib", "hmac", "secrets", "base64", "binascii", "struct", "codecs",
+  "encodings", "codec_info", "locale", "gettext", "parser", "ast", "symtable",
+  "keyword", "token", "tokenize", "astroid", "py_compile", "compileall",
+  "dis", "pickle", "shelve", "marshal", "dbm", "gdbm", "sqlite3",
+  "csv", "tarfile", "zipfile", "zlib", "gzip", "bz2", "lzma", "zipimport",
+  "configparser", "plistlib", "netrc", "xdrlib", "robotparser", "mimetypes",
+  "MimeWriter", "mhlib", "mailbox", "mailcap", "multifile", "fileinput",
+  "stat", "statvfs", "stat_cache", "filecmp", "dircache", "linecache",
+  "cmd", "code", "readline", "rlcompleter", "getpass", "curses", "termios",
+  "tty", "pty", "fcntl", "pipes", "resource", "nis", "optik", "opus",
+  "audioop", "imageop", "aifc", "sunau", "wave", "chunk", "sndhdr",
+  "imghdr", "ossaudiodev", "sunaudiodev", "vorbis", "flac", "oggsize",
+  "xxsubtype", "formatter", "simplejson", "ujson", "orjson", "msgpack",
+  "cffi", "cython", "numpy", "pandas", "six", "future", "builtins",
+};
+
+bool is_stdlib_import(const string& imp, const string& lang) {
+  if (lang == "python") {
+    size_t dot = imp.find('.');
+    string module = (dot != string::npos) ? imp.substr(0, dot) : imp;
+    return python_stdlib.count(module) > 0;
+  }
+  return false;
+}
 
 vector<string> languages = {
   "python", "cpp", "java", "javascript", "typescript", "go", "rust", "ruby", "php", "csharp", "dart", "kotlin", "swift", "scala", "elixir", "haskell", "clojure", "lua", "bash", "sh", "shell", "zsh", "powershell", "ps1", "pt"
@@ -105,6 +271,9 @@ bool is_probably_file(const string& name) {
   return name.find('.') != string::npos;
 }
 
+bool matches_gitignore(const string& name);
+vector<string> gitignore_patterns;
+
 // core tree build from filesystem only (no parsing nonsense)
 unique_ptr<TreeNode> build_tree(const fs::path& current_path,
                 const fs::path& root_path) {
@@ -116,17 +285,24 @@ unique_ptr<TreeNode> build_tree(const fs::path& current_path,
   if (find(dep_files_to_skip.begin(), dep_files_to_skip.end(), fname) != dep_files_to_skip.end()) {
     return nullptr;
   }
+  if (find(build_artifacts_to_skip.begin(), build_artifacts_to_skip.end(), fname) != build_artifacts_to_skip.end()) {
+    return nullptr;
+  }
+
+  string rel_path = fs::relative(current_path, root_path).generic_string();
+  if (rel_path.empty()) rel_path = ".";
+
+  if (!gitignore_patterns.empty() && is_path_in_gitignore(rel_path)) {
+    return nullptr;
+  }
 
   string name = (current_path == root_path)
     ? fs::absolute(root_path).filename().string()
     : current_path.filename().string();
   if (name.empty()) name = "root";
 
-    string abs_path = fs::absolute(current_path).string();
-    string rel_path = fs::relative(current_path, root_path).string();
-  if (rel_path.empty()) rel_path = ".";
-
-    bool is_file = fs::is_regular_file(current_path);
+  string abs_path = fs::absolute(current_path).string();
+  bool is_file = fs::is_regular_file(current_path);
 
   auto node = make_unique<TreeNode>(name, abs_path, rel_path, is_file);
 
@@ -172,6 +348,123 @@ void print_tree(TreeNode* node) {
     }
 }
 
+void collect_source_files(TreeNode* node, unordered_map<string, string>& contents, unordered_map<string, TreeNode*>& files) {
+  if (!node) return;
+  if (node->is_file) {
+    string lang = get_language_from_ext(node->rel_path);
+    if (!lang.empty()) {
+      files[node->rel_path] = node;
+      if (!is_likely_binary_file(node->abs_path)) {
+        ifstream infile(node->abs_path);
+        if (infile.is_open()) {
+          stringstream buffer;
+          buffer << infile.rdbuf();
+          contents[node->rel_path] = sanitize_utf8(buffer.str());
+        }
+      }
+    }
+  }
+  for (const auto& child : node->children) collect_source_files(child.get(), contents, files);
+}
+
+DepGraph build_dep_graph(TreeNode* root) {
+  DepGraph graph;
+  if (!root) return graph;
+
+  unordered_map<string, string> contents;
+  unordered_map<string, TreeNode*> files;
+  cerr << "[DEBUG] Starting collect_source_files..." << endl;
+  collect_source_files(root, contents, files);
+  cerr << "[DEBUG] collect_source_files done. Files found: " << contents.size() << endl;
+
+  unordered_set<string> known_files;
+  for (const auto& [rel_path, _] : contents) {
+    known_files.insert(rel_path);
+  }
+
+  size_t file_count = 0;
+  for (const auto& [rel_path, content] : contents) {
+    file_count++;
+    if (file_count % 10 == 0) {
+      cerr << "[DEBUG] Processing file " << file_count << ": " << rel_path << endl;
+    }
+    string lang = get_language_from_ext(rel_path);
+    vector<string> imports = extract_imports(rel_path, content);
+
+    for (const string& imp : imports) {
+      if (is_stdlib_import(imp, lang)) {
+        continue;
+      }
+
+      string norm = normalize_import_path(imp, rel_path);
+      string edge_key = rel_path + "||" + norm;
+
+      bool is_internal = known_files.count(norm) > 0 ||
+                         (norm.find('/') == string::npos && (known_files.count(norm + ".h") > 0 || known_files.count(norm + ".hpp") > 0));
+
+      if (!is_internal) {
+        for (const auto& [file_path, _] : contents) {
+          string fname = fs::path(file_path).filename().string();
+          if (fname == norm || fname == norm + ".h" || fname == norm + ".hpp") {
+            norm = file_path;
+            is_internal = true;
+            break;
+          }
+        }
+      }
+
+      if (!is_internal) {
+        bool gitignored = is_path_in_gitignore(norm);
+        if (!graph.path_to_node.count(norm)) {
+          DepNode node;
+          node.name = fs::path(norm).filename().string();
+          node.rel_path = norm;
+          node.description = gitignored ? "Gitignored dependency" : "External/stdlib dependency";
+          node.is_gitignored = gitignored;
+          graph.path_to_node[norm] = graph.nodes.size();
+          graph.nodes.push_back(node);
+        }
+
+        DepEdge edge;
+        edge.from_path = rel_path;
+        edge.to_path = norm;
+        edge.import_stmt = imp;
+        graph.edges.push_back(edge);
+      }
+    }
+  }
+
+  return graph;
+}
+
+json build_dep_graph_json(const DepGraph& graph) {
+  json result = json::object();
+  result["nodes"] = json::array();
+  result["edges"] = json::array();
+
+  for (const auto& node : graph.nodes) {
+    json n = {
+      {"id", node.rel_path},
+      {"name", node.name},
+      {"description", node.description},
+      {"is_gitignored", node.is_gitignored}
+    };
+    result["nodes"].push_back(n);
+  }
+
+  for (const auto& edge : graph.edges) {
+    json e = {
+      {"from", edge.from_path},
+      {"to", edge.to_path},
+      {"import_stmt", edge.import_stmt},
+      {"description", edge.description}
+    };
+    result["edges"].push_back(e);
+  }
+
+  return result;
+}
+
 string escape_dot_label(const string& input) {
   string escaped;
   escaped.reserve(input.size());
@@ -184,6 +477,157 @@ string escape_dot_label(const string& input) {
   }
 
   return escaped;
+}
+
+string trim_copy(const string& input);
+
+void load_gitignore(const fs::path& root) {
+  fs::path gitignore_path = root / ".gitignore";
+  if (!fs::exists(gitignore_path)) return;
+
+  ifstream infile(gitignore_path.string());
+  if (!infile.is_open()) return;
+
+  string line;
+  while (getline(infile, line)) {
+    line = trim_copy(line);
+    if (line.empty() || line.front() == '#') continue;
+    gitignore_patterns.push_back(line);
+  }
+  infile.close();
+}
+
+vector<string> dgatignore_patterns;
+
+void load_dgatignore(const fs::path& root) {
+  fs::path dgatignore_path = root / ".dgatignore";
+  if (!fs::exists(dgatignore_path)) return;
+
+  ifstream infile(dgatignore_path.string());
+  if (!infile.is_open()) return;
+
+  string line;
+  while (getline(infile, line)) {
+    line = trim_copy(line);
+    if (line.empty() || line.front() == '#') continue;
+    dgatignore_patterns.push_back(line);
+  }
+  infile.close();
+}
+
+bool matches_dgatignore(const string& rel_path) {
+  if (rel_path.empty() || rel_path == ".") return false;
+
+  string rp = fs::path(rel_path).generic_string();
+  string fname = fs::path(rp).filename().string();
+
+  for (const auto& pat_raw : dgatignore_patterns) {
+    string pat = trim_copy(pat_raw);
+    if (pat.empty()) continue;
+
+    bool anchored = !pat.empty() && pat.front() == '/';
+    if (anchored) pat.erase(pat.begin());
+
+    bool dir_only = !pat.empty() && pat.back() == '/';
+    if (dir_only) pat.pop_back();
+
+    if (pat.empty()) continue;
+
+    if (!dir_only && (fname == pat || rp == pat)) return true;
+
+    if (pat.find('*') != string::npos) {
+      size_t star = pat.find('*');
+      string prefix = pat.substr(0, star);
+      string suffix = pat.substr(star + 1);
+      const string& target = anchored ? rp : fname;
+      if (target.size() >= prefix.size() + suffix.size() &&
+          target.compare(0, prefix.size(), prefix) == 0 &&
+          target.compare(target.size() - suffix.size(), suffix.size(), suffix) == 0) {
+        return true;
+      }
+      continue;
+    }
+
+    if (dir_only) {
+      if (rp.find(pat + "/") == 0) return true;
+      string with_slash = "/" + pat + "/";
+      if (rp.find(with_slash) != string::npos) return true;
+    }
+  }
+  return false;
+}
+
+bool matches_gitignore(const string& name) {
+  for (const auto& pat : gitignore_patterns) {
+    if (pat == name) return true;
+    if (pat.size() > 1 && pat.front() == '/' && pat.substr(1) == name) return true;
+    if (pat.size() > 1 && pat.back() == '/') {
+      string dir_prefix = pat.substr(1, pat.size() - 2);
+      if (name.find(dir_prefix) == 0) return true;
+      if (name.substr(0, name.find('/')) == dir_prefix) return true;
+    }
+    if (pat.find("*/") == string::npos && pat.find('*') != string::npos) {
+      size_t star = pat.find('*');
+      string prefix = pat.substr(0, star);
+      string suffix = pat.substr(star + 1);
+      if (name.size() >= prefix.size() + suffix.size() &&
+          name.substr(0, prefix.size()) == prefix &&
+          name.substr(name.size() - suffix.size()) == suffix) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool is_path_in_gitignore(const string& rel_path) {
+  if (rel_path.empty() || rel_path == ".") return false;
+
+  string rp = fs::path(rel_path).generic_string();
+  string fname = fs::path(rp).filename().string();
+
+  for (const auto& pat_raw : gitignore_patterns) {
+    string pat = trim_copy(pat_raw);
+    if (pat.empty()) continue;
+
+    bool anchored = !pat.empty() && pat.front() == '/';
+    if (anchored) pat.erase(pat.begin());
+
+    bool dir_only = !pat.empty() && pat.back() == '/';
+    if (dir_only) pat.pop_back();
+
+    if (pat.empty()) continue;
+
+    // exact file name ignore (e.g. dgat, dgat_blueprint.md)
+    if (!dir_only && (fname == pat || rp == pat)) return true;
+
+    // simple wildcard like *.o
+    if (pat.find('*') != string::npos) {
+      size_t star = pat.find('*');
+      string prefix = pat.substr(0, star);
+      string suffix = pat.substr(star + 1);
+      const string& target = anchored ? rp : fname;
+      if (target.size() >= prefix.size() + suffix.size() &&
+          target.compare(0, prefix.size(), prefix) == 0 &&
+          target.compare(target.size() - suffix.size(), suffix.size(), suffix) == 0) {
+        return true;
+      }
+      continue;
+    }
+
+    // directory pattern (e.g. build/, tmp/, grammars/)
+    if (dir_only) {
+      if (rp == pat) return true;
+      if (rp.rfind(pat + "/", 0) == 0) return true;
+      if (!anchored && rp.find("/" + pat + "/") != string::npos) return true;
+      continue;
+    }
+
+    // fallback plain path match
+    if (rp == pat) return true;
+  }
+
+  return false;
 }
 
 string trim_copy(const string& input) {
@@ -318,7 +762,7 @@ string get_grammars_dir() {
 }
 
 string run_tree_sitter_query(const string& lang, const string& file_path, const string& content) {
-  string query_file = "queries/" + lang + ".scm";
+  fs::path query_file = fs::absolute("queries/") / (lang + ".scm");
   if (!fs::exists(query_file)) {
     return "";
   }
@@ -328,7 +772,12 @@ string run_tree_sitter_query(const string& lang, const string& file_path, const 
   tmp_out << content;
   tmp_out.close();
 
-  string cmd = "tree-sitter query --scope source." + lang + " " + query_file + " " + tmp_input + " 2>/dev/null";
+  string grammars_dir = get_grammars_dir();
+  string cmd = "tree-sitter query";
+  if (!grammars_dir.empty()) {
+    cmd += " -p " + grammars_dir + "/node_modules/tree-sitter-" + lang;
+  }
+  cmd += " " + query_file.string() + " " + tmp_input + " 2>/dev/null";
   array<char, 4096> buffer;
   string result;
 
@@ -378,7 +827,7 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
   unordered_set<string> seen;
 
   while (getline(iss, line)) {
-    if (line.find("@import") == string::npos) continue;
+    if (line.find(" import") == string::npos) continue;
 
     size_t start = line.rfind('"');
     if (start == string::npos) continue;
@@ -490,6 +939,18 @@ vector<string> extract_imports(const string& file_path, const string& content) {
   }
 
   return imports;
+}
+
+string normalize_import_path(const string& imp, const string& src_file) {
+  if (imp.empty()) return "";
+  if (imp.front() == '<' || imp.front() == '"') return imp;
+  if (imp.find('/') != string::npos) return imp;
+
+  size_t dot_pos = src_file.rfind('/');
+  string src_dir = (dot_pos != string::npos) ? src_file.substr(0, dot_pos) : ".";
+  if (src_dir.empty()) src_dir = ".";
+
+  return src_dir + "/" + imp;
 }
 
 string extract_fenced_block_or_raw(const string& input) {
@@ -682,11 +1143,17 @@ string load_tree_gui_html() {
     candidates.emplace_back(env_html);
   }
 
+  candidates.emplace_back("dgat_gui.html");
   candidates.emplace_back("tree_gui.html");
+  candidates.emplace_back("assets/dgat_gui.html");
   candidates.emplace_back("assets/tree_gui.html");
+  candidates.emplace_back("../dgat_gui.html");
   candidates.emplace_back("../tree_gui.html");
+  candidates.emplace_back("../assets/dgat_gui.html");
   candidates.emplace_back("../assets/tree_gui.html");
+  candidates.emplace_back("/usr/local/share/dgat/dgat_gui.html");
   candidates.emplace_back("/usr/local/share/dgat/tree_gui.html");
+  candidates.emplace_back("/usr/share/dgat/dgat_gui.html");
   candidates.emplace_back("/usr/share/dgat/tree_gui.html");
 
   string html;
@@ -701,27 +1168,29 @@ string load_tree_gui_html() {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DGAT Tree Visualizer</title>
+  <title>DGAT</title>
   <style>
-    body { font-family: Inter, system-ui, sans-serif; padding: 24px; background: #0f172a; color: #e2e8f0; }
-    .box { max-width: 760px; margin: 40px auto; padding: 20px; border: 1px solid #334155; border-radius: 12px; background: #111827; }
-    code { color: #93c5fd; }
+    body { font-family: Inter, system-ui, sans-serif; padding: 24px; background: #FAFAFA; color: #1A1A1A; }
+    .box { max-width: 760px; margin: 40px auto; padding: 20px; border: 1px solid #E5E7EB; border-radius: 12px; background: #FFFFFF; }
+    code { color: #3B82F6; }
   </style>
 </head>
 <body>
   <div class="box">
-    <h1>DGAT Tree Visualizer</h1>
-    <p>Could not load external GUI file. Create <code>tree_gui.html</code> in the working directory, or set <code>DGAT_GUI_HTML</code> to a valid path.</p>
+    <h1>DGAT</h1>
+    <p>Could not load GUI file. Create <code>dgat_gui.html</code> in the working directory, or set <code>DGAT_GUI_HTML</code> to a valid path.</p>
   </div>
 </body>
 </html>
 )HTML";
 }
 
-void run_tree_gui_server(TreeNode* root, int port) {
+void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
   httplib::Server server;
   const string html = load_tree_gui_html();
   const json tree_json = tree_to_json(root);
+
+  const json dep_graph_json = build_dep_graph_json(dep_graph);
 
   server.Get("/", [html](const httplib::Request&, httplib::Response& response) {
     response.set_content(html, "text/html; charset=UTF-8");
@@ -731,12 +1200,16 @@ void run_tree_gui_server(TreeNode* root, int port) {
     response.set_content(tree_json.dump(), "application/json; charset=UTF-8");
   });
 
+  server.Get("/api/dep-graph", [dep_graph_json](const httplib::Request&, httplib::Response& response) {
+    response.set_content(dep_graph_json.dump(), "application/json; charset=UTF-8");
+  });
+
   server.Get("/health", [](const httplib::Request&, httplib::Response& response) {
     response.set_content("ok", "text/plain; charset=UTF-8");
   });
 
-  cout << "Interactive tree GUI running at: http://localhost:" << port << endl;
-  cout << "Press Ctrl+C to stop the GUI server." << endl;
+  cout << "Interactive GUI running at: http://localhost:" << port << endl;
+  cout << "Press Ctrl+C to stop." << endl;
 
   if (!server.listen("0.0.0.0", port)) {
     cerr << "Failed to start GUI server on port " << port << endl;
@@ -816,9 +1289,35 @@ string extract_folder_structure() {
   return result;
 }
 
+const size_t MAX_CONTEXT_TOKENS = 32000;
+const size_t PROMPT_TOKEN_ESTIMATE = 1500;
+const size_t RESPONSE_TOKEN_BUFFER = 2000;
+
+size_t estimate_tokens(const string& text) {
+  return text.size() / 4;
+}
+
+string chunk_content(const string& content, size_t max_tokens) {
+  size_t max_chars = max_tokens * 4;
+  if (content.size() <= max_chars) return content;
+  
+  size_t chunk_end = content.find("\n", max_chars / 2);
+  if (chunk_end == string::npos || chunk_end > max_chars) {
+    chunk_end = max_chars;
+  }
+  
+  return content.substr(0, chunk_end) + "\n\n[Content truncated - file too large for context window]";
+}
+
 // next step is to populate the files with their description according to the content of the file
 void populate_descriptions(TreeNode* node, string rc="", string folder_structure="") {
   if (!node) return;
+
+  // Skip files matching .dgatignore patterns
+  if (node->is_file && matches_dgatignore(node->rel_path)) {
+    node->description = "Ignored by .dgatignore";
+    return;
+  }
 
   // check for readme file, and treat it like the context of the whole project
   if(rc == "") rc = read_readme_content();
@@ -843,13 +1342,15 @@ void populate_descriptions(TreeNode* node, string rc="", string folder_structure
       buffer << infile.rdbuf();
       file_content = buffer.str();
 
-      const size_t max_file_content_size = 50 * 1024;
-      if (file_content.size() > max_file_content_size) {
-        file_content.resize(max_file_content_size);
-        file_content += "\n\n[TRUNCATED: file content exceeded 50KB]";
-      }
-
       file_content = sanitize_utf8(file_content);
+
+      size_t blueprint_tokens = estimate_tokens(rc);
+      size_t folder_tokens = estimate_tokens(folder_structure);
+      size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
+      
+      if (available_tokens < 1000) available_tokens = 5000;
+      
+      file_content = chunk_content(file_content, available_tokens);
     }
   }
 
@@ -919,7 +1420,7 @@ void populate_descriptions(TreeNode* node, string rc="", string folder_structure
 
   if(res && res->status == 200){
     cout<<"response from vllm successful for file: "<<node->rel_path<<endl;
-    cout<<"response body: "<<res->body<<endl;
+    // cout<<"response body: "<<res->body<<endl;
     try {
       json response_json = json::parse(res->body);
       string assistant_text = extract_assistant_text(response_json);
@@ -1093,40 +1594,54 @@ int main(int argc, char** argv){
     }
   }
 
+  load_gitignore(root_path);
+  load_dgatignore(root_path);
+
+  cout << "========================================" << endl;
+  cout << "   DGAT - Dependency Graph as a Tool   " << endl;
+  cout << "========================================" << endl;
+  cout << "[DGAT] Target: " << fs::absolute(root_path).string() << endl;
+  cout << "[DGAT] Building file tree..." << endl;
   auto root = build_tree(root_path, root_path);
   if (!root) {
-    cerr << "Failed to build tree from root path." << endl;
+    cerr << "[DGAT] Error: Failed to build tree from root path." << endl;
     return 1;
   }
+  cout << "[DGAT] File tree built successfully." << endl;
 
   const string dot_file = "tree_visualization.dot";
   if (!export_tree_as_dot(root.get(), dot_file)) {
-    cerr << "Failed to write visualization file: " << dot_file << endl;
+    cerr << "[DGAT] Error: Failed to write visualization file: " << dot_file << endl;
     return 1;
   }
-
-  cout << "Tree visualization written to: " << dot_file << endl;
+  cout << "[DGAT] Tree DOT file written to: " << dot_file << endl;
 
   int dot_available = system("command -v dot > /dev/null 2>&1");
   if (dot_available == 0) {
     const string png_file = "tree_visualization.png";
     string render_cmd = "dot -Tpng " + dot_file + " -o " + png_file;
     if (system(render_cmd.c_str()) == 0) {
-      cout << "PNG visualization written to: " << png_file << endl;
+      cout << "[DGAT] Tree PNG visualization written to: " << png_file << endl;
     } else {
-      cerr << "Failed to render PNG from DOT file" << endl;
+      cerr << "[DGAT] Warning: Failed to render PNG from DOT file" << endl;
     }
   } else {
-    cout << "Graphviz not found; install 'dot' to render PNG from the DOT file." << endl;
+    cout << "[DGAT] Info: Graphviz not found. Install 'dot' to render PNG visualization." << endl;
   }
 
+  cout << "[DGAT] Populating file descriptions via vllm..." << endl;
   populate_descriptions(root.get());
   create_dgat_blueprint(root.get());
+  cout << "[DGAT] File descriptions populated." << endl;
 
-  // update_tree();
+  cout << "[DGAT] Building dependency graph..." << endl;
+  DepGraph dep_graph = build_dep_graph(root.get());
+  cout << "[DGAT] Dependency graph built: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
+  print_dep_graph(dep_graph);
 
   if (gui_mode) {
-    run_tree_gui_server(root.get(), gui_port);
+    cout << "[DGAT] Starting GUI server on port " << gui_port << "..." << endl;
+    run_tree_gui_server(root.get(), dep_graph, gui_port);
     return 0;
   }
 

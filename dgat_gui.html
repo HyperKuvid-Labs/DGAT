@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DGAT - Dependency Graph as a Tool</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --paper: #FFFFFF;
+      --text: #1A1A1A;
+      --text-body: #2C3E50;
+      --muted: #6B7280;
+      --accent: #3B82F6;
+      --accent-dark: #1E40AF;
+      --neutral: #E5E7EB;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+      background: var(--bg);
+      color: var(--text-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--paper);
+      border-bottom: 1px solid var(--neutral);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .logo span {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .tab-btn {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-body);
+    }
+
+    .tab-btn.active {
+      background: var(--paper);
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .graph-panel {
+      flex: 1;
+      position: relative;
+      background: var(--paper);
+      margin: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--neutral);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    #graph-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    #graph-container svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: var(--paper);
+      border: 1px solid var(--neutral);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .legend-dot.internal { background: var(--accent); }
+    .legend-dot.external { background: var(--accent-dark); }
+    .legend-dot.gitignored { background: #F59E0B; }
+
+    .node circle {
+      fill: var(--accent);
+    }
+
+    .detail-panel {
+      width: 360px;
+      background: var(--paper);
+      border-left: 1px solid var(--neutral);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .detail-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--neutral);
+      background: var(--bg);
+    }
+
+    .detail-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .detail-content {
+      flex: 1;
+      padding: 16px 18px;
+      overflow-y: auto;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.4;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--neutral);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .row-label {
+      color: var(--muted);
+      min-width: 60px;
+    }
+
+    .row-value {
+      color: var(--text-body);
+      word-break: break-all;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #EFF6FF;
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin: 2px;
+      font-family: monospace;
+    }
+
+    .tag.ext {
+      background: #F3F4F6;
+      color: var(--muted);
+    }
+
+    .edge-list {
+      list-style: none;
+    }
+
+    .edge-item {
+      background: var(--bg);
+      border: 1px solid var(--neutral);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .edge-from {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .edge-item strong {
+      color: var(--accent);
+    }
+
+    .edge-desc {
+      font-size: 12px;
+      color: var(--text-body);
+      margin-top: 4px;
+    }
+
+    .tree-panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .tree-panel.active {
+      display: flex;
+    }
+
+    .graph-panel.hidden {
+      display: none;
+    }
+
+    .tree-header {
+      background: var(--paper);
+      border-radius: 12px;
+      border: 1px solid var(--neutral);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
+
+    .tree-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .tree-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tree-controls button {
+      padding: 6px 12px;
+      border: 1px solid var(--neutral);
+      background: var(--paper);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tree-controls button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .tree-search {
+      background: var(--paper);
+      border-radius: 12px;
+      border: 1px solid var(--neutral);
+      padding: 12px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .tree-search input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--neutral);
+      border-radius: 8px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .tree-search input:focus {
+      border-color: var(--accent);
+    }
+
+    .tree-container {
+      flex: 1;
+      background: var(--paper);
+      border-radius: 12px;
+      border: 1px solid var(--neutral);
+      overflow: auto;
+      box-shadow: var(--shadow);
+    }
+
+    .tree-view {
+      padding: 12px 16px;
+    }
+
+    .tree-view ul {
+      list-style: none;
+      padding-left: 18px;
+      border-left: 1px dashed var(--neutral);
+    }
+
+    .tree-view > ul {
+      padding-left: 0;
+      border-left: none;
+    }
+
+    .tree-node {
+      margin: 3px 0;
+    }
+
+    .tree-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tree-row:hover {
+      background: var(--bg);
+    }
+
+    .tree-row.active {
+      background: #EFF6FF;
+    }
+
+    .caret {
+      width: 14px;
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge.folder {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .badge.file {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+
+    .tree-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-body);
+    }
+
+    .node circle {
+      fill: var(--accent);
+    }
+
+    .node text {
+      font-size: 11px;
+      fill: var(--text-body);
+    }
+
+    .link {
+      fill: none;
+      stroke: var(--neutral);
+      stroke-width: 1.5px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) {
+      .detail-panel { display: none; }
+      header { flex-wrap: wrap; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <h1>DGAT</h1>
+      <span>Dependency Graph as a Tool</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="graph">Dependency Graph</button>
+      <button class="tab-btn" data-tab="tree">File Tree</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="nodeCount">0</strong> nodes</div>
+      <div class="stat"><strong id="edgeCount">0</strong> edges</div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="graph-panel" id="graphPanel">
+      <div id="graph-container">
+        <svg id="graphSvg"></svg>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot internal"></div>
+          <span>External Dependency</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot gitignored"></div>
+          <span>Gitignored (build/, tmp/)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tree-panel" id="treePanel">
+      <div class="tree-header">
+        <h2>Project Files</h2>
+        <div class="tree-controls">
+          <button id="expandAll">Expand All</button>
+          <button id="collapseAll">Collapse All</button>
+        </div>
+      </div>
+      <div class="tree-search">
+        <input type="search" id="treeSearch" placeholder="Search files..." />
+      </div>
+      <div class="tree-container">
+        <div class="tree-view" id="treeView"></div>
+      </div>
+    </div>
+
+    <aside class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        <h2>Details</h2>
+      </div>
+      <div class="detail-content" id="detailContent">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>Select a node to view details</span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script>
+    let graphData = { nodes: [], edges: [] };
+    let treeData = null;
+    let currentView = 'graph';
+
+    const graphPanel = document.getElementById('graphPanel');
+    const treePanel = document.getElementById('treePanel');
+    const detailContent = document.getElementById('detailContent');
+    const nodeCountEl = document.getElementById('nodeCount');
+    const edgeCountEl = document.getElementById('edgeCount');
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentView = btn.dataset.tab;
+        
+        if (currentView === 'graph') {
+          graphPanel.classList.remove('hidden');
+          treePanel.classList.remove('active');
+        } else {
+          graphPanel.classList.add('hidden');
+          treePanel.classList.add('active');
+          renderTree();
+        }
+      });
+    });
+
+    async function loadData() {
+      try {
+        const [graphRes, treeRes] = await Promise.all([
+          fetch('/api/dep-graph'),
+          fetch('/api/tree')
+        ]);
+        const graphJson = await graphRes.json();
+        graphData = graphJson;
+        treeData = await treeRes.json();
+        initGraph();
+        nodeCountEl.textContent = graphData.nodes.length;
+        edgeCountEl.textContent = graphData.edges.length;
+      } catch (e) {
+        console.error('Failed to load data:', e);
+      }
+    }
+
+    function initGraph() {
+      const svg = document.getElementById('graphSvg');
+      const g = new dagre.graphlib.Graph();
+      g.setGraph({ rankdir: 'LR', nodesep: 40, ranksep: 60, marginx: 30, marginy: 30 });
+      g.setDefaultEdgeLabel(() => ({}));
+
+      graphData.nodes.forEach(n => {
+        const label = n.id.split('/').pop();
+        const w = Math.max(100, label.length * 6 + 40);
+        g.setNode(n.id, { label, width: w, height: 36 });
+      });
+
+      graphData.edges.forEach(e => {
+        if (g.hasNode(e.from) && g.hasNode(e.to)) {
+          g.setEdge(e.from, e.to);
+        }
+      });
+
+      dagre.layout(g);
+
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      defs.innerHTML = '<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10" fill="#3B82F6"/></marker>';
+      svg.appendChild(defs);
+
+      const mainG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      svg.appendChild(mainG);
+
+      g.edges().forEach(eid => {
+        const edge = g.edge(eid);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'link');
+        path.setAttribute('d', 'M' + edge.points.map(p => `${p.x},${p.y}`).join(' L '));
+        path.setAttribute('marker-end', 'url(#arrow)');
+        path.dataset.from = eid.v;
+        path.dataset.to = eid.w;
+        mainG.appendChild(path);
+      });
+
+      g.nodes().forEach(nid => {
+        const node = g.node(nid);
+        const nodeData = graphData.nodes.find(n => n.id === nid);
+        const isGitignored = nodeData && nodeData.is_gitignored;
+        
+        const gEl = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        gEl.setAttribute('transform', `translate(${node.x - node.width/2}, ${node.y - node.height/2})`);
+        gEl.dataset.id = nid;
+        gEl.style.cursor = 'pointer';
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', node.width);
+        rect.setAttribute('height', node.height);
+        rect.setAttribute('rx', 6);
+        rect.setAttribute('fill', isGitignored ? '#FEF3C7' : '#FFFFFF');
+        rect.setAttribute('stroke', isGitignored ? '#F59E0B' : '#3B82F6');
+        rect.setAttribute('stroke-width', '1.5');
+        gEl.appendChild(rect);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', node.width / 2);
+        text.setAttribute('y', node.height / 2 + 4);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '11');
+        text.setAttribute('font-weight', '500');
+        text.setAttribute('fill', '#1A1A1A');
+        const name = node.label.length > 16 ? node.label.substring(0, 14) + '...' : node.label;
+        text.textContent = name;
+        gEl.appendChild(text);
+
+        gEl.addEventListener('click', () => showDetail(nid));
+        mainG.appendChild(gEl);
+      });
+    }
+
+    function showDetail(id) {
+      const node = graphData.nodes.find(n => n.id === id);
+      const edges = graphData.edges.filter(e => e.from === id);
+
+      let html = `
+        <div class="section">
+          <div class="section-title">File</div>
+          <div class="row"><span class="row-label">Name</span><span class="row-value">${id.split('/').pop()}</span></div>
+          <div class="row"><span class="row-label">Path</span><span class="row-value">${id}</span></div>
+        </div>
+      `;
+
+      if (node && node.imports && node.imports.length > 0) {
+        html += `<div class="section"><div class="section-title">Imports (${node.imports.length})</div>`;
+        node.imports.forEach(imp => {
+          const isExt = imp.startsWith('<') || !imp.includes('.');
+          html += `<span class="tag ${isExt ? 'ext' : ''}">${imp}</span>`;
+        });
+        html += '</div>';
+      }
+
+      if (edges.length > 0) {
+        html += `<div class="section"><div class="section-title">Dependencies (${edges.length})</div><ul class="edge-list">`;
+        edges.slice(0, 8).forEach(e => {
+          html += `
+            <li class="edge-item">
+              <div class="edge-from">→ <strong>${e.to.split('/').pop()}</strong></div>
+              ${e.import_stmt ? `<div class="edge-desc">${e.import_stmt}</div>` : ''}
+            </li>
+          `;
+        });
+        html += '</ul></div>';
+      }
+
+      detailContent.innerHTML = html;
+    }
+
+    function renderTree() {
+      const container = document.getElementById('treeView');
+      if (!treeData) return;
+      container.innerHTML = renderTreeNode(treeData);
+      setupTreeListeners();
+    }
+
+    function renderTreeNode(node) {
+      const children = node.children || [];
+      let html = `<li class="tree-node"><div class="tree-row" data-path="${node.rel_path}">`;
+      
+      if (children.length > 0) {
+        html += `<span class="caret">▶</span>`;
+      } else {
+        html += `<span class="caret"></span>`;
+      }
+      
+      html += `<span class="badge ${node.is_file ? 'file' : 'folder'}">${node.is_file ? 'file' : 'dir'}</span>`;
+      html += `<span class="tree-name">${node.name}</span>`;
+      html += `</div>`;
+      
+      if (children.length > 0) {
+        html += `<ul>`;
+        children.forEach(child => {
+          html += renderTreeNode(child);
+        });
+        html += `</ul>`;
+      }
+      
+      html += `</li>`;
+      return html;
+    }
+
+    function setupTreeListeners() {
+      document.querySelectorAll('.tree-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const ul = row.nextElementSibling;
+          if (ul && ul.tagName === 'UL') {
+            ul.style.display = ul.style.display === 'none' ? 'block' : 'none';
+            const caret = row.querySelector('.caret');
+            if (caret) caret.textContent = ul.style.display === 'none' ? '▶' : '▼';
+          }
+          document.querySelectorAll('.tree-row').forEach(r => r.classList.remove('active'));
+          row.classList.add('active');
+        });
+      });
+
+      document.getElementById('expandAll').addEventListener('click', () => {
+        document.querySelectorAll('ul').forEach(u => u.style.display = 'block');
+        document.querySelectorAll('.caret').forEach(c => c.textContent = '▼');
+      });
+
+      document.getElementById('collapseAll').addEventListener('click', () => {
+        document.querySelectorAll('ul').forEach(u => u.style.display = 'none');
+        document.querySelectorAll('.caret').forEach(c => c.textContent = '▶');
+      });
+
+      document.getElementById('treeSearch').addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        document.querySelectorAll('.tree-row').forEach(row => {
+          const name = row.querySelector('.tree-name').textContent.toLowerCase();
+          row.closest('li').style.display = name.includes(q) ? 'block' : 'none';
+        });
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

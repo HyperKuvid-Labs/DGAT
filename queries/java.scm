@@ -2,4 +2,4 @@
   (scoped_identifier) @import)
 
 (import_declaration
-  (asterisk) @import)
+  (identifier) @import)

@@ -1,8 +1,6 @@
+; C++ imports and includes
 (preproc_include
-  (system_lib_string) @import)
+  path: (system_lib_string) @import)
 
-(import_declaration
-  (string_literal) @import)
-
-(header_include
-  (string_literal) @import)
+(preproc_include
+  path: (string_literal) @import)

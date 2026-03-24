@@ -94,9 +94,16 @@ install_tree_sitter_grammars() {
       cd "$GRAMMARS_DIR"
     else
       info "Installing $grammar..."
-      git clone "https://github.com/$grammar" >/dev/null 2>&1 || npm install "${npm_quiet_flags[@]}" "$grammar" >/dev/null 2>&1 || {
-        warn "Failed to install $grammar, skipping..."
-      }
+      if git clone "https://github.com/$grammar" >/dev/null 2>&1; then
+        true
+      elif npm install "${npm_quiet_flags[@]}" "$grammar" >/dev/null 2>&1; then
+        true
+      else
+        warn "Failed to install $grammar, trying without native binding..."
+        npm install "${npm_quiet_flags[@]}" --ignore-scripts "$grammar" >/dev/null 2>&1 || {
+          warn "Failed to install $grammar, skipping..."
+        }
+      fi
     fi
   done
 
@@ -104,9 +111,11 @@ install_tree_sitter_grammars() {
   for grammar in */; do
     if [ -d "$grammar" ] && [ -f "$grammar/package.json" ]; then
       local name=$(basename "$grammar")
-      info "  Compiling $name..."
-      cd "$grammar"
-      npx tree-sitter generate 2>/dev/null || true
+      if npx tree-sitter generate >/dev/null 2>&1; then
+        info "  Compiled $name"
+      else
+        warn "  Skipping $name (generation failed)"
+      fi
       cd "$GRAMMARS_DIR"
     fi
   done

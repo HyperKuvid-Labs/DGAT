@@ -1,6 +1,5 @@
 (preproc_include
-  (system_lib_string) @import
-  (string_literal) @import)
+  path: (system_lib_string) @import)
 
-(import_declaration
-  (string_literal) @import)
+(preproc_include
+  path: (string_literal) @import)

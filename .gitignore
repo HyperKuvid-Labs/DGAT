@@ -3,4 +3,7 @@ dgat
 *.o
 build/
 tmp/
+grammars/
+.vscode/
+.cache/
 

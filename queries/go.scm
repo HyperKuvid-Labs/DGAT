@@ -1,10 +1,7 @@
 (import_declaration
-  (import_spec_list
-    (import_spec (string_literal) @import)))
+  (import_spec
+    path: (interpreted_string_literal) @import))
 
 (import_declaration
-  (import_spec (string_literal) @import))
-
-(import_declaration
-  (import_block
-    (import_spec (string_literal) @import)))
+  (import_spec
+    path: (raw_string_literal) @import))

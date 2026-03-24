@@ -1,2 +1,6 @@
 dgat_blueprint.md
-./dgat
+dgat
+*.o
+build/
+tmp/
+

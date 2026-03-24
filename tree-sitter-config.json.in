@@ -1,0 +1,6 @@
+{
+  "parser-directories": [
+    "@GRAMMARS_DIR@",
+    "@CMAKE_SOURCE_DIR@/grammars"
+  ]
+}

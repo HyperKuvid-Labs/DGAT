@@ -200,6 +200,298 @@ string trim_copy(const string& input) {
   return input.substr(start, end - start);
 }
 
+vector<string> extract_file_mentions(const string& content, const string& file_ext) {
+  vector<string> mentions;
+  istringstream iss(content);
+  string line;
+
+  auto add_if_valid = [&](const string& path) {
+    if (!path.empty() && path != "." && path != "..") {
+      mentions.push_back(path);
+    }
+  };
+
+  if (file_ext == ".sh" || file_ext == ".bash") {
+    while (getline(iss, line)) {
+      line = trim_copy(line);
+      if (line.find('#') != string::npos) {
+        line = line.substr(0, line.find('#'));
+        line = trim_copy(line);
+      }
+      if (line.rfind("source ", 0) == 0 || line.rfind(". ", 0) == 0) {
+        size_t pos = line.find(' ');
+        if (pos != string::npos) {
+          add_if_valid(line.substr(pos + 1));
+        }
+      }
+      if (line.find("./") != string::npos) {
+        size_t pos = line.find("./");
+        add_if_valid(line.substr(pos + 2));
+      }
+    }
+  } else if (file_ext == ".make" || file_ext == "Makefile") {
+    while (getline(iss, line)) {
+      if (line.find("include") != string::npos || line.find("-include") != string::npos) {
+        istringstream incl(line);
+        string word;
+        while (incl >> word) {
+          if (word != "include" && word != "-include") {
+            add_if_valid(word);
+          }
+        }
+      }
+    }
+  }
+
+  return mentions;
+}
+
+string get_language_from_ext(const string& file_path) {
+  size_t dot_pos = file_path.rfind('.');
+  string ext = (dot_pos != string::npos) ? file_path.substr(dot_pos) : "";
+  string name = file_path;
+
+  if (name.find("Makefile") != string::npos) return "make";
+  if (name.find("CMakeLists.txt") != string::npos) return "cmake";
+
+  unordered_map<string, string> ext_to_lang = {
+    {".c", "c"}, {".h", "c"},
+    {".cpp", "cpp"}, {".cc", "cpp"}, {".cxx", "cpp"}, {".c++", "cpp"},
+    {".hpp", "cpp"}, {".hh", "cpp"}, {".hxx", "cpp"}, {".h++", "cpp"},
+    {".py", "python"}, {".pyw", "python"},
+    {".go", "go"},
+    {".js", "javascript"}, {".mjs", "javascript"}, {".cjs", "javascript"},
+    {".jsx", "javascript"},
+    {".ts", "typescript"}, {".tsx", "typescript"},
+    {".rs", "rust"},
+    {".java", "java"}, {".kt", "kotlin"}, {".kts", "kotlin"},
+    {".scala", "scala"},
+    {".cs", "csharp"},
+    {".rb", "ruby"},
+    {".php", "php"},
+    {".swift", "swift"},
+    {".dart", "dart"},
+    {".sh", "bash"}, {".bash", "bash"}, {".zsh", "bash"}, {".fish", "bash"},
+    {".ps1", "powershell"}, {".psm1", "powershell"},
+    {".lua", "lua"},
+    {".r", "r"}, {".R", "r"},
+    {".pl", "perl"}, {".pm", "perl"},
+    {".ex", "elixir"}, {".exs", "elixir"},
+    {".erl", "erlang"},
+    {".hs", "haskell"},
+    {".ml", "ocaml"}, {".mli", "ocaml"},
+    {".jl", "julia"},
+    {".sql", "sql"},
+    {".yml", "yaml"}, {".yaml", "yaml"},
+    {".json", "json"},
+    {".toml", "toml"},
+    {".xml", "xml"},
+    {".html", "html"}, {".htm", "html"},
+    {".css", "css"},
+    {".scss", "scss"}, {".sass", "scss"}, {".less", "less"},
+    {".vue", "vue"},
+    {".svelte", "svelte"},
+    {".md", "markdown"},
+    {".dockerfile", "dockerfile"},
+    {".tf", "terraform"}, {".hcl", "terraform"},
+  };
+
+  auto it = ext_to_lang.find(ext);
+  return (it != ext_to_lang.end()) ? it->second : "";
+}
+
+string get_grammars_dir() {
+  const char* env_grammars = getenv("DGAT_GRAMMARS_DIR");
+  if (env_grammars && fs::exists(env_grammars)) {
+    return string(env_grammars);
+  }
+  if (fs::exists("grammars")) {
+    return "grammars";
+  }
+  if (fs::exists("/usr/local/share/dgat/grammars")) {
+    return "/usr/local/share/dgat/grammars";
+  }
+  if (fs::exists("/usr/share/dgat/grammars")) {
+    return "/usr/share/dgat/grammars";
+  }
+  return "";
+}
+
+string run_tree_sitter_query(const string& lang, const string& file_path, const string& content) {
+  string query_file = "queries/" + lang + ".scm";
+  if (!fs::exists(query_file)) {
+    return "";
+  }
+
+  string tmp_input = "/tmp/ts_input_" + to_string(time(nullptr)) + ".txt";
+  ofstream tmp_out(tmp_input);
+  tmp_out << content;
+  tmp_out.close();
+
+  string cmd = "tree-sitter query --scope source." + lang + " " + query_file + " " + tmp_input + " 2>/dev/null";
+  array<char, 4096> buffer;
+  string result;
+
+  auto close_pipe = [](FILE* stream) { if (stream) pclose(stream); };
+  unique_ptr<FILE, decltype(close_pipe)> pipe(popen(cmd.c_str(), "r"), close_pipe);
+  if (!pipe) {
+    fs::remove(tmp_input);
+    return "";
+  }
+
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    result += buffer.data();
+  }
+
+  fs::remove(tmp_input);
+  return result;
+}
+
+vector<string> extract_imports_via_tree_sitter(const string& file_path, const string& content) {
+  vector<string> imports;
+
+  string lang = get_language_from_ext(file_path);
+  if (lang.empty()) {
+    return imports;
+  }
+
+  static bool ts_checked = false;
+  static bool ts_available = false;
+  if (!ts_checked) {
+    ts_checked = true;
+    ts_available = (system("command -v tree-sitter > /dev/null 2>&1") == 0);
+    if (!ts_available) {
+      cerr << "[DGAT] tree-sitter not found. Install with: ./install.sh cli grammars configure" << endl;
+    }
+  }
+  if (!ts_available) {
+    return imports;
+  }
+
+  string query_output = run_tree_sitter_query(lang, file_path, content);
+  if (query_output.empty()) {
+    return imports;
+  }
+
+  istringstream iss(query_output);
+  string line;
+  unordered_set<string> seen;
+
+  while (getline(iss, line)) {
+    if (line.find("@import") == string::npos) continue;
+
+    size_t start = line.rfind('"');
+    if (start == string::npos) continue;
+
+    size_t end = line.rfind('"', start - 1);
+    if (end == string::npos) continue;
+
+    string imp = line.substr(end + 1, start - end - 1);
+    if (!imp.empty() && seen.find(imp) == seen.end()) {
+      seen.insert(imp);
+      imports.push_back(imp);
+    }
+  }
+
+  return imports;
+}
+
+vector<string> extract_imports_fallback(const string& content, const string& lang) {
+  vector<string> imports;
+  istringstream iss(content);
+  string line;
+  unordered_set<string> seen;
+
+  auto add = [&](const string& imp) {
+    if (!imp.empty() && seen.find(imp) == seen.end()) {
+      seen.insert(imp);
+      imports.push_back(imp);
+    }
+  };
+
+  while (getline(iss, line)) {
+    line = trim_copy(line);
+
+    if (line.find('#') != string::npos) {
+      line = line.substr(0, line.find('#'));
+      line = trim_copy(line);
+    }
+
+    if (lang == "python") {
+      if (line.rfind("import ", 0) == 0 || line.rfind("from ", 0) == 0) {
+        add(line);
+      }
+    } else if (lang == "c" || lang == "cpp") {
+      if (line.rfind("#include", 0) == 0) {
+        size_t start = line.find('"');
+        if (start != string::npos) {
+          size_t end = line.find('"', start + 1);
+          if (end != string::npos) add(line.substr(start + 1, end - start - 1));
+        } else {
+          start = line.find('<');
+          if (start != string::npos) {
+            size_t end = line.find('>', start + 1);
+            if (end != string::npos) add(line.substr(start + 1, end - start - 1));
+          }
+        }
+      }
+    } else if (lang == "go") {
+      if (line.rfind("import", 0) == 0) {
+        if (line.front() == '"' && line.back() == '"') {
+          add(line.substr(1, line.size() - 2));
+        }
+      }
+    } else if (lang == "javascript" || lang == "typescript") {
+      if (line.rfind("import ", 0) == 0) {
+        add(line);
+      }
+    } else if (lang == "rust") {
+      if (line.rfind("use ", 0) == 0) {
+        add(line);
+      }
+    } else if (lang == "java") {
+      if (line.rfind("import ", 0) == 0) {
+        add(line.substr(7));
+        trim_copy(line.substr(7));
+      }
+    } else if (lang == "ruby") {
+      if (line.rfind("require", 0) == 0 || line.rfind("require_relative", 0) == 0) {
+        add(line);
+      }
+    } else if (lang == "php") {
+      if (line.rfind("use ", 0) == 0) {
+        size_t semi = line.find(';');
+        if (semi != string::npos) line = line.substr(0, semi);
+        add(trim_copy(line.substr(3)));
+      }
+    }
+  }
+
+  return imports;
+}
+
+vector<string> extract_imports(const string& file_path, const string& content) {
+  vector<string> imports = extract_imports_via_tree_sitter(file_path, content);
+
+  if (!imports.empty()) {
+    return imports;
+  }
+
+  string lang = get_language_from_ext(file_path);
+  if (lang == "bash") {
+    return extract_file_mentions(content, ".sh");
+  }
+  if (lang == "make" || file_path.find("Makefile") != string::npos) {
+    return extract_file_mentions(content, "Makefile");
+  }
+
+  if (!lang.empty()) {
+    return extract_imports_fallback(content, lang);
+  }
+
+  return imports;
+}
+
 string extract_fenced_block_or_raw(const string& input) {
   size_t fence_start = input.find("```");
   if (fence_start == string::npos) {

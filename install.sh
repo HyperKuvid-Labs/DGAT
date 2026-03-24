@@ -354,7 +354,7 @@ main() {
 
   echo
   info "Installation complete!"
-  info "Run 'dgat --help' to get started."
+  info "Run 'dgat' to get started."
 }
 
 main "$@"

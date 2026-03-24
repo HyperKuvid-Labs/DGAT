@@ -75,6 +75,7 @@ bool is_likely_binary_file(const string& file_path);
 bool matches_dgatignore(const string& rel_path);
 string sanitize_utf8(const string& input);
 vector<string> extract_imports(const string& file_path, const string& content);
+vector<string> extract_imports_fallback(const string& content, const string& lang);
 string normalize_import_path(const string& imp, const string& src_file);
 bool is_path_in_gitignore(const string& rel_path);
 string extract_assistant_text(const json& response_json);
@@ -441,24 +442,33 @@ DepGraph build_dep_graph(TreeNode* root) {
       vector<pair<string, string>> local_edges;
       
       for (const string& imp : imports) {
+        // skip stdlib imports
         if (is_stdlib_import(imp, lang)) {
           continue;
         }
 
+        // skip system includes marker
         if (imp.rfind("__SYSTEM_INCLUDE__:", 0) == 0) {
           continue;
         }
 
         string norm = normalize_import_path(imp, rel_path);
+        if (norm.empty()) continue;
 
-        bool is_internal = known_files.count(norm) > 0 ||
-                           (norm.find('/') == string::npos && 
-                            (known_files.count(norm + ".h") > 0 || known_files.count(norm + ".hpp") > 0));
+        // check if file exists in project tree by exact path
+        bool is_internal = known_files.count(norm) > 0;
 
+        // also check with .h and .hpp extensions
+        if (!is_internal && norm.find('/') == string::npos) {
+          is_internal = known_files.count(norm + ".h") > 0 || known_files.count(norm + ".hpp") > 0;
+        }
+
+        // if not found by path, try matching by filename
         if (!is_internal) {
+          string imp_name = fs::path(imp).filename().string();
           for (const auto& [file_path, _] : contents) {
             string fname = fs::path(file_path).filename().string();
-            if (fname == norm || fname == norm + ".h" || fname == norm + ".hpp") {
+            if (fname == imp_name || fname == imp_name + ".h" || fname == imp_name + ".hpp") {
               norm = file_path;
               is_internal = true;
               break;
@@ -466,7 +476,8 @@ DepGraph build_dep_graph(TreeNode* root) {
           }
         }
 
-        if (!is_internal) {
+        // only add edge if file exists in tree - skip external
+        if (is_internal) {
           local_edges.emplace_back(norm, imp);
         }
       }
@@ -984,7 +995,13 @@ string run_tree_sitter_query(const string& lang, const string& file_path, const 
     return "";
   }
 
-  string tmp_input = "/tmp/ts_input_" + to_string(time(nullptr)) + ".txt";
+  // Use unique filename: PID + timestamp + random to avoid race conditions
+  auto now = chrono::high_resolution_clock::now();
+  auto us = chrono::duration_cast<chrono::microseconds>(now.time_since_epoch()).count();
+  int pid = getpid();
+  int rand_val = rand() % 10000;
+  string tmp_input = "/tmp/ts_input_" + to_string(pid) + "_" + to_string(us) + "_" + to_string(rand_val) + ".txt";
+  
   ofstream tmp_out(tmp_input);
   tmp_out << content;
   tmp_out.close();
@@ -994,7 +1011,11 @@ string run_tree_sitter_query(const string& lang, const string& file_path, const 
   if (!grammars_dir.empty()) {
     cmd += " -p " + grammars_dir + "/node_modules/tree-sitter-" + lang;
   }
-  cmd += " " + query_file.string() + " " + tmp_input + " 2>/dev/null";
+  cmd += " " + query_file.string() + " " + tmp_input + " 2>&1";
+  
+  // Debug: show command being executed
+  cerr << "[DEBUG_TS_CMD] executing: " << cmd << endl;
+  
   array<char, 4096> buffer;
   string result;
 
@@ -1025,18 +1046,42 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
   static bool ts_available = false;
   if (!ts_checked) {
     ts_checked = true;
-    ts_available = (system("command -v tree-sitter > /dev/null 2>&1") == 0);
+    // Use explicit PATH check - try multiple common locations
+    const char* path_env = getenv("PATH");
+    string paths = path_env ? path_env : "";
+    vector<string> search_paths = {"/usr/local/bin", "/usr/bin", "/bin", 
+                                    "/home/pradheep/.local/bin",
+                                    "/home/pradheep/.local/share/mise/installs/node/22.20.0/bin"};
+    for (const auto& p : search_paths) {
+      fs::path ts_path = fs::path(p) / "tree-sitter";
+      if (fs::exists(ts_path)) {
+        ts_available = true;
+        break;
+      }
+    }
+    // Also try via command -v
+    if (!ts_available) {
+      ts_available = (system("command -v tree-sitter > /dev/null 2>&1") == 0);
+    }
     if (!ts_available) {
       cerr << "[DGAT] tree-sitter not found. Install with: ./install.sh cli grammars configure" << endl;
+    } else {
+      cerr << "[DGAT] tree-sitter detected and available" << endl;
     }
   }
   if (!ts_available) {
+    // Try fallback directly
+    string lang = get_language_from_ext(file_path);
+    if (!lang.empty()) {
+      return extract_imports_fallback(content, lang);
+    }
     return imports;
   }
 
   string query_output = run_tree_sitter_query(lang, file_path, content);
   
   // Debug: show raw tree-sitter output for cpp files
+  cerr << "[DEBUG_TS] " << file_path << " lang=" << lang << " query_output size=" << query_output.size() << endl;
   if (file_path.find(".cpp") != string::npos) {
     cerr << "[DEBUG_TS] " << file_path << " raw output:" << endl;
     cerr << query_output << endl;
@@ -1044,7 +1089,8 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
   }
   
   if (query_output.empty()) {
-    return imports;
+    cerr << "[DEBUG_TS] query output empty, trying fallback for " << lang << endl;
+    return extract_imports_fallback(content, lang);
   }
 
   istringstream iss(query_output);
@@ -1052,25 +1098,15 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
   unordered_set<string> seen;
 
   while (getline(iss, line)) {
-    if (line.find(" import") == string::npos) continue;
+    if (line.find("import") == string::npos) continue;
 
-    // Try backticks first (system includes: <bits/stdc++.h>)
-    size_t pos = 0;
-    while (true) {
-      size_t start = line.find('`', pos);
-      if (start == string::npos) break;
-      size_t end = line.find('`', start + 1);
-      if (end == string::npos) break;
-      string imp = line.substr(start + 1, end - start - 1);
-      if (!imp.empty() && seen.find(imp) == seen.end()) {
-        seen.insert(imp);
-        imports.push_back(imp);
-      }
-      pos = end + 1;
+    // skip system includes - tree-sitter shows them as text: <...>
+    if (line.find("text: <") != string::npos) {
+      continue;
     }
 
-    // Try quotes (local includes: "httplib.h")
-    pos = 0;
+    // extract local includes from quotes - already strips quotes via substr
+    size_t pos = 0;
     while (true) {
       size_t start = line.find('"', pos);
       if (start == string::npos) break;
@@ -1115,20 +1151,13 @@ vector<string> extract_imports_fallback(const string& content, const string& lan
       }
     } else if (lang == "c" || lang == "cpp") {
       if (line.rfind("#include", 0) == 0) {
+        // only process local includes (quotes), skip system includes (angle brackets)
         size_t start = line.find('"');
         if (start != string::npos) {
           size_t end = line.find('"', start + 1);
           if (end != string::npos) add(line.substr(start + 1, end - start - 1));
-        } else {
-          start = line.find('<');
-          if (start != string::npos) {
-            size_t end = line.find('>', start + 1);
-            if (end != string::npos) {
-              string sys_inc = line.substr(start + 1, end - start - 1);
-              add("__SYSTEM_INCLUDE__:" + sys_inc);
-            }
-          }
         }
+        // skip angle bracket system includes - don't add them
       }
     } else if (lang == "go") {
       if (line.rfind("import", 0) == 0) {
@@ -1208,14 +1237,28 @@ vector<string> extract_imports(const string& file_path, const string& content) {
 
 string normalize_import_path(const string& imp, const string& src_file) {
   if (imp.empty()) return "";
-  if (imp.front() == '<' || imp.front() == '"') return imp;
-  if (imp.find('/') != string::npos) return imp;
+  
+  string normalized = imp;
+  
+  // Strip quotes from local includes like "inja.hpp"
+  if (normalized.front() == '"' && normalized.back() == '"') {
+    normalized = normalized.substr(1, normalized.size() - 2);
+  }
+  
+  // Skip system includes like <bits/stdc++.h>
+  if (normalized.front() == '<' && normalized.back() == '>') {
+    return "";
+  }
+  
+  // Already has path component
+  if (normalized.find('/') != string::npos) return normalized;
 
+  // Resolve relative to source file's directory
   size_t dot_pos = src_file.rfind('/');
   string src_dir = (dot_pos != string::npos) ? src_file.substr(0, dot_pos) : ".";
   if (src_dir.empty()) src_dir = ".";
 
-  return src_dir + "/" + imp;
+  return src_dir + "/" + normalized;
 }
 
 string extract_fenced_block_or_raw(const string& input) {

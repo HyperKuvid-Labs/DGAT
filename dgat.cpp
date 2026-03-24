@@ -120,6 +120,8 @@ struct TreeNode {
   bool is_file; // true = file, false = folder
   vector<json> error_traces; // like [{"error": "...", "timestamp": "...", "solution": "..."}]
   string description; // extra file context if needed later
+  vector<string> depends_on; // files this file depends on
+  vector<string> depended_by; // files that depend on this file
 
     TreeNode(const string& name,
              const string& abs_path,
@@ -135,9 +137,14 @@ struct TreeNode {
 struct DepNode {
   string name;
   string rel_path;
+  string abs_path;
   string description;
+  bool is_file;
   bool is_gitignored;
-  DepNode() : is_gitignored(false) {}
+  string hash;
+  vector<string> depends_on;
+  vector<string> depended_by;
+  DepNode() : is_file(true), is_gitignored(false) {}
 };
 
 struct DepEdge {
@@ -373,6 +380,16 @@ void collect_source_files(TreeNode* node, unordered_map<string, string>& content
   for (const auto& child : node->children) collect_source_files(child.get(), contents, files, skip_dgatignore);
 }
 
+TreeNode* find_node_by_path(TreeNode* node, const string& rel_path) {
+  if (!node) return nullptr;
+  if (node->rel_path == rel_path) return node;
+  for (auto& child : node->children) {
+    TreeNode* found = find_node_by_path(child.get(), rel_path);
+    if (found) return found;
+  }
+  return nullptr;
+}
+
 DepGraph build_dep_graph(TreeNode* root) {
   DepGraph graph;
   if (!root) return graph;
@@ -399,7 +416,27 @@ DepGraph build_dep_graph(TreeNode* root) {
   for (const auto& [rel_path, content] : contents) {
     futures.push_back(pool.enqueue([&]() {
       string lang = get_language_from_ext(rel_path);
+      
+      // Debug for C++ files
+      if (rel_path.find(".cpp") != string::npos || rel_path.find(".h") != string::npos) {
+        lock_guard<mutex> lock(graph_mutex);
+        cerr << "[DEBUG_CPP] " << rel_path << " lang=" << lang << endl;
+      }
+      
       vector<string> imports = extract_imports(rel_path, content);
+      
+      if (rel_path.find(".cpp") != string::npos) {
+        lock_guard<mutex> lock(graph_mutex);
+        cerr << "[DEBUG_CPP] " << rel_path << " extracted " << imports.size() << " imports" << endl;
+      }
+      
+      if (!imports.empty()) {
+        lock_guard<mutex> lock(graph_mutex);
+        cerr << "[DEBUG] " << rel_path << " (" << lang << "): " << imports.size() << " imports" << endl;
+        for (const auto& imp : imports) {
+          cerr << "  - " << imp << endl;
+        }
+      }
       
       vector<pair<string, string>> local_edges;
       
@@ -481,11 +518,38 @@ DepGraph build_dep_graph(TreeNode* root) {
       DepNode node;
       node.name = fs::path(edge.from_path).filename().string();
       node.rel_path = edge.from_path;
-      node.description = "Source file";
+      node.is_file = true;
       node.is_gitignored = false;
+      
+      TreeNode* tn = find_node_by_path(root, edge.from_path);
+      if (tn) {
+        node.abs_path = tn->abs_path;
+        node.description = tn->description;
+        ostringstream oss;
+        oss << std::hex << std::setfill('0')
+            << std::setw(16) << tn->hash.high64
+            << std::setw(16) << tn->hash.low64;
+        node.hash = oss.str();
+      } else {
+        node.abs_path = "";
+        node.description = "Source file";
+        node.hash = "";
+      }
+      
       graph.path_to_node[edge.from_path] = graph.nodes.size();
       graph.nodes.push_back(node);
       all_node_ids.insert(edge.from_path);
+    }
+  }
+
+  for (auto& node : graph.nodes) {
+    for (const auto& edge : graph.edges) {
+      if (edge.from_path == node.rel_path) {
+        node.depends_on.push_back(edge.to_path);
+      }
+      if (edge.to_path == node.rel_path) {
+        node.depended_by.push_back(edge.from_path);
+      }
     }
   }
 
@@ -971,6 +1035,14 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
   }
 
   string query_output = run_tree_sitter_query(lang, file_path, content);
+  
+  // Debug: show raw tree-sitter output for cpp files
+  if (file_path.find(".cpp") != string::npos) {
+    cerr << "[DEBUG_TS] " << file_path << " raw output:" << endl;
+    cerr << query_output << endl;
+    cerr << "[DEBUG_TS] end output" << endl;
+  }
+  
   if (query_output.empty()) {
     return imports;
   }
@@ -982,16 +1054,34 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
   while (getline(iss, line)) {
     if (line.find(" import") == string::npos) continue;
 
-    size_t start = line.rfind('"');
-    if (start == string::npos) continue;
+    // Try backticks first (system includes: <bits/stdc++.h>)
+    size_t pos = 0;
+    while (true) {
+      size_t start = line.find('`', pos);
+      if (start == string::npos) break;
+      size_t end = line.find('`', start + 1);
+      if (end == string::npos) break;
+      string imp = line.substr(start + 1, end - start - 1);
+      if (!imp.empty() && seen.find(imp) == seen.end()) {
+        seen.insert(imp);
+        imports.push_back(imp);
+      }
+      pos = end + 1;
+    }
 
-    size_t end = line.rfind('"', start - 1);
-    if (end == string::npos) continue;
-
-    string imp = line.substr(end + 1, start - end - 1);
-    if (!imp.empty() && seen.find(imp) == seen.end()) {
-      seen.insert(imp);
-      imports.push_back(imp);
+    // Try quotes (local includes: "httplib.h")
+    pos = 0;
+    while (true) {
+      size_t start = line.find('"', pos);
+      if (start == string::npos) break;
+      size_t end = line.find('"', start + 1);
+      if (end == string::npos) break;
+      string imp = line.substr(start + 1, end - start - 1);
+      if (!imp.empty() && seen.find(imp) == seen.end()) {
+        seen.insert(imp);
+        imports.push_back(imp);
+      }
+      pos = end + 1;
     }
   }
 
@@ -1288,6 +1378,8 @@ json tree_to_json(const TreeNode* node) {
     {"is_file", node->is_file},
     {"description", node->description},
     {"error_traces", node->error_traces},
+    {"depends_on", node->depends_on},
+    {"depended_by", node->depended_by},
     {"children", json::array()}
   };
 
@@ -1723,9 +1815,20 @@ void create_dgat_blueprint(TreeNode* root){
 
   collect_descriptors(root);
 
+  // Limit file descriptors to prevent token overflow
+  const size_t MAX_DESCRIPTORS = 50;
+  string descriptors_str;
+  if (file_descriptors.size() > MAX_DESCRIPTORS) {
+    vector<json> limited_descriptors(file_descriptors.begin(), file_descriptors.begin() + MAX_DESCRIPTORS);
+    descriptors_str = json(limited_descriptors).dump(2);
+    descriptors_str += "\n\n[... and " + to_string(file_descriptors.size() - MAX_DESCRIPTORS) + " more files ...]";
+  } else {
+    descriptors_str = json(file_descriptors).dump(2);
+  }
+
   json prompt_data = {
     {"folder_structure", extract_folder_structure()},
-    {"file_descriptors_pretty", json(file_descriptors).dump(2)}
+    {"file_descriptors_pretty", descriptors_str}
   };
 
   inja::Environment env;
@@ -1865,6 +1968,15 @@ int main(int argc, char** argv){
   
   cout << "[DGAT] Populating dependency descriptions via vllm..." << endl;
   populate_dependency_descriptions(dep_graph);
+  
+  for (const auto& node : dep_graph.nodes) {
+    TreeNode* tn = find_node_by_path(root.get(), node.rel_path);
+    if (tn) {
+      tn->depends_on = node.depends_on;
+      tn->depended_by = node.depended_by;
+    }
+  }
+  cout << "[DGAT] Tree nodes updated with dependency info." << endl;
   
   print_dep_graph(dep_graph);
 

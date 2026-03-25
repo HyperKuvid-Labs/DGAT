@@ -31,8 +31,8 @@ public:
                     function<void()> task;
                     {
                         unique_lock<mutex> lock(this->queue_mutex);
-                        this->condition.wait(lock, [this] { 
-                            return this->stop_flag || !this->tasks.empty(); 
+                        this->condition.wait(lock, [this] {
+                            return this->stop_flag || !this->tasks.empty();
                         });
                         if (this->stop_flag && this->tasks.empty()) return;
                         task = move(this->tasks.front());
@@ -417,20 +417,20 @@ DepGraph build_dep_graph(TreeNode* root) {
   for (const auto& [rel_path, content] : contents) {
     futures.push_back(pool.enqueue([&]() {
       string lang = get_language_from_ext(rel_path);
-      
+
       // Debug for C++ files
       if (rel_path.find(".cpp") != string::npos || rel_path.find(".h") != string::npos) {
         lock_guard<mutex> lock(graph_mutex);
         cerr << "[DEBUG_CPP] " << rel_path << " lang=" << lang << endl;
       }
-      
+
       vector<string> imports = extract_imports(rel_path, content);
-      
+
       if (rel_path.find(".cpp") != string::npos) {
         lock_guard<mutex> lock(graph_mutex);
         cerr << "[DEBUG_CPP] " << rel_path << " extracted " << imports.size() << " imports" << endl;
       }
-      
+
       if (!imports.empty()) {
         lock_guard<mutex> lock(graph_mutex);
         cerr << "[DEBUG] " << rel_path << " (" << lang << "): " << imports.size() << " imports" << endl;
@@ -438,9 +438,9 @@ DepGraph build_dep_graph(TreeNode* root) {
           cerr << "  - " << imp << endl;
         }
       }
-      
+
       vector<pair<string, string>> local_edges;
-      
+
       for (const string& imp : imports) {
         // skip stdlib imports
         if (is_stdlib_import(imp, lang)) {
@@ -531,7 +531,7 @@ DepGraph build_dep_graph(TreeNode* root) {
         int count = ++processed;
         if (count % 10 == 0 || count == total) {
           float pct = (float)count / total * 100;
-          cout << "\r[DGAT] Processing: " << count << "/" << total 
+          cout << "\r[DGAT] Processing: " << count << "/" << total
                << " (" << fixed << setprecision(1) << pct << "%)" << flush;
         }
       }
@@ -541,7 +541,7 @@ DepGraph build_dep_graph(TreeNode* root) {
   for (auto& f : futures) {
     f.get();
   }
-  
+
   cout << "\r[DGAT] Processing complete!                    " << endl;
 
   unordered_set<string> all_node_ids;
@@ -556,7 +556,7 @@ DepGraph build_dep_graph(TreeNode* root) {
       node.rel_path = edge.from_path;
       node.is_file = true;
       node.is_gitignored = false;
-      
+
       TreeNode* tn = find_node_by_path(root, edge.from_path);
       if (tn) {
         node.abs_path = tn->abs_path;
@@ -571,7 +571,7 @@ DepGraph build_dep_graph(TreeNode* root) {
         node.description = "Source file";
         node.hash = "";
       }
-      
+
       graph.path_to_node[edge.from_path] = graph.nodes.size();
       graph.nodes.push_back(node);
       all_node_ids.insert(edge.from_path);
@@ -601,7 +601,7 @@ void populate_dependency_descriptions(DepGraph& graph) {
   }
 
   cout << "[DGAT] Populating descriptions for " << graph.nodes.size() << " dependency nodes..." << endl;
-  
+
   const size_t BATCH_SIZE = 8;
   mutex graph_mutex;
   atomic<int> processed{0};
@@ -629,11 +629,11 @@ void populate_dependency_descriptions(DepGraph& graph) {
       }
 
       const string dep_desc_prompt = R"J2(Provide a brief description (1-2 sentences) of the external dependency "{{ dep_name }}" used in software development.
-  
+
   {% if importers %}
   This dependency is imported by: {{ importers }}
   {% endif %}
-  
+
   Return ONLY a simple description, no markdown formatting.)J2";
 
       json prompt_data = {
@@ -676,7 +676,7 @@ void populate_dependency_descriptions(DepGraph& graph) {
         int count = ++processed;
         if (count % 5 == 0 || count == total) {
           float pct = (float)count / total * 100;
-          cout << "\r[DGAT] Dependency descriptions: " << count << "/" << total 
+          cout << "\r[DGAT] Dependency descriptions: " << count << "/" << total
                << " (" << fixed << setprecision(1) << pct << "%)" << flush;
         }
       }
@@ -686,8 +686,104 @@ void populate_dependency_descriptions(DepGraph& graph) {
   for (auto& f : futures) {
     f.get();
   }
-  
+
   cout << "\r[DGAT] Dependency descriptions complete!             " << endl;
+}
+
+// one-sentence relationship desc per edge — what does A use from B and why
+void populate_edge_descriptions(DepGraph& graph) {
+  if (graph.edges.empty()) return;
+
+  // build a quick lookup: rel_path -> description
+  unordered_map<string, string> node_desc;
+  for (const auto& node : graph.nodes) {
+    node_desc[node.rel_path] = node.description;
+  }
+
+  // placeholder descs — skip edges where either side has no real description
+  auto is_placeholder = [](const string& d) {
+    return d.empty() || d == "Source file" || d == "External dependency"
+        || d == "Gitignored dependency";
+  };
+
+  cout << "[DGAT] Populating edge descriptions for " << graph.edges.size() << " edges..." << endl;
+
+  const size_t BATCH_SIZE = 8;
+  mutex edge_mutex;
+  atomic<int> processed{0};
+  int total = static_cast<int>(graph.edges.size());
+
+  ThreadPool pool(BATCH_SIZE);
+  vector<future<void>> futures;
+
+  for (size_t i = 0; i < graph.edges.size(); i++) {
+    const auto& edge = graph.edges[i];
+    string from_desc = node_desc.count(edge.from_path) ? node_desc[edge.from_path] : "";
+    string to_desc   = node_desc.count(edge.to_path)   ? node_desc[edge.to_path]   : "";
+
+    // skip if either side is boring — llm won't add anything useful
+    if (is_placeholder(from_desc) || is_placeholder(to_desc)) continue;
+
+    futures.push_back(pool.enqueue([&, i, from_desc, to_desc]() {
+      const auto& e = graph.edges[i];
+
+      const string edge_prompt = R"J2(given these two files in the same project:
+
+file A: `{{ from_path }}`
+description: {{ from_desc }}
+
+file B: `{{ to_path }}`
+description: {{ to_desc }}
+
+import statement: `{{ import_stmt }}`
+
+in one tight sentence, describe what file A uses from file B and why.
+return only the sentence, no preamble.)J2";
+
+      json prompt_data = {
+        {"from_path",   e.from_path},
+        {"from_desc",   from_desc},
+        {"to_path",     e.to_path},
+        {"to_desc",     to_desc},
+        {"import_stmt", e.import_stmt}
+      };
+
+      inja::Environment env;
+      string rendered = env.render(edge_prompt, prompt_data);
+
+      json payload = {
+        {"model", "Qwen/Qwen3.5-2B"},
+        {"messages", {{{"role", "user"}, {"content", rendered}}}}
+      };
+
+      httplib::Client cli("localhost", 8000);
+      auto res = cli.Post("/v1/chat/completions", payload.dump(), "application/json");
+
+      {
+        lock_guard<mutex> lock(edge_mutex);
+        if (res && res->status == 200) {
+          try {
+            json rj = json::parse(res->body);
+            string txt = extract_assistant_text(rj);
+            if (!txt.empty()) {
+              graph.edges[i].description = trim_copy(txt);
+            }
+          } catch (const std::exception& ex) {
+            cerr << "edge desc parse error: " << ex.what() << endl;
+          }
+        }
+        int count = ++processed;
+        if (count % 5 == 0 || count == total) {
+          float pct = (float)count / total * 100;
+          cout << "\r[DGAT] Edge descriptions: " << count << "/" << total
+               << " (" << fixed << setprecision(1) << pct << "%)" << flush;
+        }
+      }
+    }));
+  }
+
+  for (auto& f : futures) f.get();
+  cout << "\r[DGAT] Edge descriptions complete!                   " << endl;
 }
 
 json build_dep_graph_json(const DepGraph& graph) {
@@ -1124,7 +1220,7 @@ string run_tree_sitter_query(const string& lang, const string& file_path, const 
   int pid = getpid();
   int rand_val = rand() % 10000;
   string tmp_input = "/tmp/ts_input_" + to_string(pid) + "_" + to_string(us) + "_" + to_string(rand_val) + ".txt";
-  
+
   ofstream tmp_out(tmp_input);
   tmp_out << content;
   tmp_out.close();
@@ -1135,10 +1231,10 @@ string run_tree_sitter_query(const string& lang, const string& file_path, const 
     cmd += " -p " + grammars_dir + "/node_modules/tree-sitter-" + lang;
   }
   cmd += " " + query_file.string() + " " + tmp_input + " 2>&1";
-  
+
   // Debug: show command being executed
   cerr << "[DEBUG_TS_CMD] executing: " << cmd << endl;
-  
+
   array<char, 4096> buffer;
   string result;
 
@@ -1172,7 +1268,7 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
     // Use explicit PATH check - try multiple common locations
     const char* path_env = getenv("PATH");
     string paths = path_env ? path_env : "";
-    vector<string> search_paths = {"/usr/local/bin", "/usr/bin", "/bin", 
+    vector<string> search_paths = {"/usr/local/bin", "/usr/bin", "/bin",
                                     "/home/pradheep/.local/bin",
                                     "/home/pradheep/.local/share/mise/installs/node/22.20.0/bin"};
     for (const auto& p : search_paths) {
@@ -1202,7 +1298,7 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
   }
 
   string query_output = run_tree_sitter_query(lang, file_path, content);
-  
+
   // Debug: show raw tree-sitter output for cpp files
   cerr << "[DEBUG_TS] " << file_path << " lang=" << lang << " query_output size=" << query_output.size() << endl;
   if (file_path.find(".cpp") != string::npos) {
@@ -1210,7 +1306,7 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
     cerr << query_output << endl;
     cerr << "[DEBUG_TS] end output" << endl;
   }
-  
+
   if (query_output.empty()) {
     cerr << "[DEBUG_TS] query output empty, trying fallback for " << lang << endl;
     return extract_imports_fallback(content, lang);
@@ -1767,12 +1863,12 @@ size_t estimate_tokens(const string& text) {
 string chunk_content(const string& content, size_t max_tokens) {
   size_t max_chars = max_tokens * 4;
   if (content.size() <= max_chars) return content;
-  
+
   size_t chunk_end = content.find("\n", max_chars / 2);
   if (chunk_end == string::npos || chunk_end > max_chars) {
     chunk_end = max_chars;
   }
-  
+
   return content.substr(0, chunk_end) + "\n\n[Content truncated - file too large for context window]";
 }
 
@@ -1792,25 +1888,25 @@ void collect_file_nodes(TreeNode* node, vector<TreeNode*>& files) {
 void populate_descriptions(TreeNode* root) {
   string rc = read_readme_content();
   string folder_structure = extract_folder_structure();
-  
+
   vector<TreeNode*> files;
   collect_file_nodes(root, files);
-  
+
   if (files.empty()) {
     cout << "[DGAT] No files to process for descriptions." << endl;
     return;
   }
-  
+
   cout << "[DGAT] Processing " << files.size() << " file descriptions with 8 workers..." << endl;
-  
+
   const size_t NUM_THREADS = 8;
   mutex tree_mutex;
   atomic<int> processed{0};
   atomic<int> total{static_cast<int>(files.size())};
-  
+
   ThreadPool pool(NUM_THREADS);
   vector<future<void>> futures;
-  
+
   // prompt that asks the model to give back a tight markdown blurb — not an essay, just the useful stuff
   const string file_descriptor_prompt_template = R"J2(You are a senior software engineer doing a quick code review pass. Analyze the file below and write a short markdown description of what it does.
 
@@ -1833,11 +1929,10 @@ void populate_descriptions(TreeNode* root) {
   {{ file_content }}
   {% endif %}
 
-  Return a JSON object with a single key `file_description` whose value is a compact markdown string. Rules:
+  Return a JSON object with a single key `file_description` whose value is a compact markdown string. Analyse the filename too. Rules:
   - 3-6 lines max, no fluff
-  - Start with one bold sentence saying what the file does
+  - Start with one bold sentence saying what the file does (description of the file's purpose, analyzing the filename and content together).
   - Use a tight bullet list for key responsibilities (3-5 bullets max)
-  - End with `**Lang:** <language>` on its own line
   - No intro text, no closing remarks, just the markdown)J2";
 
   json blueprint_json;
@@ -1846,42 +1941,42 @@ void populate_descriptions(TreeNode* root) {
   } catch (...) {
     blueprint_json = rc;
   }
-  
+
   for (TreeNode* node : files) {
     futures.push_back(pool.enqueue([&, node, rc, folder_structure, blueprint_json]() {
       string file_content;
-      
+
       if (is_likely_binary_file(node->abs_path)) {
         lock_guard<mutex> lock(tree_mutex);
         node->description = "Binary or non-text file skipped.";
         int count = ++processed;
         if (count % 5 == 0 || count == total) {
           float pct = (float)count / total * 100;
-          cout << "\r[DGAT] File descriptions: " << count << "/" << total 
+          cout << "\r[DGAT] File descriptions: " << count << "/" << total
                << " (" << fixed << setprecision(1) << pct << "%)" << flush;
         }
         return;
       }
-      
+
       ifstream infile(node->abs_path, ios::binary);
       if (infile.is_open()) {
         stringstream buffer;
         buffer << infile.rdbuf();
         file_content = buffer.str();
         file_content = sanitize_utf8(file_content);
-        
+
         size_t blueprint_tokens = estimate_tokens(rc);
         size_t folder_tokens = estimate_tokens(folder_structure);
         size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
-        
+
         if (available_tokens > 20000) available_tokens = 20000;
         if (available_tokens < 1000) available_tokens = 3000;
-        
+
         file_content = chunk_content(file_content, available_tokens);
       }
-      
+
       digest_t hash = fast_fingerprint(file_content);
-      
+
       json prompt_data = {
         {"software_bluprint_details", !rc.empty()},
         {"software_bluprint_details_pretty", blueprint_json.dump(2)},
@@ -1889,10 +1984,10 @@ void populate_descriptions(TreeNode* root) {
         {"file_name", node->rel_path},
         {"file_content", file_content}
       };
-      
+
       inja::Environment env;
       string rendered_prompt = env.render(file_descriptor_prompt_template, prompt_data);
-      
+
       json request_payload = {
         {"model", "Qwen/Qwen3.5-2B"},
         {"messages", {
@@ -1902,14 +1997,14 @@ void populate_descriptions(TreeNode* root) {
           }
         }}
       };
-      
+
       httplib::Client cli("localhost", 8000);
       auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
-      
+
       lock_guard<mutex> lock(tree_mutex);
-      
+
       node->hash = hash;
-      
+
       if (res && res->status == 200) {
         try {
           json response_json = json::parse(res->body);
@@ -1934,20 +2029,20 @@ void populate_descriptions(TreeNode* root) {
           cerr << "status code: " << res->status << endl;
         }
       }
-      
+
       int count = ++processed;
       if (count % 5 == 0 || count == total) {
         float pct = (float)count / total * 100;
-        cout << "\r[DGAT] File descriptions: " << count << "/" << total 
+        cout << "\r[DGAT] File descriptions: " << count << "/" << total
              << " (" << fixed << setprecision(1) << pct << "%)" << flush;
       }
     }));
   }
-  
+
   for (auto& f : futures) {
     f.get();
   }
-  
+
   cout << "\r[DGAT] File descriptions complete!                " << endl;
 }
 
@@ -2131,10 +2226,13 @@ int main(int argc, char** argv){
   cout << "[DGAT] Building dependency graph..." << endl;
   DepGraph dep_graph = build_dep_graph(root.get());
   cout << "[DGAT] Dependency graph built: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
-  
+
   cout << "[DGAT] Populating dependency descriptions via vllm..." << endl;
   populate_dependency_descriptions(dep_graph);
-  
+
+  cout << "[DGAT] Populating edge descriptions via vllm..." << endl;
+  populate_edge_descriptions(dep_graph);
+
   for (const auto& node : dep_graph.nodes) {
     TreeNode* tn = find_node_by_path(root.get(), node.rel_path);
     if (tn) {
@@ -2143,7 +2241,7 @@ int main(int argc, char** argv){
     }
   }
   cout << "[DGAT] Tree nodes updated with dependency info." << endl;
-  
+
   print_dep_graph(dep_graph);
 
   if (gui_mode) {

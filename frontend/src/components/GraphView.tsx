@@ -1,220 +1,213 @@
 "use client";
 
-// force-directed dep graph — renders nodes colored by file extension
-// clicking a node fires onNodeSelect so the right panel can show the full card
+// dep graph via sigma.js — webgl renderer, reliable node click detection
+// graphology for graph data, forceatlas2 for layout
 
-import { useRef, useCallback, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useCallback } from "react";
+import {
+  SigmaContainer,
+  useLoadGraph,
+  useRegisterEvents,
+  useSigma,
+  useCamera,
+} from "@react-sigma/core";
+import "@react-sigma/core/lib/style.css";
+import Graph from "graphology";
+import forceAtlas2 from "graphology-layout-forceatlas2";
 import type { DepGraph, DepNode } from "@/lib/types";
 import { getFileIconConfig } from "@/lib/fileIcons";
-import { ZoomIn, ZoomOut, RotateCcw, Crosshair, Loader } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, Crosshair } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// dynamic import — canvas doesn't work in SSR
-const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full">
-      <Loader size={18} className="text-[#333] animate-spin" />
-    </div>
-  ),
-});
-
-interface GraphViewProps {
-  data: DepGraph;
-  onNodeSelect: (node: DepNode) => void;
-  selectedId?: string;
-}
-
-// resolve a node's display color based on type + extension
-function nodeColor(node: DepNode): string {
+function nodeBaseColor(node: DepNode): string {
   if (node.is_gitignored) return "#F59E0B";
-  if (!node.is_file) return "#9B72CF";
-  // external deps (not in source tree) get purple
+  if (!node.is_file)       return "#9B72CF";
   if (!node.rel_path || node.description === "External dependency") return "#9B72CF";
   return getFileIconConfig(node.name).color;
 }
 
-export function GraphView({ data, onNodeSelect, selectedId }: GraphViewProps) {
-  const fgRef = useRef<any>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+interface GraphViewProps {
+  data: DepGraph;
+  onNodeSelect: (node: DepNode) => void;
+  selectedIds?: string[];
+}
 
-  // build the graph data format react-force-graph-2d expects
-  const graphData = useMemo(() => {
-    const degreemap: Record<string, number> = {};
+// ── graph loader — runs inside SigmaContainer ────────────────────────────────
+
+function GraphLoader({ data, onNodeSelect, selectedIds = [] }: GraphViewProps) {
+  const loadGraph      = useLoadGraph();
+  const registerEvents = useRegisterEvents();
+  const sigma          = useSigma();
+
+  // build graph + pre-compute force layout on data change
+  useEffect(() => {
+    const graph = new Graph({ type: "directed", multi: false });
+
+    const deg: Record<string, number> = {};
     for (const e of data.edges) {
-      degreemap[e.from] = (degreemap[e.from] ?? 0) + 1;
-      degreemap[e.to]   = (degreemap[e.to]   ?? 0) + 1;
+      deg[e.from] = (deg[e.from] ?? 0) + 1;
+      deg[e.to]   = (deg[e.to]   ?? 0) + 1;
     }
 
-    const nodes = data.nodes.map((n) => ({
-      ...n,
-      // val controls circle radius
-      val: Math.max(2, Math.min(12, (degreemap[n.id] ?? 0) + 3)),
-      color: nodeColor(n),
-    }));
+    data.nodes.forEach(n => {
+      if (graph.hasNode(n.id)) return;
+      const color = nodeBaseColor(n);
+      graph.addNode(n.id, {
+        label:         n.name,
+        color,
+        originalColor: color,
+        size:  Math.max(4, Math.min(18, (deg[n.id] ?? 0) * 1.5 + 4)),
+        x: Math.random() * 200 - 100,
+        y: Math.random() * 200 - 100,
+      });
+    });
 
-    const links = data.edges.map((e) => ({
-      source: e.from,
-      target: e.to,
-      import_stmt: e.import_stmt,
-    }));
+    data.edges.forEach(e => {
+      if (!graph.hasNode(e.from) || !graph.hasNode(e.to)) return;
+      if (graph.hasEdge(e.from, e.to)) return;
+      graph.addDirectedEdge(e.from, e.to, { color: "#2a2a2a", size: 0.8 });
+    });
 
-    return { nodes, links };
-  }, [data]);
+    // pre-compute layout so nodes start stable
+    forceAtlas2.assign(graph, {
+      iterations: 200,
+      settings:   forceAtlas2.inferSettings(graph),
+    });
 
-  // custom canvas painter — circle + filename label underneath
-  const paintNode = useCallback(
-    (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const r = Math.sqrt(node.val) * 3;
-      const isSelected = node.id === selectedId;
-      const isHovered  = node.id === hoveredId;
+    loadGraph(graph);
+  }, [data, loadGraph]);
 
-      // glow ring for selected / hovered
-      if (isSelected || isHovered) {
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r + 3, 0, 2 * Math.PI);
-        ctx.fillStyle = isSelected ? `${node.color}40` : `${node.color}25`;
-        ctx.fill();
+  // update visual state when selection changes
+  useEffect(() => {
+    const graph = sigma.getGraph();
+    if (graph.order === 0) return;
+    const anySelected = selectedIds.length > 0;
+
+    graph.forEachNode((id) => {
+      const orig      = graph.getNodeAttribute(id, "originalColor") as string;
+      const isSelected = selectedIds.includes(id);
+      graph.setNodeAttribute(id, "color",
+        !anySelected || isSelected ? orig : `${orig}33`
+      );
+    });
+
+    graph.forEachEdge((edgeId, _attrs, src, tgt) => {
+      const srcSel = selectedIds.includes(src);
+      const tgtSel = selectedIds.includes(tgt);
+      const isConn = selectedIds.length === 2 && srcSel && tgtSel;
+      if (isConn) {
+        graph.setEdgeAttribute(edgeId, "color", "#F59E0B");
+        graph.setEdgeAttribute(edgeId, "size",  2.5);
+      } else if (anySelected && (srcSel || tgtSel)) {
+        graph.setEdgeAttribute(edgeId, "color", "#4F8EF7");
+        graph.setEdgeAttribute(edgeId, "size",  1.5);
+      } else {
+        graph.setEdgeAttribute(edgeId, "color", "#2a2a2a");
+        graph.setEdgeAttribute(edgeId, "size",  0.8);
       }
+    });
 
-      // main circle
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
-      ctx.fillStyle = isSelected || isHovered ? node.color : `${node.color}bb`;
-      ctx.fill();
+    sigma.refresh();
+  }, [selectedIds, sigma]);
 
-      // label — only when zoomed in enough
-      if (globalScale >= 1.2 || isSelected || isHovered) {
-        const label = node.name;
-        const fontSize = Math.max(3, 10 / globalScale);
-        ctx.font = `${fontSize}px "Inter", sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillStyle = isSelected || isHovered ? "#e2e2e2" : "#666";
-        ctx.fillText(label, node.x, node.y + r + 2);
-      }
-    },
-    [selectedId, hoveredId]
+  // node click → fire selection
+  useEffect(() => {
+    return registerEvents({
+      clickNode: ({ node }) => {
+        const depNode = data.nodes.find(n => n.id === node);
+        if (depNode) onNodeSelect(depNode);
+      },
+    });
+  }, [registerEvents, data.nodes, onNodeSelect]);
+
+  return null;
+}
+
+// ── camera controls — runs inside SigmaContainer ─────────────────────────────
+
+function CameraControls({ lastSelectedId }: { lastSelectedId?: string }) {
+  const { zoomIn, zoomOut, reset, gotoNode } = useCamera({ duration: 300, factor: 1.5 });
+
+  const center = useCallback(() => {
+    if (lastSelectedId) gotoNode(lastSelectedId, { duration: 600 });
+  }, [lastSelectedId, gotoNode]);
+
+  const controls = [
+    { icon: ZoomIn,    action: () => zoomIn(),  title: "zoom in"        },
+    { icon: ZoomOut,   action: () => zoomOut(), title: "zoom out"       },
+    { icon: RotateCcw, action: () => reset(),   title: "fit to screen"  },
+    { icon: Crosshair, action: center,           title: "center selected", disabled: !lastSelectedId },
+  ];
+
+  return (
+    <div className="absolute bottom-5 right-5 flex flex-col gap-1.5 z-10 pointer-events-auto">
+      {controls.map(({ icon: Icon, action, title, disabled }) => (
+        <button
+          key={title}
+          onClick={action}
+          disabled={!!disabled}
+          title={title}
+          className={cn(
+            "w-8 h-8 flex items-center justify-center rounded-lg transition-colors",
+            "bg-[#111111] border border-[#1e1e1e] text-[#444]",
+            "hover:border-[#333] hover:text-[#999]",
+            "disabled:opacity-30 disabled:cursor-default"
+          )}
+        >
+          <Icon size={13} />
+        </button>
+      ))}
+    </div>
   );
+}
 
-  const handleNodeClick = useCallback(
-    (node: any) => {
-      // find original DepNode by id and pass it up
-      const depNode = data.nodes.find((n) => n.id === node.id);
-      if (depNode) onNodeSelect(depNode);
-    },
-    [data.nodes, onNodeSelect]
-  );
+// ── public export ─────────────────────────────────────────────────────────────
 
-  const handleNodeHover = useCallback((node: any) => {
-    setHoveredId(node?.id ?? null);
-    document.body.style.cursor = node ? "pointer" : "default";
-  }, []);
-
-  const linkColor = useCallback(
-    (link: any) => {
-      const src = typeof link.source === "object" ? link.source.id : link.source;
-      const tgt = typeof link.target === "object" ? link.target.id : link.target;
-      if (
-        hoveredId && (src === hoveredId || tgt === hoveredId) ||
-        selectedId && (src === selectedId || tgt === selectedId)
-      ) {
-        return "#4F8EF7";
-      }
-      return "#232323";
-    },
-    [hoveredId, selectedId]
-  );
-
-  const linkWidth = useCallback(
-    (link: any) => {
-      const src = typeof link.source === "object" ? link.source.id : link.source;
-      const tgt = typeof link.target === "object" ? link.target.id : link.target;
-      if (
-        hoveredId && (src === hoveredId || tgt === hoveredId) ||
-        selectedId && (src === selectedId || tgt === selectedId)
-      ) return 1.5;
-      return 0.5;
-    },
-    [hoveredId, selectedId]
-  );
-
-  // control helpers
-  const zoomIn  = () => fgRef.current?.zoom(fgRef.current.zoom() * 1.4, 200);
-  const zoomOut = () => fgRef.current?.zoom(fgRef.current.zoom() / 1.4, 200);
-  const reset   = () => fgRef.current?.zoomToFit(400, 40);
-  const center  = () => {
-    if (!selectedId || !fgRef.current) return;
-    const n = graphData.nodes.find((n: any) => n.id === selectedId) as any;
-    if (n?.x !== undefined) {
-      fgRef.current.centerAt(n.x, n.y, 600);
-      fgRef.current.zoom(2, 600);
-    }
-  };
+export function GraphView({ data, onNodeSelect, selectedIds = [] }: GraphViewProps) {
+  const lastSelectedId = selectedIds[selectedIds.length - 1];
 
   return (
     <div className="relative w-full h-full bg-[#0c0c0c] overflow-hidden">
-      <ForceGraph2D
-        ref={fgRef}
-        graphData={graphData}
-        backgroundColor="#0c0c0c"
-        nodeCanvasObject={paintNode}
-        nodeCanvasObjectMode={() => "replace"}
-        linkColor={linkColor}
-        linkWidth={linkWidth}
-        linkDirectionalArrowLength={4}
-        linkDirectionalArrowRelPos={0.88}
-        linkDirectionalArrowColor={linkColor}
-        onNodeClick={handleNodeClick}
-        onNodeHover={handleNodeHover}
-        cooldownTicks={120}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.35}
-        nodeLabel={(n: any) => `${n.name}\n${n.rel_path ?? ""}`}
-      />
+      <SigmaContainer
+        style={{ width: "100%", height: "100%", background: "#0c0c0c" }}
+        settings={{
+          defaultNodeColor:           "#4F8EF7",
+          defaultEdgeColor:           "#2a2a2a",
+          labelColor:                 { color: "#666" },
+          labelSize:                  11,
+          labelWeight:                "normal",
+          labelRenderedSizeThreshold: 8,
+          renderEdgeLabels:           false,
+        }}
+      >
+        <GraphLoader
+          data={data}
+          onNodeSelect={onNodeSelect}
+          selectedIds={selectedIds}
+        />
+        <CameraControls lastSelectedId={lastSelectedId} />
+      </SigmaContainer>
 
-      {/* ── zoom controls ── */}
-      <div className="absolute bottom-5 right-5 flex flex-col gap-1.5">
+      {/* legend */}
+      <div className="absolute bottom-5 left-5 flex flex-col gap-1.5 bg-[#111111]/90 backdrop-blur-sm border border-[#1e1e1e] rounded-lg px-3 py-2.5 z-10">
         {[
-          { icon: ZoomIn,    action: zoomIn,  title: "zoom in"        },
-          { icon: ZoomOut,   action: zoomOut, title: "zoom out"       },
-          { icon: RotateCcw, action: reset,   title: "fit to screen"  },
-          { icon: Crosshair, action: center,  title: "center selected", disabled: !selectedId },
-        ].map(({ icon: Icon, action, title, disabled }) => (
-          <button
-            key={title}
-            onClick={action}
-            disabled={disabled}
-            title={title}
-            className={cn(
-              "w-8 h-8 flex items-center justify-center rounded-lg transition-colors",
-              "bg-[#111111] border border-[#1e1e1e] text-[#444]",
-              "hover:border-[#333] hover:text-[#999]",
-              "disabled:opacity-30 disabled:cursor-default"
-            )}
-          >
-            <Icon size={13} />
-          </button>
-        ))}
-      </div>
-
-      {/* ── legend ── */}
-      <div className="absolute bottom-5 left-5 flex flex-col gap-1.5 bg-[#111111]/80 backdrop-blur-sm border border-[#1e1e1e] rounded-lg px-3 py-2.5">
-        {[
-          { color: "#4F8EF7", label: "source file"  },
-          { color: "#9B72CF", label: "external dep"  },
-          { color: "#F59E0B", label: "gitignored"    },
+          { color: "#4F8EF7", label: "source file" },
+          { color: "#9B72CF", label: "external dep" },
+          { color: "#F59E0B", label: "gitignored"   },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
             <span className="text-[10px] text-[#555]">{label}</span>
           </div>
         ))}
+        <div className="flex items-center gap-2 mt-0.5 pt-1.5 border-t border-[#1a1a1a]">
+          <span className="w-4 h-px shrink-0 rounded" style={{ background: "#F59E0B" }} />
+          <span className="text-[10px] text-[#444]">connection</span>
+        </div>
       </div>
 
-      {/* ── stats ── */}
-      <div className="absolute top-3 right-3 flex items-center gap-3 text-[10px] text-[#333] font-mono">
+      {/* stats */}
+      <div className="absolute top-3 right-3 flex items-center gap-3 text-[10px] text-[#333] font-mono z-10">
         <span>{data.nodes.length} nodes</span>
         <span>{data.edges.length} edges</span>
       </div>

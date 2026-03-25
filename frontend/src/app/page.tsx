@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import type { TreeNode, DepGraph, DepNode } from "@/lib/types";
 import { FileTree } from "@/components/FileTree";
 import { MarkdownPanel } from "@/components/MarkdownPanel";
 import { DescriptionCardGrid } from "@/components/DescriptionCardGrid";
 import { GraphView } from "@/components/GraphView";
-import { GraphNodePanel } from "@/components/GraphNodePanel";
+import { GraphNodePanel, GraphEdgePanel } from "@/components/GraphNodePanel";
 import { RefreshCw, Layers, FileText, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,10 +28,20 @@ export default function Home() {
   const [graphError, setGraphError]     = useState<string | null>(null);
 
   // right panel — whichever was selected last wins
-  const [selectedTreeNode,  setSelectedTreeNode]  = useState<TreeNode | null>(null);
-  const [selectedGraphNode, setSelectedGraphNode] = useState<DepNode  | null>(null);
+  const [selectedTreeNode,   setSelectedTreeNode]   = useState<TreeNode | null>(null);
+  // up to 2 selected graph nodes — last click is "primary", previous is "secondary"
+  const [selectedGraphNodes, setSelectedGraphNodes] = useState<DepNode[]>([]);
   // track which source populated the right panel
   const [rightSource, setRightSource] = useState<"tree" | "graph">("tree");
+
+  // edge derived from the two selected nodes
+  const derivedEdge = useMemo(() => {
+    if (selectedGraphNodes.length < 2 || !graphData) return null;
+    const [a, b] = selectedGraphNodes;
+    return graphData.edges.find(e =>
+      (e.from === a.id && e.to === b.id) || (e.from === b.id && e.to === a.id)
+    ) ?? null;
+  }, [selectedGraphNodes, graphData]);
 
   // ── fetch tree ────────────────────────────────────────────
   const fetchTree = useCallback(async () => {
@@ -79,7 +89,12 @@ export default function Home() {
   };
 
   const handleGraphNodeSelect = (node: DepNode) => {
-    setSelectedGraphNode(node);
+    setSelectedGraphNodes(prev => {
+      // already selected → deselect
+      if (prev.some(n => n.id === node.id)) return prev.filter(n => n.id !== node.id);
+      // new node — keep last one + this, max 2
+      return [...prev.slice(-1), node];
+    });
     setRightSource("graph");
   };
 
@@ -162,30 +177,30 @@ export default function Home() {
         {/* ── Col 2: Blueprint / Graph ─────────────────────── */}
         <section className="flex-[3] border-r border-[#1e1e1e] overflow-hidden min-w-0 bg-[#0e0e0e] flex flex-col">
 
-          {/* tab header */}
-          <div className="flex items-center gap-1 px-4 h-11 border-b border-[#1e1e1e] shrink-0">
+          {/* tab header — full width segmented toggle */}
+          <div className="flex items-center px-3 h-12 border-b border-[#1e1e1e] shrink-0 gap-1.5">
             <button
               onClick={() => handleTabSwitch("blueprint")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[12px] font-medium transition-all",
                 midTab === "blueprint"
-                  ? "bg-[#1a1a1a] text-[#c0c0c0] border border-[#272727]"
-                  : "text-[#444] hover:text-[#888] hover:bg-[#161616]"
+                  ? "bg-[#1e1e1e] text-[#d0d0d0] border border-[#2e2e2e]"
+                  : "text-[#3a3a3a] hover:text-[#777] hover:bg-[#161616] border border-transparent"
               )}
             >
-              <FileText size={11} />
+              <FileText size={12} />
               Blueprint
             </button>
             <button
               onClick={() => handleTabSwitch("graph")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[12px] font-medium transition-all",
                 midTab === "graph"
-                  ? "bg-[#1a1a1a] text-[#c0c0c0] border border-[#272727]"
-                  : "text-[#444] hover:text-[#888] hover:bg-[#161616]"
+                  ? "bg-[#1e1e1e] text-[#d0d0d0] border border-[#2e2e2e]"
+                  : "text-[#3a3a3a] hover:text-[#777] hover:bg-[#161616] border border-transparent"
               )}
             >
-              <GitBranch size={11} />
+              <GitBranch size={12} />
               Graph
             </button>
           </div>
@@ -218,17 +233,26 @@ export default function Home() {
               <GraphView
                 data={graphData}
                 onNodeSelect={handleGraphNodeSelect}
-                selectedId={selectedGraphNode?.id}
+                selectedIds={selectedGraphNodes.map(n => n.id)}
               />
             ) : null}
           </div>
         </section>
 
         {/* ── Col 3: Inspector ─────────────────────────────── */}
-        {/* shows tree card grid or graph node panel depending on what was last clicked */}
-        <section className="flex-[4] overflow-hidden min-w-0 bg-[#0c0c0c]">
+        {/* tree: full-height card grid | graph: top = node panel, bottom = edge panel */}
+        <section className="flex-[4] overflow-hidden min-w-0 bg-[#0c0c0c] flex flex-col">
           {rightSource === "graph" ? (
-            <GraphNodePanel node={selectedGraphNode} />
+            <>
+              {/* top ~55% — selected node(s), both shown when two are picked */}
+              <div className="flex-[55] overflow-hidden min-h-0">
+                <GraphNodePanel nodes={selectedGraphNodes} />
+              </div>
+              {/* bottom ~45% — mini graph + connection between the two nodes */}
+              <div className="flex-[45] overflow-hidden min-h-0 border-t border-[#1e1e1e]">
+                <GraphEdgePanel edge={derivedEdge} graphData={graphData} selectedNodes={selectedGraphNodes} />
+              </div>
+            </>
           ) : (
             <DescriptionCardGrid selectedNode={selectedTreeNode} />
           )}

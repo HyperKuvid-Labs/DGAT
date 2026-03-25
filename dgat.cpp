@@ -455,15 +455,40 @@ DepGraph build_dep_graph(TreeNode* root) {
         string norm = normalize_import_path(imp, rel_path);
         if (norm.empty()) continue;
 
-        // check if file exists in project tree by exact path
-        bool is_internal = known_files.count(norm) > 0;
+        // try exact path first, then common extensions, then barrel index files
+        // this covers: "@/lib/utils" → "frontend/src/lib/utils.ts"
+        //              "../components/Foo" → ".../Foo.tsx"
+        //              "some/module" → "some/module/index.ts" (barrel)
+        bool is_internal = false;
+        {
+          static const vector<string> try_exts = {
+            "", ".tsx", ".ts", ".jsx", ".js", ".css", ".scss", ".h", ".hpp"
+          };
+          static const vector<string> index_exts = {
+            ".tsx", ".ts", ".jsx", ".js"
+          };
 
-        // also check with .h and .hpp extensions
-        if (!is_internal && norm.find('/') == string::npos) {
-          is_internal = known_files.count(norm + ".h") > 0 || known_files.count(norm + ".hpp") > 0;
+          for (auto& ext : try_exts) {
+            if (known_files.count(norm + ext)) {
+              norm = norm + ext;
+              is_internal = true;
+              break;
+            }
+          }
+          // barrel import — try norm/index.*
+          if (!is_internal) {
+            for (auto& ext : index_exts) {
+              string candidate = norm + "/index" + ext;
+              if (known_files.count(candidate)) {
+                norm = candidate;
+                is_internal = true;
+                break;
+              }
+            }
+          }
         }
 
-        // if not found by path, try matching by filename
+        // last resort: match by filename only (catches c/cpp header-only scenarios)
         if (!is_internal) {
           string imp_name = fs::path(imp).filename().string();
           for (const auto& [file_path, _] : contents) {
@@ -671,11 +696,18 @@ json build_dep_graph_json(const DepGraph& graph) {
   result["edges"] = json::array();
 
   for (const auto& node : graph.nodes) {
+    // serialize every field — frontend needs the full picture for the inspector panel
     json n = {
-      {"id", node.rel_path},
-      {"name", node.name},
-      {"description", node.description},
-      {"is_gitignored", node.is_gitignored}
+      {"id",            node.rel_path},
+      {"name",          node.name},
+      {"rel_path",      node.rel_path},
+      {"abs_path",      node.abs_path},
+      {"description",   node.description},
+      {"is_file",       node.is_file},
+      {"is_gitignored", node.is_gitignored},
+      {"hash",          node.hash},
+      {"depends_on",    node.depends_on},
+      {"depended_by",   node.depended_by}
     };
     result["nodes"].push_back(n);
   }
@@ -726,6 +758,97 @@ void load_gitignore(const fs::path& root) {
 }
 
 vector<string> dgatignore_patterns;
+
+// maps alias prefix → resolved prefix, e.g. "@/" → "frontend/src/"
+// populated by load_tsconfig_aliases() before build_dep_graph runs
+unordered_map<string, string> ts_path_aliases;
+
+// walk dirs looking for tsconfig.json / jsconfig.json and parse compilerOptions.paths
+// so "@/components/Foo" resolves to "frontend/src/components/Foo" etc.
+void load_tsconfig_aliases(const fs::path& root) {
+  ts_path_aliases.clear();
+
+  // bfs — stop at first tsconfig.json found (usually one per project)
+  queue<fs::path> dirs;
+  dirs.push(root);
+
+  fs::path found_config;
+  fs::path config_dir;
+
+  while (!dirs.empty() && found_config.empty()) {
+    fs::path cur = dirs.front(); dirs.pop();
+    for (auto& name : {"tsconfig.json", "jsconfig.json"}) {
+      fs::path candidate = cur / name;
+      if (fs::exists(candidate)) {
+        found_config = candidate;
+        config_dir = cur;
+        break;
+      }
+    }
+    if (!found_config.empty()) break;
+    try {
+      for (auto& entry : fs::directory_iterator(cur)) {
+        if (entry.is_directory()) {
+          string dname = entry.path().filename().string();
+          // skip heavy dirs — we only want source dirs
+          if (dname == "node_modules" || dname == ".git" || dname == "build" ||
+              dname == "dist" || dname == ".next" || dname == "out") continue;
+          dirs.push(entry.path());
+        }
+      }
+    } catch (...) {}
+  }
+
+  if (found_config.empty()) return;
+
+  ifstream f(found_config);
+  if (!f.is_open()) return;
+
+  try {
+    json tsconfig = json::parse(f, nullptr, /*exceptions=*/true, /*ignore_comments=*/true);
+    auto& opts = tsconfig["compilerOptions"];
+    if (!opts.is_object()) return;
+    auto& paths = opts["paths"];
+    if (!paths.is_object()) return;
+
+    // config_dir relative to project root (e.g. "frontend")
+    string config_rel = fs::relative(config_dir, root).generic_string();
+    if (config_rel == ".") config_rel = "";
+
+    for (auto& [alias_pattern, targets] : paths.items()) {
+      if (!targets.is_array() || targets.empty()) continue;
+      string target = targets[0].get<string>();
+
+      // strip leading "./" from target
+      if (target.rfind("./", 0) == 0) target = target.substr(2);
+
+      // strip trailing "/*" wildcard from both sides
+      string alias = alias_pattern;
+      bool wildcard = alias.size() >= 2 && alias.substr(alias.size() - 2) == "/*";
+      if (wildcard) {
+        alias = alias.substr(0, alias.size() - 2) + "/";
+        if (target.size() >= 2 && target.substr(target.size() - 2) == "/*")
+          target = target.substr(0, target.size() - 2) + "/";
+      } else {
+        alias += "/";
+        target += "/";
+      }
+
+      // prefix target with config_dir so it becomes a repo-relative path
+      string resolved = config_rel.empty() ? target : config_rel + "/" + target;
+      ts_path_aliases[alias] = resolved;
+    }
+
+    if (!ts_path_aliases.empty()) {
+      cout << "[DGAT] Loaded " << ts_path_aliases.size() << " TS path alias(es) from "
+           << fs::relative(found_config, root).generic_string() << endl;
+      for (auto& [k, v] : ts_path_aliases)
+        cout << "  " << k << " -> " << v << endl;
+    }
+  } catch (const exception& e) {
+    cerr << "[DGAT] Warning: could not parse tsconfig aliases: " << e.what() << endl;
+  }
+}
 
 void load_dgatignore(const fs::path& root) {
   fs::path dgatignore_path = root / ".dgatignore";
@@ -1237,28 +1360,45 @@ vector<string> extract_imports(const string& file_path, const string& content) {
 
 string normalize_import_path(const string& imp, const string& src_file) {
   if (imp.empty()) return "";
-  
+
   string normalized = imp;
-  
-  // Strip quotes from local includes like "inja.hpp"
+
+  // strip quotes from local includes like "inja.hpp"
   if (normalized.front() == '"' && normalized.back() == '"') {
     normalized = normalized.substr(1, normalized.size() - 2);
   }
-  
-  // Skip system includes like <bits/stdc++.h>
+
+  // skip system includes like <bits/stdc++.h>
   if (normalized.front() == '<' && normalized.back() == '>') {
     return "";
   }
-  
-  // Already has path component
-  if (normalized.find('/') != string::npos) return normalized;
 
-  // Resolve relative to source file's directory
-  size_t dot_pos = src_file.rfind('/');
-  string src_dir = (dot_pos != string::npos) ? src_file.substr(0, dot_pos) : ".";
-  if (src_dir.empty()) src_dir = ".";
+  // apply ts path aliases before anything else — "@/foo" → "frontend/src/foo"
+  for (auto& [alias, resolved] : ts_path_aliases) {
+    if (normalized.rfind(alias, 0) == 0) {
+      normalized = resolved + normalized.substr(alias.size());
+      break;
+    }
+  }
 
-  return src_dir + "/" + normalized;
+  // relative import — resolve against the importing file's dir
+  if (normalized.rfind("./", 0) == 0 || normalized.rfind("../", 0) == 0) {
+    size_t slash = src_file.rfind('/');
+    string src_dir = (slash != string::npos) ? src_file.substr(0, slash) : ".";
+    if (src_dir.empty()) src_dir = ".";
+    normalized = src_dir + "/" + normalized;
+  } else if (normalized.find('/') == string::npos) {
+    // bare name like "inja.hpp" — resolve next to source file
+    size_t slash = src_file.rfind('/');
+    string src_dir = (slash != string::npos) ? src_file.substr(0, slash) : ".";
+    if (src_dir.empty()) src_dir = ".";
+    normalized = src_dir + "/" + normalized;
+  }
+  // else: already looks like a repo-relative path (alias was expanded above)
+
+  // collapse ".." and "." so "frontend/src/components/../lib/utils" → "frontend/src/lib/utils"
+  fs::path p = fs::path(normalized).lexically_normal();
+  return p.generic_string();
 }
 
 string extract_fenced_block_or_raw(const string& input) {
@@ -1671,34 +1811,34 @@ void populate_descriptions(TreeNode* root) {
   ThreadPool pool(NUM_THREADS);
   vector<future<void>> futures;
   
-  const string file_descriptor_prompt_template = R"J2(You are an exceptional Principal Software Architect with deep expertise in software design and architecture. Your task is to analyze the user's request and generate a detailed file descriptor for a specific file within the project. This descriptor should include both the precise metadata description of its purpose and functionality and language used.
+  // prompt that asks the model to give back a tight markdown blurb — not an essay, just the useful stuff
+  const string file_descriptor_prompt_template = R"J2(You are a senior software engineer doing a quick code review pass. Analyze the file below and write a short markdown description of what it does.
 
   {% if software_bluprint_details %}
-  ### Software Blueprint Details
-  The file you are generating should align with the following core project specifications:
+  Project context:
   {{ software_bluprint_details_pretty }}
   {% endif %}
 
   {% if folder_structure %}
-  ### Folder Structure
-  The file should be placed within the following directory structure:
+  Repo structure:
   {{ folder_structure }}
   {% endif %}
 
   {% if file_name %}
-  ### Target File
-  The file you need to generate is located at: `{{ file_name }}`
+  File: `{{ file_name }}`
   {% endif %}
 
   {% if file_content %}
-  ### File Content
-  Use the following source content while generating the descriptor:
+  Content:
   {{ file_content }}
   {% endif %}
 
-  Return the following in a neatly formatted JSON structure:
-  - `file_description`: A precise, 1-2 sentence technical description of the file's purpose and functionality.
-  - `language`: The programming language used in the file (e.g., Python, C++, etc.).)J2";
+  Return a JSON object with a single key `file_description` whose value is a compact markdown string. Rules:
+  - 3-6 lines max, no fluff
+  - Start with one bold sentence saying what the file does
+  - Use a tight bullet list for key responsibilities (3-5 bullets max)
+  - End with `**Lang:** <language>` on its own line
+  - No intro text, no closing remarks, just the markdown)J2";
 
   json blueprint_json;
   try {
@@ -1980,30 +2120,13 @@ int main(int argc, char** argv){
   }
   cout << "[DGAT] File tree built successfully." << endl;
 
-  const string dot_file = "tree_visualization.dot";
-  if (!export_tree_as_dot(root.get(), dot_file)) {
-    cerr << "[DGAT] Error: Failed to write visualization file: " << dot_file << endl;
-    return 1;
-  }
-  cout << "[DGAT] Tree DOT file written to: " << dot_file << endl;
-
-  int dot_available = system("command -v dot > /dev/null 2>&1");
-  if (dot_available == 0) {
-    const string png_file = "tree_visualization.png";
-    string render_cmd = "dot -Tpng " + dot_file + " -o " + png_file;
-    if (system(render_cmd.c_str()) == 0) {
-      cout << "[DGAT] Tree PNG visualization written to: " << png_file << endl;
-    } else {
-      cerr << "[DGAT] Warning: Failed to render PNG from DOT file" << endl;
-    }
-  } else {
-    cout << "[DGAT] Info: Graphviz not found. Install 'dot' to render PNG visualization." << endl;
-  }
-
   cout << "[DGAT] Populating file descriptions via vllm..." << endl;
   populate_descriptions(root.get());
   create_dgat_blueprint(root.get());
   cout << "[DGAT] File descriptions populated." << endl;
+
+  // load tsconfig path aliases so "@/..." imports resolve to real paths
+  load_tsconfig_aliases(fs::current_path());
 
   cout << "[DGAT] Building dependency graph..." << endl;
   DepGraph dep_graph = build_dep_graph(root.get());

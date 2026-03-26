@@ -1,0 +1,22 @@
+{
+  "bg":           "#0c0c0c",
+  "surface":      "#111111",
+  "surface-2":    "#141414",
+  "surface-3":    "#0e0e0e",
+  "surface-4":    "#1a1a1a",
+  "border":       "#1e1e1e",
+  "border-2":     "#2e2e2e",
+  "border-3":     "#222222",
+  "fg":           "#d4d4d4",
+  "fg-2":         "#e8e8e8",
+  "fg-3":         "#e2e2e2",
+  "fg-muted":     "#888888",
+  "fg-dim":       "#555555",
+  "fg-dimmer":    "#444444",
+  "fg-dimmest":   "#333333",
+  "fg-faint":     "#3a3a3a",
+  "accent":       "#4F8EF7",
+  "accent-muted": "#4F8EF7",
+  "accent-purple":"#9B72CF",
+  "code-color":   "#ce9178"
+}

@@ -2,16 +2,28 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
-import type { TreeNode, DepGraph, DepNode } from "@/lib/types";
+import type { TreeNode, DepGraph, DepNode, StaticData } from "@/lib/types";
+import dynamic from "next/dynamic";
 import { FileTree } from "@/components/FileTree";
 import { MarkdownPanel } from "@/components/MarkdownPanel";
 import { DescriptionCardGrid } from "@/components/DescriptionCardGrid";
-import { GraphView } from "@/components/GraphView";
 import { GraphNodePanel, GraphEdgePanel } from "@/components/GraphNodePanel";
+
+// GraphView uses Sigma.js (WebGL) — must not run during SSR prerendering
+const GraphView = dynamic(
+  () => import("@/components/GraphView").then(m => m.GraphView),
+  { ssr: false }
+);
 import { RefreshCw, Layers, FileText, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const API_BASE = "http://localhost:8090";
+
+/** Returns embedded static data injected by `dgat --export`, or undefined in live mode. */
+function getStaticData(): StaticData | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (window as unknown as { __DGAT_DATA__?: StaticData }).__DGAT_DATA__;
+}
 
 export default function Home() {
   const [treeData, setTreeData]   = useState<TreeNode | null>(null);
@@ -45,6 +57,14 @@ export default function Home() {
 
   // ── fetch tree ────────────────────────────────────────────
   const fetchTree = useCallback(async () => {
+    const sd = getStaticData();
+    if (sd) {
+      setTreeData(sd.tree);
+      setError(null);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const res = await axios.get<TreeNode>(`${API_BASE}/api/tree`);
       setTreeData(res.data);
@@ -59,6 +79,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchTree();
+    if (getStaticData()) return; // no polling in static export mode
     const interval = setInterval(fetchTree, 30000);
     return () => clearInterval(interval);
   }, [fetchTree]);
@@ -68,6 +89,12 @@ export default function Home() {
     if (graphData) return; // already loaded
     setGraphLoading(true);
     setGraphError(null);
+    const sd = getStaticData();
+    if (sd) {
+      setGraphData(sd.graph);
+      setGraphLoading(false);
+      return;
+    }
     try {
       const res = await axios.get<DepGraph>(`${API_BASE}/api/dep-graph`);
       setGraphData(res.data);
@@ -130,19 +157,19 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#0c0c0c] text-[#d4d4d4] overflow-hidden font-sans">
 
       {/* ── Titlebar ─────────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-5 h-11 bg-[#111111] border-b border-[#1e1e1e] shrink-0">
+      <header className="flex items-center justify-between px-5 h-12 bg-[#111111] border-b border-[#1e1e1e] shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center w-6 h-6 rounded-md bg-[#4F8EF7]/15 border border-[#4F8EF7]/25">
             <Layers size={13} className="text-[#4F8EF7]" />
           </div>
-          <span className="text-[13px] font-semibold text-[#e2e2e2] tracking-tight">DGAT</span>
-          <span className="text-[11px] text-[#333] select-none">·</span>
-          <span className="text-[11px] text-[#555]">Dependency Graph as a Tool</span>
+          <span className="text-[14px] font-semibold text-[#e2e2e2] tracking-tight">DGAT</span>
+          <span className="text-[12px] text-[#333] select-none">·</span>
+          <span className="text-[12px] text-[#555]">Dependency Graph as a Tool</span>
         </div>
         <button
           onClick={() => { setRefreshing(true); fetchTree(); }}
           className={cn(
-            "flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-md transition-all",
+            "flex items-center gap-1.5 text-[12px] px-2.5 py-1.5 rounded-md transition-all",
             "text-[#444] hover:text-[#aaa] hover:bg-[#1a1a1a] border border-transparent hover:border-[#222]"
           )}
         >
@@ -157,7 +184,7 @@ export default function Home() {
         {/* ── Col 1: Explorer ──────────────────────────────── */}
         <aside className="w-[250px] shrink-0 flex flex-col bg-[#111111] border-r border-[#1e1e1e] overflow-hidden">
           <div className="px-4 pt-4 pb-2 shrink-0">
-            <span className="text-[10px] font-semibold tracking-[0.12em] uppercase text-[#3a3a3a]">
+            <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#3a3a3a]">
               Explorer
             </span>
           </div>
@@ -182,7 +209,7 @@ export default function Home() {
             <button
               onClick={() => handleTabSwitch("blueprint")}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[12px] font-medium transition-all",
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[13px] font-medium transition-all",
                 midTab === "blueprint"
                   ? "bg-[#1e1e1e] text-[#d0d0d0] border border-[#2e2e2e]"
                   : "text-[#3a3a3a] hover:text-[#777] hover:bg-[#161616] border border-transparent"
@@ -194,7 +221,7 @@ export default function Home() {
             <button
               onClick={() => handleTabSwitch("graph")}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[12px] font-medium transition-all",
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[13px] font-medium transition-all",
                 midTab === "graph"
                   ? "bg-[#1e1e1e] text-[#d0d0d0] border border-[#2e2e2e]"
                   : "text-[#3a3a3a] hover:text-[#777] hover:bg-[#161616] border border-transparent"
@@ -212,6 +239,7 @@ export default function Home() {
                 filePath="dgat_blueprint.md"
                 title="dgat_blueprint.md"
                 apiBase=""
+                staticContent={getStaticData()?.blueprint}
                 className="h-full"
               />
             ) : graphLoading ? (

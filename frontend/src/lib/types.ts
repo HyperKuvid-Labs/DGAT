@@ -23,6 +23,13 @@ export interface DepGraph {
   edges: DepEdge[];
 }
 
+/** Embedded by `dgat --export` as `window.__DGAT_DATA__`. Used in static HTML mode. */
+export interface StaticData {
+  tree: TreeNode;
+  graph: DepGraph;
+  blueprint: string;
+}
+
 export interface TreeNode {
   name: string;
   version: number;

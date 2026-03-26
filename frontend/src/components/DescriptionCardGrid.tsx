@@ -34,7 +34,7 @@ export function DescriptionCardGrid({ selectedNode }: DescriptionCardGridProps) 
       <PanelHeader node={selectedNode} count={children.length} />
       <div className="flex-1 overflow-y-auto p-4">
         {children.length === 0 ? (
-          <p className="text-[12px] text-[#333] italic px-1 pt-2">empty folder</p>
+          <p className="text-[13px] text-[#333] italic px-1 pt-2">empty folder</p>
         ) : (
           // nx3 — each row has 3 cards, rows auto-expand
           <div className="grid grid-cols-3 gap-3">
@@ -62,13 +62,13 @@ function FileHeroView({ node }: { node: TreeNode }) {
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
 
         {/* description card — full width, md rendered */}
-        <div className="rounded-xl border border-[#1e1e1e] bg-[#111111] p-5">
+        <div className="rounded-2xl border border-[#1e1e1e] bg-[#111111] p-5">
           <div className="flex items-center gap-3 mb-4">
             <NodeIconBadge node={node} size={16} />
             <div>
-              <p className="text-[14px] font-semibold text-[#d4d4d4]">{node.name}</p>
+              <p className="text-[16px] font-semibold text-[#d4d4d4]">{node.name}</p>
               {node.rel_path && (
-                <p className="text-[10px] text-[#333] font-mono mt-0.5">{node.rel_path}</p>
+                <p className="text-[11px] text-[#333] font-mono mt-0.5">{node.rel_path}</p>
               )}
             </div>
           </div>
@@ -78,7 +78,7 @@ function FileHeroView({ node }: { node: TreeNode }) {
             {hasDesc ? (
               <MiniMarkdown content={node.description} />
             ) : (
-              <p className="text-[12px] text-[#333] italic">no description yet — run dgat to generate</p>
+              <p className="text-[13px] text-[#333] italic">no description yet — run dgat to generate</p>
             )}
           </div>
         </div>
@@ -125,7 +125,7 @@ function DepSection({
   return (
     <div>
       <p
-        className="text-[10px] uppercase tracking-widest font-semibold mb-2 flex items-center gap-1.5"
+        className="text-[11.5px] uppercase tracking-widest font-semibold mb-2 flex items-center gap-1.5"
         style={{ color: `${color}99` }}
       >
         {icon}
@@ -145,10 +145,10 @@ function DepSection({
               borderColor: `${color}18`,
             }}
           >
-            <p className="text-[10.5px] font-mono truncate" style={{ color: `${color}99` }}>
+            <p className="text-[12px] font-mono truncate" style={{ color: `${color}99` }}>
               {dep.split("/").pop()}
             </p>
-            <p className="text-[9px] text-[#2e2e2e] font-mono truncate mt-0.5">{dep}</p>
+            <p className="text-[10.5px] text-[#2e2e2e] font-mono truncate mt-0.5">{dep}</p>
           </div>
         ))}
       </div>
@@ -179,7 +179,7 @@ function ChildCard({ node }: { node: TreeNode }) {
       onMouseLeave={() => setHovered(false)}
       onClick={() => setOpen((v) => !v)}
       className={cn(
-        "relative rounded-xl border overflow-hidden cursor-pointer transition-all duration-150",
+        "relative rounded-2xl border overflow-hidden cursor-pointer transition-all duration-150",
         open
           ? "col-span-3 border-[#4F8EF7]/20 bg-[#0f1520]"
           : "border-[#1e1e1e] bg-[#111111] hover:border-[#272727]"
@@ -199,12 +199,12 @@ function ChildCard({ node }: { node: TreeNode }) {
           <div className="min-w-0 flex-1">
             <p className={cn(
               "font-medium text-[#d0d0d0] truncate leading-none",
-              open ? "text-[13.5px]" : "text-[12px]"
+              open ? "text-[15px]" : "text-[13.5px]"
             )}>
               {node.name}
             </p>
             {node.rel_path && (
-              <p className="text-[9.5px] text-[#2e2e2e] font-mono truncate mt-0.5">{node.rel_path}</p>
+              <p className="text-[11px] text-[#2e2e2e] font-mono truncate mt-0.5">{node.rel_path}</p>
             )}
           </div>
         </div>
@@ -215,13 +215,13 @@ function ChildCard({ node }: { node: TreeNode }) {
             open ? (
               <MiniMarkdown content={node.description} />
             ) : (
-              <p className="text-[11px] text-[#555] line-clamp-2 leading-relaxed">
+              <p className="text-[12.5px] text-[#555] line-clamp-2 leading-relaxed">
                 {/* strip md syntax for the preview — just show raw text */}
                 {node.description.replace(/[*_`#>-]/g, "").trim()}
               </p>
             )
           ) : (
-            <p className="text-[11px] italic text-[#2e2e2e]">no description</p>
+            <p className="text-[12.5px] italic text-[#2e2e2e]">no description</p>
           )}
         </div>
 
@@ -229,13 +229,13 @@ function ChildCard({ node }: { node: TreeNode }) {
         {(depsOn > 0 || depsBy > 0) && (
           <div className="flex items-center gap-1.5 flex-wrap">
             {depsOn > 0 && (
-              <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-md font-mono"
+              <span className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-lg font-mono"
                 style={{ background: "#4F8EF715", color: "#4F8EF780", border: "1px solid #4F8EF720" }}>
                 <ArrowDown size={7} />{depsOn}
               </span>
             )}
             {depsBy > 0 && (
-              <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-md font-mono"
+              <span className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-lg font-mono"
                 style={{ background: "#F59E0B15", color: "#F59E0B80", border: "1px solid #F59E0B20" }}>
                 <ArrowUp size={7} />{depsBy}
               </span>
@@ -248,10 +248,10 @@ function ChildCard({ node }: { node: TreeNode }) {
           <div className="mt-4 pt-4 border-t border-[#1a1a1a] grid grid-cols-2 gap-5">
             {node.depends_on?.length > 0 && (
               <div>
-                <p className="text-[9.5px] uppercase tracking-wider text-[#4F8EF7]/50 mb-2 font-semibold">depends on</p>
+                <p className="text-[11px] uppercase tracking-wider text-[#4F8EF7]/50 mb-2 font-semibold">depends on</p>
                 <ul className="space-y-1">
                   {node.depends_on.map((d) => (
-                    <li key={d} className="flex items-center gap-1.5 text-[10.5px] text-[#555] font-mono truncate">
+                    <li key={d} className="flex items-center gap-1.5 text-[12px] text-[#555] font-mono truncate">
                       <span className="w-1 h-1 rounded-full bg-[#4F8EF7]/30 shrink-0" />{d}
                     </li>
                   ))}
@@ -260,10 +260,10 @@ function ChildCard({ node }: { node: TreeNode }) {
             )}
             {node.depended_by?.length > 0 && (
               <div>
-                <p className="text-[9.5px] uppercase tracking-wider text-[#F59E0B]/50 mb-2 font-semibold">used by</p>
+                <p className="text-[11px] uppercase tracking-wider text-[#F59E0B]/50 mb-2 font-semibold">used by</p>
                 <ul className="space-y-1">
                   {node.depended_by.map((d) => (
-                    <li key={d} className="flex items-center gap-1.5 text-[10.5px] text-[#555] font-mono truncate">
+                    <li key={d} className="flex items-center gap-1.5 text-[12px] text-[#555] font-mono truncate">
                       <span className="w-1 h-1 rounded-full bg-[#F59E0B]/30 shrink-0" />{d}
                     </li>
                   ))}
@@ -286,7 +286,7 @@ function MiniMarkdown({ content }: { content: string }) {
       components={{
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         p({ children }: any) {
-          return <p className="text-[12px] text-[#777] leading-[1.75] mb-2 last:mb-0">{children}</p>;
+          return <p className="text-[13.5px] text-[#777] leading-[1.8] mb-2 last:mb-0">{children}</p>;
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         strong({ children }: any) {
@@ -303,7 +303,7 @@ function MiniMarkdown({ content }: { content: string }) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         li({ children }: any) {
           return (
-            <li className="flex items-start gap-2 text-[11.5px] text-[#666] leading-[1.65]">
+            <li className="flex items-start gap-2 text-[13px] text-[#666] leading-[1.7]">
               <span className="text-[#333] mt-[5px] shrink-0 text-[7px]">▸</span>
               <span>{children}</span>
             </li>
@@ -312,7 +312,7 @@ function MiniMarkdown({ content }: { content: string }) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         code({ children }: any) {
           return (
-            <code className="text-[11px] font-mono bg-[#1a1a1a] text-[#ce9178] px-1 py-px rounded border border-[#222]">
+            <code className="text-[12px] font-mono bg-[#1a1a1a] text-[#ce9178] px-1 py-px rounded border border-[#222]">
               {children}
             </code>
           );
@@ -320,15 +320,15 @@ function MiniMarkdown({ content }: { content: string }) {
         // flatten headings — descriptions shouldn't have big headers
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         h1({ children }: any) {
-          return <p className="text-[12px] font-semibold text-[#999] mb-1.5">{children}</p>;
+          return <p className="text-[13.5px] font-semibold text-[#999] mb-1.5">{children}</p>;
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         h2({ children }: any) {
-          return <p className="text-[11.5px] font-semibold text-[#888] mb-1">{children}</p>;
+          return <p className="text-[13px] font-semibold text-[#888] mb-1">{children}</p>;
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         h3({ children }: any) {
-          return <p className="text-[11px] font-semibold text-[#777] mb-1">{children}</p>;
+          return <p className="text-[12px] font-semibold text-[#777] mb-1">{children}</p>;
         },
       }}
     >
@@ -344,12 +344,12 @@ function PanelHeader({ node, count }: { node: TreeNode; count?: number }) {
   const depsBy = node.depended_by?.length ?? 0;
 
   return (
-    <div className="flex items-center justify-between px-5 h-11 border-b border-[#1e1e1e] shrink-0 bg-[#0c0c0c]">
+    <div className="flex items-center justify-between px-5 h-12 border-b border-[#1e1e1e] shrink-0 bg-[#0c0c0c]">
       <div className="flex items-center gap-2.5 min-w-0">
         <NodeIconBadge node={node} size={13} />
-        <span className="text-[12px] font-medium text-[#888] truncate">{node.name}</span>
+        <span className="text-[13px] font-medium text-[#888] truncate">{node.name}</span>
         {node.rel_path && (
-          <span className="text-[10px] text-[#2e2e2e] font-mono truncate hidden lg:block">{node.rel_path}</span>
+          <span className="text-[11px] text-[#2e2e2e] font-mono truncate hidden lg:block">{node.rel_path}</span>
         )}
       </div>
       <div className="flex items-center gap-2 shrink-0">
@@ -357,13 +357,13 @@ function PanelHeader({ node, count }: { node: TreeNode; count?: number }) {
         {node.is_file && (depsOn > 0 || depsBy > 0) && (
           <div className="flex items-center gap-1.5">
             {depsOn > 0 && (
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+              <span className="text-[11px] font-mono px-1.5 py-0.5 rounded-lg"
                 style={{ background: "#4F8EF715", color: "#4F8EF770" }}>
                 ↓{depsOn}
               </span>
             )}
             {depsBy > 0 && (
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+              <span className="text-[11px] font-mono px-1.5 py-0.5 rounded-lg"
                 style={{ background: "#F59E0B15", color: "#F59E0B70" }}>
                 ↑{depsBy}
               </span>
@@ -372,7 +372,7 @@ function PanelHeader({ node, count }: { node: TreeNode; count?: number }) {
         )}
         {/* show child count for folders */}
         {!node.is_file && count !== undefined && (
-          <span className="text-[10px] text-[#2a2a2a] font-mono">{count} items</span>
+          <span className="text-[11px] text-[#2a2a2a] font-mono">{count} items</span>
         )}
       </div>
     </div>
@@ -388,8 +388,8 @@ function EmptyState() {
         <MousePointerClick size={18} className="text-[#252525]" />
       </div>
       <div className="text-center space-y-1">
-        <p className="text-[12.5px] font-medium text-[#333]">nothing selected</p>
-        <p className="text-[11px] text-[#252525]">click a file or folder in the explorer</p>
+        <p className="text-[14px] font-medium text-[#333]">nothing selected</p>
+        <p className="text-[12.5px] text-[#252525]">click a file or folder in the explorer</p>
       </div>
     </div>
   );

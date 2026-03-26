@@ -11,12 +11,14 @@ interface MarkdownPanelProps {
   filePath: string;
   title: string;
   apiBase: string;
+  /** Pre-loaded content (used in static export mode — skips the fetch). */
+  staticContent?: string;
   className?: string;
 }
 
 type FetchState = "idle" | "loading" | "success" | "error";
 
-export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownPanelProps) {
+export function MarkdownPanel({ filePath, title, apiBase, staticContent, className }: MarkdownPanelProps) {
   const [content, setContent] = useState<string | null>(null);
   const [state, setState] = useState<FetchState>("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
@@ -37,18 +39,25 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
     }
   }, [apiBase, filePath]);
 
-  useEffect(() => { fetchContent(); }, [fetchContent]);
+  useEffect(() => {
+    if (staticContent !== undefined) {
+      setContent(staticContent);
+      setState("success");
+      return;
+    }
+    fetchContent();
+  }, [fetchContent, staticContent]);
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
 
       {/* ── Panel header ─────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 h-11 border-b border-[#1e1e1e] shrink-0 bg-[#0e0e0e]">
+      <div className="flex items-center justify-between px-5 h-12 border-b border-[#1e1e1e] shrink-0 bg-[#0e0e0e]">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="p-1.5 rounded-md bg-[#9B72CF]/10 border border-[#9B72CF]/20 shrink-0">
             <FileText size={12} className="text-[#9B72CF]" />
           </div>
-          <span className="text-[12px] font-medium text-[#888] font-mono truncate">{title}</span>
+          <span className="text-[13px] font-medium text-[#888] font-mono truncate">{title}</span>
         </div>
         <button
           onClick={fetchContent}
@@ -92,14 +101,14 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
                   if (isBlock) {
                     return (
                       <pre className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg px-5 py-4 overflow-x-auto my-5">
-                        <code className={cn("text-[12.5px] font-mono leading-[1.7] text-[#ce9178]", className)} {...props}>
+                        <code className={cn("text-[13px] font-mono leading-[1.7] text-[#ce9178]", className)} {...props}>
                           {children}
                         </code>
                       </pre>
                     );
                   }
                   return (
-                    <code className="text-[12.5px] font-mono bg-[#1a1a1a] text-[#ce9178] px-1.5 py-0.5 rounded border border-[#222]" {...props}>
+                    <code className="text-[13px] font-mono bg-[#1a1a1a] text-[#ce9178] px-1.5 py-0.5 rounded border border-[#222]" {...props}>
                       {children}
                     </code>
                   );
@@ -107,14 +116,14 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
 
                 h1({ children }) {
                   return (
-                    <h1 className="text-[22px] font-bold text-[#e8e8e8] mt-0 mb-5 pb-3 border-b border-[#1e1e1e] leading-tight tracking-tight">
+                    <h1 className="text-[24px] font-bold text-[#e8e8e8] mt-0 mb-5 pb-3 border-b border-[#1e1e1e] leading-tight tracking-tight">
                       {children}
                     </h1>
                   );
                 },
                 h2({ children }) {
                   return (
-                    <h2 className="text-[16px] font-semibold text-[#d0d0d0] mt-8 mb-3 flex items-center gap-2">
+                    <h2 className="text-[18px] font-semibold text-[#d0d0d0] mt-8 mb-3 flex items-center gap-2">
                       <span className="w-1 h-4 rounded-full bg-[#9B72CF]/60 shrink-0 inline-block" />
                       {children}
                     </h2>
@@ -122,14 +131,14 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
                 },
                 h3({ children }) {
                   return (
-                    <h3 className="text-[14px] font-semibold text-[#b8b8b8] mt-6 mb-2">
+                    <h3 className="text-[16px] font-semibold text-[#b8b8b8] mt-6 mb-2">
                       {children}
                     </h3>
                   );
                 },
                 h4({ children }) {
                   return (
-                    <h4 className="text-[13px] font-semibold text-[#999] mt-4 mb-1.5">
+                    <h4 className="text-[14px] font-semibold text-[#999] mt-4 mb-1.5">
                       {children}
                     </h4>
                   );
@@ -137,7 +146,7 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
 
                 p({ children }) {
                   return (
-                    <p className="text-[13.5px] text-[#888] leading-[1.85] mb-4">
+                    <p className="text-[15px] text-[#888] leading-[1.9] mb-4">
                       {children}
                     </p>
                   );
@@ -148,14 +157,14 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
                 },
                 ol({ children }) {
                   return (
-                    <ol className="list-decimal pl-5 mb-4 space-y-1.5 text-[13.5px] text-[#888]">
+                    <ol className="list-decimal pl-5 mb-4 space-y-1.5 text-[15px] text-[#888]">
                       {children}
                     </ol>
                   );
                 },
                 li({ children }) {
                   return (
-                    <li className="text-[13.5px] text-[#888] leading-[1.75] flex gap-2.5 items-start">
+                    <li className="text-[15px] text-[#888] leading-[1.8] flex gap-2.5 items-start">
                       <span className="text-[#333] mt-[7px] shrink-0 text-[8px]">▸</span>
                       <span>{children}</span>
                     </li>
@@ -182,7 +191,7 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
                 table({ children }) {
                   return (
                     <div className="overflow-x-auto my-5 rounded-lg border border-[#1e1e1e]">
-                      <table className="w-full text-[12.5px] border-collapse">{children}</table>
+                      <table className="w-full text-[13.5px] border-collapse">{children}</table>
                     </div>
                   );
                 },
@@ -190,7 +199,7 @@ export function MarkdownPanel({ filePath, title, apiBase, className }: MarkdownP
                   return <thead className="bg-[#141414] border-b border-[#1e1e1e]">{children}</thead>;
                 },
                 th({ children }) {
-                  return <th className="text-left px-4 py-2.5 text-[11px] uppercase tracking-wider text-[#555] font-semibold">{children}</th>;
+                  return <th className="text-left px-4 py-2.5 text-[12px] uppercase tracking-wider text-[#555] font-semibold">{children}</th>;
                 },
                 td({ children }) {
                   return <td className="px-4 py-2.5 border-b border-[#141414] text-[#777]">{children}</td>;

@@ -36,8 +36,8 @@ export function GraphNodePanel({ nodes }: GraphNodePanelProps) {
           <GitBranch size={18} className="text-[#252525]" />
         </div>
         <div className="text-center space-y-1">
-          <p className="text-[12.5px] font-medium text-[#333]">no node selected</p>
-          <p className="text-[11px] text-[#252525]">click a node in the graph</p>
+          <p className="text-[14px] font-medium text-[#333]">no node selected</p>
+          <p className="text-[12.5px] text-[#252525]">click a node in the graph</p>
         </div>
       </div>
     );
@@ -72,55 +72,55 @@ function SingleNodeView({ node, compact = false }: { node: DepNode; compact?: bo
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* header strip */}
-      <div className="flex items-center justify-between px-3 h-10 border-b border-[#1e1e1e] shrink-0"
+      <div className="flex items-center justify-between px-3 h-11 border-b border-[#1e1e1e] shrink-0"
         style={{ background: `${color}08` }}>
         <div className="flex items-center gap-2 min-w-0">
           <NodeIconBadge node={node} size={12} />
-          <span className="text-[11.5px] font-semibold truncate" style={{ color: `${color}cc` }}>
+          <span className="text-[13px] font-semibold truncate" style={{ color: `${color}cc` }}>
             {node.name}
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {depsOn.length > 0 && (
-            <span className="text-[9px] font-mono px-1 py-0.5 rounded"
+            <span className="text-[11px] font-mono px-1 py-0.5 rounded-lg"
               style={{ background: "#4F8EF715", color: "#4F8EF770" }}>↓{depsOn.length}</span>
           )}
           {depsBy.length > 0 && (
-            <span className="text-[9px] font-mono px-1 py-0.5 rounded"
+            <span className="text-[11px] font-mono px-1 py-0.5 rounded-lg"
               style={{ background: "#F59E0B15", color: "#F59E0B70" }}>↑{depsBy.length}</span>
           )}
         </div>
       </div>
 
       {/* body */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
         {/* meta */}
         <div className="space-y-1">
           {node.rel_path && (
-            <p className="text-[9.5px] font-mono text-[#333] truncate">{node.rel_path}</p>
+            <p className="text-[11px] font-mono text-[#333] truncate">{node.rel_path}</p>
           )}
           {node.hash && (
-            <p className="flex items-center gap-1 text-[9px] font-mono text-[#2a2a2a]">
+            <p className="flex items-center gap-1 text-[10.5px] font-mono text-[#2a2a2a]">
               <Hash size={7} className="shrink-0" />
               {node.hash.slice(0, 12)}
             </p>
           )}
           <div className="flex items-center gap-1.5 pt-0.5">
             {node.is_gitignored && (
-              <span className="text-[8.5px] px-1.5 py-px rounded font-mono"
+              <span className="text-[11px] px-1.5 py-px rounded-lg font-mono"
                 style={{ background: "#F59E0B10", color: "#F59E0B70", border: "1px solid #F59E0B18" }}>
                 gitignored
               </span>
             )}
             {!node.is_file && (
-              <span className="text-[8.5px] px-1.5 py-px rounded font-mono"
+              <span className="text-[11px] px-1.5 py-px rounded-lg font-mono"
                 style={{ background: "#9B72CF10", color: "#9B72CF70", border: "1px solid #9B72CF18" }}>
                 external
               </span>
             )}
             {node.is_file && !node.is_gitignored && (
-              <span className="text-[8.5px] px-1.5 py-px rounded font-mono"
+              <span className="text-[11px] px-1.5 py-px rounded-lg font-mono"
                 style={{ background: "#4F8EF710", color: "#4F8EF760", border: "1px solid #4F8EF718" }}>
                 source
               </span>
@@ -129,11 +129,11 @@ function SingleNodeView({ node, compact = false }: { node: DepNode; compact?: bo
         </div>
 
         {/* description — min height for 2-3 lines */}
-        <div className="border-t border-[#1a1a1a] pt-2.5 min-h-[52px]">
+        <div className="border-t border-[#1a1a1a] pt-2.5 min-h-[64px]">
           {hasDesc ? (
             <MiniMarkdown content={node.description} />
           ) : (
-            <p className="text-[11px] italic text-[#2a2a2a] leading-[1.7]">
+            <p className="text-[12.5px] italic text-[#2a2a2a] leading-[1.7]">
               {node.description || "no description available"}
             </p>
           )}
@@ -176,7 +176,7 @@ export function GraphEdgePanel({ edge, graphData, selectedNodes = [] }: GraphEdg
   if (selectedNodes.length === 0 && !edge) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 select-none">
-        <p className="text-[11px] text-[#2e2e2e]">select two nodes to see their connection</p>
+        <p className="text-[12.5px] text-[#2e2e2e]">select two nodes to see their connection</p>
       </div>
     );
   }
@@ -195,14 +195,14 @@ export function GraphEdgePanel({ edge, graphData, selectedNodes = [] }: GraphEdg
       </div>
 
       {/* body */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
 
         {/* import statement */}
         {edge && (
           <div>
-            <p className="text-[9px] uppercase tracking-widest font-semibold mb-1.5"
+            <p className="text-[11px] uppercase tracking-widest font-semibold mb-1.5"
               style={{ color: "#4F8EF780" }}>import</p>
-            <code className="block text-[10px] font-mono bg-[#111] text-[#ce9178] px-3 py-2 rounded-lg border border-[#1e1e1e] break-all leading-[1.6]">
+            <code className="block text-[12px] font-mono bg-[#111] text-[#ce9178] px-3 py-2 rounded-lg border border-[#1e1e1e] break-all leading-[1.6]">
               {edge.import_stmt}
             </code>
           </div>
@@ -210,12 +210,12 @@ export function GraphEdgePanel({ edge, graphData, selectedNodes = [] }: GraphEdg
 
         {/* relationship */}
         <div>
-          <p className="text-[9px] uppercase tracking-widest font-semibold mb-1.5"
+          <p className="text-[11px] uppercase tracking-widest font-semibold mb-1.5"
             style={{ color: "#F59E0B80" }}>relationship</p>
           {hasDesc ? (
             <MiniMarkdown content={edge!.description} />
           ) : (
-            <p className="text-[11px] italic text-[#2a2a2a] leading-[1.7] min-h-[52px]">
+            <p className="text-[12.5px] italic text-[#2a2a2a] leading-[1.7] min-h-[64px]">
               {!hasEdge
                 ? "no direct connection between these files"
                 : "no relationship description — rebuild with vllm to generate"}
@@ -307,7 +307,7 @@ function DepSection({ label, color, items, icon }: {
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 flex items-center gap-1.5"
+      <p className="text-[11.5px] uppercase tracking-widest font-semibold mb-2 flex items-center gap-1.5"
         style={{ color: `${color}99` }}>
         {icon}{label}
         <span className="ml-1 font-mono" style={{ color: `${color}55` }}>{items.length}</span>
@@ -316,7 +316,7 @@ function DepSection({ label, color, items, icon }: {
         {items.map(dep => (
           <div key={dep} className="rounded-lg border px-2.5 py-1.5"
             style={{ background: `${color}08`, borderColor: `${color}18` }}>
-            <p className="text-[10px] font-mono truncate" style={{ color: `${color}99` }}>
+            <p className="text-[11.5px] font-mono truncate" style={{ color: `${color}99` }}>
               {dep.split("/").pop()}
             </p>
           </div>
@@ -333,7 +333,7 @@ function MiniMarkdown({ content }: { content: string }) {
     <ReactMarkdown
       components={{
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        p:      ({ children }: any) => <p className="text-[12px] text-[#777] leading-[1.8] mb-2 last:mb-0">{children}</p>,
+        p:      ({ children }: any) => <p className="text-[13.5px] text-[#777] leading-[1.8] mb-2 last:mb-0">{children}</p>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         strong: ({ children }: any) => <strong className="font-semibold text-[#aaa]">{children}</strong>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -342,23 +342,23 @@ function MiniMarkdown({ content }: { content: string }) {
         ul:     ({ children }: any) => <ul className="mb-2 space-y-0.5 pl-0">{children}</ul>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         li:     ({ children }: any) => (
-          <li className="flex items-start gap-2 text-[11.5px] text-[#666] leading-[1.7]">
+          <li className="flex items-start gap-2 text-[13px] text-[#666] leading-[1.7]">
             <span className="text-[#333] mt-[5px] shrink-0 text-[7px]">▸</span>
             <span>{children}</span>
           </li>
         ),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         code:   ({ children }: any) => (
-          <code className="text-[11px] font-mono bg-[#1a1a1a] text-[#ce9178] px-1 py-px rounded border border-[#222]">
+          <code className="text-[12px] font-mono bg-[#1a1a1a] text-[#ce9178] px-1 py-px rounded border border-[#222]">
             {children}
           </code>
         ),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        h1: ({ children }: any) => <p className="text-[12px] font-semibold text-[#999] mb-1.5">{children}</p>,
+        h1: ({ children }: any) => <p className="text-[13.5px] font-semibold text-[#999] mb-1.5">{children}</p>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        h2: ({ children }: any) => <p className="text-[11.5px] font-semibold text-[#888] mb-1">{children}</p>,
+        h2: ({ children }: any) => <p className="text-[13px] font-semibold text-[#888] mb-1">{children}</p>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        h3: ({ children }: any) => <p className="text-[11px] font-semibold text-[#777] mb-1">{children}</p>,
+        h3: ({ children }: any) => <p className="text-[12px] font-semibold text-[#777] mb-1">{children}</p>,
       }}
     >
       {content}

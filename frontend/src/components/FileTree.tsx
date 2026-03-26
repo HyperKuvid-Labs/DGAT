@@ -63,8 +63,8 @@ function TreeNodeItem({ node, onSelect, selectedPath, depth }: TreeNodeItemProps
         onClick={handleClick}
         style={{ paddingLeft }}
         className={cn(
-          "group relative flex items-center gap-1.5 h-[26px] pr-3 cursor-pointer select-none",
-          "text-[13px] transition-colors duration-75",
+          "group relative flex items-center gap-1.5 h-[30px] pr-3 cursor-pointer select-none",
+          "text-[14px] transition-colors duration-75",
           isSelected
             ? "bg-[#1e3a5f] text-[#e2e2e2]"
             : "text-[#9d9d9d] hover:bg-[#181818] hover:text-[#c8c8c8]"
@@ -120,12 +120,12 @@ function TreeNodeItem({ node, onSelect, selectedPath, depth }: TreeNodeItemProps
             isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
           )}>
             {node.depends_on?.length > 0 && (
-              <span className="text-[9px] px-1 py-px rounded-sm bg-[#4F8EF7]/10 text-[#4F8EF7]/80 font-mono">
+              <span className="text-[10.5px] px-1 py-px rounded-sm bg-[#4F8EF7]/10 text-[#4F8EF7]/80 font-mono">
                 ↓{node.depends_on.length}
               </span>
             )}
             {node.depended_by?.length > 0 && (
-              <span className="text-[9px] px-1 py-px rounded-sm bg-[#F59E0B]/10 text-[#F59E0B]/80 font-mono">
+              <span className="text-[10.5px] px-1 py-px rounded-sm bg-[#F59E0B]/10 text-[#F59E0B]/80 font-mono">
                 ↑{node.depended_by.length}
               </span>
             )}

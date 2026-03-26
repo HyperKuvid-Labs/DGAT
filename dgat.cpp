@@ -418,26 +418,7 @@ DepGraph build_dep_graph(TreeNode* root) {
     futures.push_back(pool.enqueue([&]() {
       string lang = get_language_from_ext(rel_path);
 
-      // Debug for C++ files
-      if (rel_path.find(".cpp") != string::npos || rel_path.find(".h") != string::npos) {
-        lock_guard<mutex> lock(graph_mutex);
-        cerr << "[DEBUG_CPP] " << rel_path << " lang=" << lang << endl;
-      }
-
       vector<string> imports = extract_imports(rel_path, content);
-
-      if (rel_path.find(".cpp") != string::npos) {
-        lock_guard<mutex> lock(graph_mutex);
-        cerr << "[DEBUG_CPP] " << rel_path << " extracted " << imports.size() << " imports" << endl;
-      }
-
-      if (!imports.empty()) {
-        lock_guard<mutex> lock(graph_mutex);
-        cerr << "[DEBUG] " << rel_path << " (" << lang << "): " << imports.size() << " imports" << endl;
-        for (const auto& imp : imports) {
-          cerr << "  - " << imp << endl;
-        }
-      }
 
       vector<pair<string, string>> local_edges;
 
@@ -1232,9 +1213,6 @@ string run_tree_sitter_query(const string& lang, const string& file_path, const 
   }
   cmd += " " + query_file.string() + " " + tmp_input + " 2>&1";
 
-  // Debug: show command being executed
-  cerr << "[DEBUG_TS_CMD] executing: " << cmd << endl;
-
   array<char, 4096> buffer;
   string result;
 
@@ -1299,16 +1277,7 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
 
   string query_output = run_tree_sitter_query(lang, file_path, content);
 
-  // Debug: show raw tree-sitter output for cpp files
-  cerr << "[DEBUG_TS] " << file_path << " lang=" << lang << " query_output size=" << query_output.size() << endl;
-  if (file_path.find(".cpp") != string::npos) {
-    cerr << "[DEBUG_TS] " << file_path << " raw output:" << endl;
-    cerr << query_output << endl;
-    cerr << "[DEBUG_TS] end output" << endl;
-  }
-
   if (query_output.empty()) {
-    cerr << "[DEBUG_TS] query output empty, trying fallback for " << lang << endl;
     return extract_imports_fallback(content, lang);
   }
 
@@ -1731,6 +1700,226 @@ string load_tree_gui_html() {
 )HTML";
 }
 
+// write file_tree.json and dep_graph.json to disk so we can reload them later
+void save_state(const json& tree_json, const json& dep_graph_json) {
+  {
+    ofstream f("file_tree.json");
+    if (!f.is_open()) { cerr << "[DGAT] failed to write file_tree.json" << endl; return; }
+    f << tree_json.dump(2);
+  }
+  {
+    ofstream f("dep_graph.json");
+    if (!f.is_open()) { cerr << "[DGAT] failed to write dep_graph.json" << endl; return; }
+    f << dep_graph_json.dump(2);
+  }
+  cout << "[DGAT] state saved to file_tree.json and dep_graph.json" << endl;
+}
+
+// load both state files — returns false if either is missing
+bool load_state(json& tree_json, json& dep_graph_json) {
+  {
+    ifstream f("file_tree.json");
+    if (!f.is_open()) { cerr << "[DGAT] file_tree.json not found — run dgat [path] first" << endl; return false; }
+    try { tree_json = json::parse(f); } catch (const exception& e) {
+      cerr << "[DGAT] failed to parse file_tree.json: " << e.what() << endl; return false;
+    }
+  }
+  {
+    ifstream f("dep_graph.json");
+    if (!f.is_open()) { cerr << "[DGAT] dep_graph.json not found — run dgat [path] first" << endl; return false; }
+    try { dep_graph_json = json::parse(f); } catch (const exception& e) {
+      cerr << "[DGAT] failed to parse dep_graph.json: " << e.what() << endl; return false;
+    }
+  }
+  return true;
+}
+
+// create a default .dgatignore if one doesn't exist yet
+void ensure_dgatignore(const fs::path& root) {
+  fs::path p = root / ".dgatignore";
+  if (fs::exists(p)) return;
+
+  ofstream f(p);
+  if (!f.is_open()) { cerr << "[DGAT] failed to create .dgatignore" << endl; return; }
+
+  f << "# .dgatignore — files and dirs to exclude from dgat analysis\n";
+  f << "# syntax is the same as .gitignore\n";
+  f << "#\n";
+  f << "# examples:\n";
+  f << "#   node_modules/\n";
+  f << "#   *.min.js\n";
+  f << "#   build/\n";
+  f << "#   dist/\n";
+  f << "\n";
+  f << "# auto-generated dgat output files — skip these during analysis\n";
+  f << "file_tree.json\n";
+  f << "dep_graph.json\n";
+  f << "dgat_blueprint.md\n";
+  f << "tree_visualization.dot\n";
+  f << "tree_visualization.png\n";
+
+  cout << "[DGAT] created default .dgatignore" << endl;
+}
+
+// Forward declarations
+string read_readme_content();
+string extract_folder_structure();
+size_t estimate_tokens(const string& text);
+string chunk_content(const string& content, size_t max_tokens);
+static const size_t MAX_CONTEXT_TOKENS = 25000;
+static const size_t PROMPT_TOKEN_ESTIMATE = 2000;
+static const size_t RESPONSE_TOKEN_BUFFER = 3000;
+
+// same as populate_descriptions but operates on a pre-selected list instead of walking the whole tree
+void populate_descriptions_selective(vector<TreeNode*>& nodes) {
+  if (nodes.empty()) return;
+
+  string rc = read_readme_content();
+  string folder_structure = extract_folder_structure();
+
+  cout << "[DGAT] Processing " << nodes.size() << " file descriptions (selective) with 8 workers..." << endl;
+
+  const size_t NUM_THREADS = 8;
+  mutex tree_mutex;
+  atomic<int> processed{0};
+  atomic<int> total{static_cast<int>(nodes.size())};
+
+  ThreadPool pool(NUM_THREADS);
+  vector<future<void>> futures;
+
+  const string file_descriptor_prompt_template = R"J2(You are a senior software engineer doing a quick code review pass. Analyze the file below and write a short markdown description of what it does.
+
+  {% if software_bluprint_details %}
+  Project context:
+  {{ software_bluprint_details_pretty }}
+  {% endif %}
+
+  {% if folder_structure %}
+  Repo structure:
+  {{ folder_structure }}
+  {% endif %}
+
+  {% if file_name %}
+  File: `{{ file_name }}`
+  {% endif %}
+
+  {% if file_content %}
+  Content:
+  {{ file_content }}
+  {% endif %}
+
+  Return a JSON object with a single key `file_description` whose value is a compact markdown string. Analyse the filename too. Rules:
+  - 3-6 lines max, no fluff
+  - Start with one bold sentence saying what the file does (description of the file's purpose, analyzing the filename and content together).
+  - Use a tight bullet list for key responsibilities (3-5 bullets max)
+  - No intro text, no closing remarks, just the markdown)J2";
+
+  json blueprint_json;
+  try {
+    blueprint_json = json::parse(rc);
+  } catch (...) {
+    blueprint_json = rc;
+  }
+
+  for (TreeNode* node : nodes) {
+    futures.push_back(pool.enqueue([&, node, rc, folder_structure, blueprint_json]() {
+      string file_content;
+
+      if (is_likely_binary_file(node->abs_path)) {
+        lock_guard<mutex> lock(tree_mutex);
+        node->description = "Binary or non-text file skipped.";
+        int count = ++processed;
+        if (count % 5 == 0 || count == total) {
+          float pct = (float)count / total * 100;
+          cout << "\r[DGAT] File descriptions: " << count << "/" << total
+               << " (" << fixed << setprecision(1) << pct << "%)" << flush;
+        }
+        return;
+      }
+
+      ifstream infile(node->abs_path, ios::binary);
+      if (infile.is_open()) {
+        stringstream buffer;
+        buffer << infile.rdbuf();
+        file_content = buffer.str();
+        file_content = sanitize_utf8(file_content);
+
+        size_t blueprint_tokens = estimate_tokens(rc);
+        size_t folder_tokens = estimate_tokens(folder_structure);
+        size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
+
+        if (available_tokens > 20000) available_tokens = 20000;
+        if (available_tokens < 1000) available_tokens = 3000;
+
+        file_content = chunk_content(file_content, available_tokens);
+      }
+
+      digest_t hash = fast_fingerprint(file_content);
+
+      json prompt_data = {
+        {"software_bluprint_details", !rc.empty()},
+        {"software_bluprint_details_pretty", blueprint_json.dump(2)},
+        {"folder_structure", folder_structure},
+        {"file_name", node->rel_path},
+        {"file_content", file_content}
+      };
+
+      inja::Environment env;
+      string rendered_prompt = env.render(file_descriptor_prompt_template, prompt_data);
+
+      json request_payload = {
+        {"model", "Qwen/Qwen3.5-2B"},
+        {"messages", {
+          {
+            {"role", "user"},
+            {"content", rendered_prompt}
+          }
+        }}
+      };
+
+      httplib::Client cli("localhost", 8000);
+      auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+
+      lock_guard<mutex> lock(tree_mutex);
+
+      node->hash = hash;
+
+      if (res && res->status == 200) {
+        try {
+          json response_json = json::parse(res->body);
+          string assistant_text = extract_assistant_text(response_json);
+          if (assistant_text.empty()) {
+            node->description = "Model returned no usable text payload.";
+          } else {
+            string json_candidate = extract_fenced_block_or_raw(assistant_text);
+            try {
+              json descriptor_json = json::parse(json_candidate);
+              node->description = descriptor_json.value("file_description", assistant_text);
+            } catch (...) {
+              node->description = assistant_text;
+            }
+          }
+        } catch (const std::exception& e) {
+          cerr << "failed to parse response for file: " << node->rel_path << ". error: " << e.what() << endl;
+        }
+      } else {
+        cerr << "response from vllm failed for file: " << node->rel_path << endl;
+        if (res) cerr << "status code: " << res->status << endl;
+      }
+
+      int count = ++processed;
+      if (count % 5 == 0 || count == total) {
+        float pct = (float)count / total * 100;
+        cout << "\r[DGAT] File descriptions: " << count << "/" << total
+             << " (" << fixed << setprecision(1) << pct << "%)" << flush;
+      }
+    }));
+  }
+
+  for (auto& f : futures) f.get();
+  cout << "\r[DGAT] File descriptions complete!                " << endl;
+}
+
 void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
   httplib::Server server;
   const string html = load_tree_gui_html();
@@ -1769,6 +1958,20 @@ void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
   server.Get("/health", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
     response.set_content("ok", "text/plain; charset=UTF-8");
+  });
+
+  // serve the blueprint markdown — frontend can render it in a panel
+  server.Get("/api/blueprint", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    ifstream f("dgat_blueprint.md");
+    if (!f.is_open()) {
+      response.status = 404;
+      response.set_content("blueprint not found", "text/plain; charset=UTF-8");
+      return;
+    }
+    stringstream buf;
+    buf << f.rdbuf();
+    response.set_content(buf.str(), "text/plain; charset=UTF-8");
   });
 
   cout << "Interactive GUI running at: http://localhost:" << port << endl;
@@ -1852,9 +2055,6 @@ string extract_folder_structure() {
   return result;
 }
 
-const size_t MAX_CONTEXT_TOKENS = 25000;
-const size_t PROMPT_TOKEN_ESTIMATE = 2000;
-const size_t RESPONSE_TOKEN_BUFFER = 3000;
 
 size_t estimate_tokens(const string& text) {
   return text.size() / 4;
@@ -2171,66 +2371,281 @@ void create_dgat_blueprint(TreeNode* root){
   cout<<"DGAT blueprint written to: "<<file_name<<endl;
 }
 
+// backend mode — load state from disk and start the server, no llm calls
+void run_backend_mode(int port) {
+  json tree_json, dep_graph_json;
+  if (!load_state(tree_json, dep_graph_json)) return;
+
+  // build minimal in-memory tree and dep graph from json so we can reuse run_tree_gui_server
+  // we pass nullptr for root since the server only needs the serialized json blobs
+  // instead of threading through a full TreeNode tree, we use a json-only server path
+
+  httplib::Server server;
+  const string html = load_tree_gui_html();
+
+  auto set_cors_headers = [](httplib::Response& response) {
+    response.set_header("Access-Control-Allow-Origin", "*");
+    response.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response.set_header("Access-Control-Allow-Headers", "Content-Type");
+  };
+
+  server.Options("/(.*)", [](const httplib::Request&, httplib::Response& response) {
+    response.set_header("Access-Control-Allow-Origin", "*");
+    response.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response.set_header("Access-Control-Allow-Headers", "Content-Type");
+    response.status = 200;
+  });
+
+  server.Get("/", [html, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.set_content(html, "text/html; charset=UTF-8");
+  });
+
+  server.Get("/api/tree", [tree_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.set_content(tree_json.dump(), "application/json; charset=UTF-8");
+  });
+
+  server.Get("/api/dep-graph", [dep_graph_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.set_content(dep_graph_json.dump(), "application/json; charset=UTF-8");
+  });
+
+  server.Get("/health", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.set_content("ok", "text/plain; charset=UTF-8");
+  });
+
+  server.Get("/api/blueprint", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    ifstream f("dgat_blueprint.md");
+    if (!f.is_open()) {
+      response.status = 404;
+      response.set_content("blueprint not found", "text/plain; charset=UTF-8");
+      return;
+    }
+    stringstream buf;
+    buf << f.rdbuf();
+    response.set_content(buf.str(), "text/plain; charset=UTF-8");
+  });
+
+  cout << "Interactive GUI running at: http://localhost:" << port << endl;
+  cout << "Press Ctrl+C to stop." << endl;
+
+  if (!server.listen("0.0.0.0", port)) {
+    cerr << "Failed to start GUI server on port " << port << endl;
+  }
+}
+
+// incremental update — re-describe only changed files, copy everything else from saved state
+void run_update_mode(const fs::path& root_path) {
+  load_gitignore(root_path);
+  load_dgatignore(root_path);
+
+  cout << "[DGAT] update mode — target: " << fs::absolute(root_path).string() << endl;
+
+  // load old state to get stored hashes and descriptions
+  json old_tree_json, old_dep_graph_json;
+  if (!load_state(old_tree_json, old_dep_graph_json)) return;
+
+  // build a flat map of rel_path -> {hash, description} from old tree
+  unordered_map<string, string> old_hash;
+  unordered_map<string, string> old_desc;
+  function<void(const json&)> collect_old = [&](const json& node) {
+    if (node.value("is_file", false)) {
+      string rp = node.value("rel_path", "");
+      if (!rp.empty()) {
+        old_hash[rp] = node.value("hash", "");
+        old_desc[rp]  = node.value("description", "");
+      }
+    }
+    for (const auto& child : node.value("children", json::array())) {
+      collect_old(child);
+    }
+  };
+  collect_old(old_tree_json);
+
+  // build fresh tree from filesystem
+  cout << "[DGAT] building new file tree..." << endl;
+  load_tsconfig_aliases(fs::current_path());
+  auto root = build_tree(root_path, root_path);
+  if (!root) { cerr << "[DGAT] failed to build tree" << endl; return; }
+
+  // collect all current files and compute their hashes
+  unordered_map<string, string> contents;
+  unordered_map<string, TreeNode*> file_map;
+  collect_source_files(root.get(), contents, file_map, true);
+
+  unordered_set<string> changed_paths;
+  for (auto& [rp, content] : contents) {
+    digest_t d = fast_fingerprint(content);
+    ostringstream oss;
+    oss << hex << setfill('0') << setw(16) << d.high64 << setw(16) << d.low64;
+    string new_hash = oss.str();
+
+    auto it = old_hash.find(rp);
+    if (it == old_hash.end() || it->second != new_hash) {
+      changed_paths.insert(rp);
+    } else {
+      // hash unchanged — copy old description so we skip the llm call
+      TreeNode* tn = file_map[rp];
+      if (tn) {
+        tn->description = old_desc.count(rp) ? old_desc[rp] : "";
+        tn->hash = d;
+      }
+    }
+  }
+
+  if (changed_paths.empty()) {
+    cout << "[DGAT] nothing changed" << endl;
+    return;
+  }
+
+  cout << "[DGAT] " << changed_paths.size() << " changed file(s) — re-describing..." << endl;
+
+  // collect TreeNode* for only the changed files
+  vector<TreeNode*> changed_nodes;
+  for (const auto& rp : changed_paths) {
+    auto it = file_map.find(rp);
+    if (it != file_map.end()) changed_nodes.push_back(it->second);
+  }
+
+  populate_descriptions_selective(changed_nodes);
+
+  // rebuild dep graph — fast, no llm
+  cout << "[DGAT] rebuilding dep graph..." << endl;
+  DepGraph dep_graph = build_dep_graph(root.get());
+  cout << "[DGAT] dep graph: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
+
+  // restore old node descriptions for nodes whose source file didn't change
+  unordered_map<string, string> old_node_desc;
+  for (const auto& n : old_dep_graph_json.value("nodes", json::array())) {
+    old_node_desc[n.value("id", "")] = n.value("description", "");
+  }
+  for (auto& node : dep_graph.nodes) {
+    if (!changed_paths.count(node.rel_path) && old_node_desc.count(node.rel_path)) {
+      node.description = old_node_desc[node.rel_path];
+    }
+  }
+
+  // re-describe only dep nodes that are external/gitignored AND were not already described above
+  // (populate_dependency_descriptions already skips non-placeholder descs)
+  populate_dependency_descriptions(dep_graph);
+
+  // for edges: re-describe only where from or to is in changed set, copy old otherwise
+  unordered_map<string, string> old_edge_desc;
+  for (const auto& e : old_dep_graph_json.value("edges", json::array())) {
+    string key = e.value("from", "") + "|||" + e.value("to", "");
+    old_edge_desc[key] = e.value("description", "");
+  }
+  // first restore old descriptions for untouched edges
+  for (auto& edge : dep_graph.edges) {
+    bool touches_changed = changed_paths.count(edge.from_path) || changed_paths.count(edge.to_path);
+    if (!touches_changed) {
+      string key = edge.from_path + "|||" + edge.to_path;
+      if (old_edge_desc.count(key)) edge.description = old_edge_desc[key];
+    }
+  }
+  // now only re-describe edges touching changed files (we temporarily set a marker so the function skips the rest)
+  // easiest approach: call populate_edge_descriptions which skips edges with placeholder node descs anyway
+  populate_edge_descriptions(dep_graph);
+
+  // sync dep info back to tree nodes
+  for (const auto& node : dep_graph.nodes) {
+    TreeNode* tn = find_node_by_path(root.get(), node.rel_path);
+    if (tn) {
+      tn->depends_on = node.depends_on;
+      tn->depended_by = node.depended_by;
+    }
+  }
+
+  // save updated state
+  json new_tree_json = tree_to_json(root.get());
+  json new_dep_json  = build_dep_graph_json(dep_graph);
+  save_state(new_tree_json, new_dep_json);
+
+  cout << "[DGAT] update complete" << endl;
+}
+
 int main(int argc, char** argv){
   fs::path root_path = ".";
-  bool gui_mode = true;
-  int gui_port = 8090;
+  bool backend_mode = false;
+  bool update_mode  = false;
+  int  port = 8090;
 
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
 
-    if (arg == "--gui") {
-      gui_mode = true;
+    if (arg == "--backend" || arg == "-b") {
+      backend_mode = true;
+    } else if (arg == "update") {
+      update_mode = true;
     } else if (arg == "--port" && i + 1 < argc) {
       try {
-        gui_port = stoi(argv[++i]);
+        port = stoi(argv[++i]);
       } catch (...) {
-        cerr << "Invalid value for --port" << endl;
+        cerr << "invalid value for --port" << endl;
         return 1;
       }
     } else if (arg.rfind("--port=", 0) == 0) {
       try {
-        gui_port = stoi(arg.substr(7));
+        port = stoi(arg.substr(7));
       } catch (...) {
-        cerr << "Invalid value for --port" << endl;
+        cerr << "invalid value for --port" << endl;
         return 1;
       }
-    } else {
+    } else if (arg.front() != '-') {
+      // non-flag, non-keyword arg is the root path
       root_path = arg;
     }
   }
 
-  load_gitignore(root_path);
-  load_dgatignore(root_path);
-
   cout << "========================================" << endl;
   cout << "   DGAT - Dependency Graph as a Tool   " << endl;
   cout << "========================================" << endl;
-  cout << "[DGAT] Target: " << fs::absolute(root_path).string() << endl;
-  cout << "[DGAT] Building file tree..." << endl;
+
+  if (backend_mode) {
+    cout << "[DGAT] backend mode — loading state and starting server on port " << port << endl;
+    run_backend_mode(port);
+    return 0;
+  }
+
+  if (update_mode) {
+    cout << "[DGAT] update mode" << endl;
+    run_update_mode(root_path);
+    return 0;
+  }
+
+  // full scan mode
+  load_gitignore(root_path);
+  load_dgatignore(root_path);
+  ensure_dgatignore(root_path);
+
+  cout << "[DGAT] target: " << fs::absolute(root_path).string() << endl;
+  cout << "[DGAT] building file tree..." << endl;
   auto root = build_tree(root_path, root_path);
   if (!root) {
-    cerr << "[DGAT] Error: Failed to build tree from root path." << endl;
+    cerr << "[DGAT] error: failed to build tree from root path." << endl;
     return 1;
   }
-  cout << "[DGAT] File tree built successfully." << endl;
+  cout << "[DGAT] file tree built successfully." << endl;
 
-  cout << "[DGAT] Populating file descriptions via vllm..." << endl;
+  cout << "[DGAT] populating file descriptions via vllm..." << endl;
   populate_descriptions(root.get());
   create_dgat_blueprint(root.get());
-  cout << "[DGAT] File descriptions populated." << endl;
+  cout << "[DGAT] file descriptions populated." << endl;
 
   // load tsconfig path aliases so "@/..." imports resolve to real paths
   load_tsconfig_aliases(fs::current_path());
 
-  cout << "[DGAT] Building dependency graph..." << endl;
+  cout << "[DGAT] building dependency graph..." << endl;
   DepGraph dep_graph = build_dep_graph(root.get());
-  cout << "[DGAT] Dependency graph built: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
+  cout << "[DGAT] dependency graph built: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
 
-  cout << "[DGAT] Populating dependency descriptions via vllm..." << endl;
+  cout << "[DGAT] populating dependency descriptions via vllm..." << endl;
   populate_dependency_descriptions(dep_graph);
 
-  cout << "[DGAT] Populating edge descriptions via vllm..." << endl;
+  cout << "[DGAT] populating edge descriptions via vllm..." << endl;
   populate_edge_descriptions(dep_graph);
 
   for (const auto& node : dep_graph.nodes) {
@@ -2240,15 +2655,15 @@ int main(int argc, char** argv){
       tn->depended_by = node.depended_by;
     }
   }
-  cout << "[DGAT] Tree nodes updated with dependency info." << endl;
+  cout << "[DGAT] tree nodes updated with dependency info." << endl;
 
   print_dep_graph(dep_graph);
 
-  if (gui_mode) {
-    cout << "[DGAT] Starting GUI server on port " << gui_port << "..." << endl;
-    run_tree_gui_server(root.get(), dep_graph, gui_port);
-    return 0;
-  }
+  // save state to disk — backend mode picks it up from here
+  json tree_j = tree_to_json(root.get());
+  json dep_j  = build_dep_graph_json(dep_graph);
+  save_state(tree_j, dep_j);
 
+  cout << "[DGAT] scan complete. run 'dgat --backend' to start the server." << endl;
   return 0;
 }

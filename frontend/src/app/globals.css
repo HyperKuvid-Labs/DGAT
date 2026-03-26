@@ -1,17 +1,7 @@
 @import "tailwindcss";
 
-:root {
-  --bg: #0c0c0c;
-  --surface: #111111;
-  --surface-2: #141414;
-  --border: #1e1e1e;
-  --border-soft: #222222;
-  --fg: #d4d4d4;
-  --fg-muted: #888888;
-  --fg-dim: #444444;
-  --accent: #4F8EF7;
-  --accent-purple: #9B72CF;
-}
+/* Color variables are injected from theme.json via layout.tsx (Next.js)
+   or export-main.tsx (Vite export build). */
 
 *, *::before, *::after {
   box-sizing: border-box;

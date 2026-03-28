@@ -1,5 +1,14 @@
 {
   "framework": null,
   "outputDirectory": ".",
-  "cleanUrls": true
+  "routes": [
+    {
+      "src": "/examples/dgat-self",
+      "dest": "/examples/dgat-self.html"
+    },
+    {
+      "src": "/examples/dgat-self/",
+      "dest": "/examples/dgat-self/index.html"
+    }
+  ]
 }

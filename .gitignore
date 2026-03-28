@@ -1,4 +1,3 @@
-dgat_blueprint.md
 # dgat/
 *.o
 build/
@@ -7,3 +6,8 @@ grammars/
 .vscode/
 .cache/
 
+# Generated DGAT output files (globally ignored; only examples/ snapshots are tracked)
+dgat_blueprint.md
+dep_graph.json
+file_tree.json
+!examples/

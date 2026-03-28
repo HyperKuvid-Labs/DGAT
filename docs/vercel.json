@@ -1,14 +1,4 @@
 {
   "framework": null,
-  "outputDirectory": ".",
-  "routes": [
-    {
-      "src": "/examples/([^/]+)$",
-      "dest": "/examples/wrapper.html?id=$1"
-    },
-    {
-      "src": "/examples/([^/]+)/$",
-      "dest": "/examples/wrapper.html?id=$1"
-    }
-  ]
+  "outputDirectory": "."
 }

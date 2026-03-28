@@ -4,8 +4,8 @@
   <script>(function(){var t=localStorage.getItem('dgat-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>dgat — self-analysis — DGAT Examples</title>
-  <meta name="description" content="DGAT analysing its own source tree. Backend engine, frontend components, library headers — every dependency mapped and described." />
+  <title>DGAT Examples</title>
+  <meta name="description" content="Real codebases analysed by DGAT — browse the dependency graph, blueprint, and file tree." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -53,7 +53,6 @@
     h1, h2, h3 { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.025em; }
     code { font-family: 'JetBrains Mono', monospace; }
 
-    /* Nav */
     nav {
       position: sticky; top: 0; z-index: 100;
       height: 56px;
@@ -79,14 +78,12 @@
       font-size: 15px; font-weight: 700; color: var(--text);
     }
 
-    /* Main layout */
     .main {
       max-width: 1400px;
       margin: 0 auto;
       padding: 32px 40px 60px;
     }
 
-    /* Repo Header Card */
     .repo-header {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -182,7 +179,6 @@
       color: #4F8EF7;
     }
 
-    /* DGAT Canvas Window */
     .dgat-window {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -221,6 +217,22 @@
       background: #0c0c0c;
     }
 
+    .not-found {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .not-found h1 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .not-found p {
+      color: var(--muted);
+    }
+    .not-found a {
+      color: #4F8EF7;
+      text-decoration: none;
+    }
+
     @media (max-width: 800px) {
       .main, .nav-inner { padding-left: 24px; padding-right: 24px; }
       .repo-header-top { flex-direction: column; }
@@ -231,7 +243,6 @@
 </head>
 <body>
 
-<!-- Nav -->
 <nav>
   <div class="nav-inner">
     <a href="./" class="nav-back">
@@ -241,59 +252,138 @@
       Examples
     </a>
     <span class="nav-sep">·</span>
-    <span class="nav-title">dgat — self-analysis</span>
+    <span class="nav-title" id="nav-title">Loading...</span>
   </div>
 </nav>
 
-<!-- Main -->
-<main class="main">
-  <!-- Repo Header -->
-  <div class="repo-header">
-    <div class="repo-header-top">
-      <h1 class="repo-name">dgat — self-analysis</h1>
-      <div class="repo-links">
-        <a href="https://github.com/pradheeppr/dgat" class="repo-link" target="_blank" rel="noopener">
+<main class="main" id="main-content">
+  <div class="not-found">
+    <h1>Loading...</h1>
+    <p>Please wait</p>
+  </div>
+</main>
+
+<script>
+const CONFIG_URL = '/examples/config.json';
+
+async function loadExample() {
+  try {
+    const configRes = await fetch(CONFIG_URL);
+    const config = await configRes.json();
+    
+    // Get example ID from URL
+    const path = window.location.pathname;
+    const match = path.match(/\/examples\/([^/]+)/);
+    const exampleId = match ? match[1] : null;
+    
+    // Also check for ?id= query param
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryId = urlParams.get('id');
+    
+    const id = exampleId || queryId;
+    
+    if (!id) {
+      // Redirect to examples index
+      window.location.href = './';
+      return;
+    }
+    
+    const example = config.examples.find(e => e.id === id);
+    
+    if (!example) {
+      document.getElementById('main-content').innerHTML = `
+        <div class="not-found">
+          <h1>Example Not Found</h1>
+          <p>No example with ID "${id}"</p>
+          <p><a href="./">← Back to Examples</a></p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Update page
+    document.title = `${example.name} — DGAT Examples`;
+    document.getElementById('nav-title').textContent = example.name;
+    
+    // Build header
+    let linksHtml = '';
+    if (example.github || example.website) {
+      if (example.github) {
+        linksHtml += `<a href="${example.github}" class="repo-link" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
           </svg>
           GitHub
-        </a>
+        </a>`;
+      }
+      if (example.website) {
+        linksHtml += `<a href="${example.website}" class="repo-link" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>
+          </svg>
+          Website
+        </a>`;
+      }
+    }
+    
+    // Build lang badges
+    const langBadges = example.langs.map(l => `<span class="stat-badge">${l}</span>`).join('');
+    
+    // Build main content
+    document.getElementById('main-content').innerHTML = `
+      <div class="repo-header">
+        <div class="repo-header-top">
+          <h1 class="repo-name">${example.name}</h1>
+          ${linksHtml ? `<div class="repo-links">${linksHtml}</div>` : ''}
+        </div>
+        <p class="repo-desc">${example.description}</p>
+        <div class="repo-stats">
+          <div class="stat-item">
+            <span class="stat-label">Nodes</span>
+            <span class="stat-value">${example.stats.nodes}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Edges</span>
+            <span class="stat-value">${example.stats.edges}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Languages</span>
+            ${langBadges}
+          </div>
+          ${example.model ? `
+          <div class="stat-item">
+            <span class="stat-label">Model</span>
+            <span class="stat-badge model">${example.model}</span>
+          </div>
+          ` : ''}
+        </div>
       </div>
-    </div>
-    <p class="repo-desc">DGAT analysing its own source tree. Backend engine, frontend components, library headers — every dependency mapped and described.</p>
-    <div class="repo-stats">
-      <div class="stat-item">
-        <span class="stat-label">Nodes</span>
-        <span class="stat-value">27</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Edges</span>
-        <span class="stat-value">44</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Languages</span>
-        <span class="stat-badge">C++</span>
-        <span class="stat-badge">TypeScript</span>
-        <span class="stat-badge">CSS</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Model</span>
-        <span class="stat-badge model">Qwen3.5-2B</span>
-      </div>
-    </div>
-  </div>
 
-  <!-- DGAT Canvas -->
-  <div class="dgat-window">
-    <div class="dgat-window-bar">
-      <span class="dgat-window-dot red"></span>
-      <span class="dgat-window-dot yellow"></span>
-      <span class="dgat-window-dot green"></span>
-      <span class="dgat-window-title">DGAT Explorer — dgat — self-analysis</span>
-    </div>
-    <iframe class="dgat-iframe" src="/examples/dgat-self/index.html" title="DGAT Explorer"></iframe>
-  </div>
-</main>
+      <div class="dgat-window">
+        <div class="dgat-window-bar">
+          <span class="dgat-window-dot red"></span>
+          <span class="dgat-window-dot yellow"></span>
+          <span class="dgat-window-dot green"></span>
+          <span class="dgat-window-title">DGAT Explorer — ${example.name}</span>
+        </div>
+        <iframe class="dgat-iframe" src="/examples/${example.id}/index.html" title="DGAT Explorer"></iframe>
+      </div>
+    `;
+    
+  } catch (err) {
+    console.error('Error loading example:', err);
+    document.getElementById('main-content').innerHTML = `
+      <div class="not-found">
+        <h1>Error Loading Example</h1>
+        <p>${err.message}</p>
+        <p><a href="./">← Back to Examples</a></p>
+      </div>
+    `;
+  }
+}
+
+loadExample();
+</script>
 
 </body>
 </html>

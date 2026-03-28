@@ -1,0 +1,17 @@
+{
+  "examples": [
+    {
+      "id": "dgat-self",
+      "name": "dgat — self-analysis",
+      "description": "DGAT analysing its own source tree. Backend engine, frontend components, library headers — every dependency mapped and described.",
+      "github": "https://github.com/pradheeppr/dgat",
+      "website": null,
+      "model": "Qwen3.5-2B",
+      "stats": {
+        "nodes": 27,
+        "edges": 44
+      },
+      "langs": ["C++", "TypeScript", "CSS"]
+    }
+  ]
+}

@@ -3,12 +3,12 @@
   "outputDirectory": ".",
   "routes": [
     {
-      "src": "/examples/dgat-self",
-      "dest": "/examples/dgat-self.html"
+      "src": "/examples/([^/]+)$",
+      "dest": "/examples/wrapper.html?id=$1"
     },
     {
-      "src": "/examples/dgat-self/",
-      "dest": "/examples/dgat-self/index.html"
+      "src": "/examples/([^/]+)/$",
+      "dest": "/examples/wrapper.html?id=$1"
     }
   ]
 }

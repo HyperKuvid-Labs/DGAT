@@ -4,7 +4,7 @@
       "id": "dgat-self",
       "name": "dgat — self-analysis",
       "description": "DGAT analysing its own source tree. Backend engine, frontend components, library headers — every dependency mapped and described.",
-      "github": "https://github.com/pradheeppr/dgat",
+      "github": "https://github.com/HyperKuvid-Labs/dgat",
       "website": null,
       "model": "Qwen3.5-2B",
       "stats": {

@@ -11,3 +11,5 @@ dgat_blueprint.md
 dep_graph.json
 file_tree.json
 !examples/
+
+temp/

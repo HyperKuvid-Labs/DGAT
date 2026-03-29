@@ -32,7 +32,7 @@ export function DescriptionCardGrid({ selectedNode }: DescriptionCardGridProps) 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <PanelHeader node={selectedNode} count={children.length} />
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-5">
         {children.length === 0 ? (
           <p className="text-[13px] text-[#333] italic px-1 pt-2">empty folder</p>
         ) : (
@@ -59,10 +59,10 @@ function FileHeroView({ node }: { node: TreeNode }) {
     <div className="flex flex-col h-full overflow-hidden">
       <PanelHeader node={node} />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-5 space-y-3">
 
         {/* description card — full width, md rendered */}
-        <div className="rounded-2xl border border-[#1e1e1e] bg-[#111111] p-5">
+        <div className="rounded-2xl border border-[#1e1e1e] bg-[#111111] p-6">
           <div className="flex items-center gap-3 mb-4">
             <NodeIconBadge node={node} size={16} />
             <div>
@@ -74,7 +74,7 @@ function FileHeroView({ node }: { node: TreeNode }) {
           </div>
 
           {/* render description as markdown if it looks like md, else plain text */}
-          <div className="border-t border-[#1a1a1a] pt-4">
+          <div className="border-t border-[#1a1a1a] pt-5">
             {hasDesc ? (
               <MiniMarkdown content={node.description} />
             ) : (

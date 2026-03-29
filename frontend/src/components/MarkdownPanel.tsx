@@ -91,7 +91,7 @@ export function MarkdownPanel({ filePath, title, apiBase, staticContent, classNa
         )}
 
         {state === "success" && (
-          <div className="px-8 py-7 max-w-[680px]">
+          <div className="px-10 py-8 max-w-[680px]">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{

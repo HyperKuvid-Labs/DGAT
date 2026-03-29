@@ -1,4 +1,10 @@
 {
   "framework": null,
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/examples/:id((?!wrapper\\.html|index\\.html)[^/]+)",
+      "destination": "/examples/wrapper.html?id=:id"
+    }
+  ]
 }

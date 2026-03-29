@@ -264,23 +264,21 @@
 </main>
 
 <script>
-const CONFIG_URL = '/examples/config.json';
+const CONFIG_URL = './config.json';
 
 async function loadExample() {
   try {
     const configRes = await fetch(CONFIG_URL);
     const config = await configRes.json();
-    
-    // Get example ID from URL
-    const path = window.location.pathname;
-    const match = path.match(/\/examples\/([^/]+)/);
-    const exampleId = match ? match[1] : null;
-    
-    // Also check for ?id= query param
+
+    // Prefer ?id= query param; fall back to path segment
     const urlParams = new URLSearchParams(window.location.search);
     const queryId = urlParams.get('id');
-    
-    const id = exampleId || queryId;
+
+    const pathMatch = window.location.pathname.match(/\/examples\/([^/]+)\//);
+    const exampleId = pathMatch ? pathMatch[1] : null;
+
+    const id = queryId || exampleId;
     
     if (!id) {
       // Redirect to examples index
@@ -366,7 +364,7 @@ async function loadExample() {
           <span class="dgat-window-dot green"></span>
           <span class="dgat-window-title">DGAT Explorer — ${example.name}</span>
         </div>
-        <iframe class="dgat-iframe" src="/examples/${example.id}/index.html" title="DGAT Explorer"></iframe>
+        <iframe class="dgat-iframe" src="./${example.id}/index.html" title="DGAT Explorer"></iframe>
       </div>
     `;
     

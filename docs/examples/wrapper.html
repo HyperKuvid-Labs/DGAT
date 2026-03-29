@@ -275,7 +275,7 @@ async function loadExample() {
     const urlParams = new URLSearchParams(window.location.search);
     const queryId = urlParams.get('id');
 
-    const pathMatch = window.location.pathname.match(/\/examples\/([^/]+)\//);
+    const pathMatch = window.location.pathname.match(/\/examples\/([^/.]+?)(?:\/|$)/);
     const exampleId = pathMatch ? pathMatch[1] : null;
 
     const id = queryId || exampleId;

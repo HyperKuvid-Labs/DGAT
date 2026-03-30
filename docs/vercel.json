@@ -3,7 +3,7 @@
   "outputDirectory": ".",
   "rewrites": [
     {
-      "source": "/examples/:id((?!wrapper\\.html|index\\.html)[^/]+)",
+      "source": "/examples/:id([^./]+)",
       "destination": "/examples/wrapper.html?id=:id"
     }
   ]

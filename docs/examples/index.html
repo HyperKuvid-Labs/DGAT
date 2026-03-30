@@ -307,6 +307,15 @@ const REPOS = [
     model:       "Qwen3.5-2B",
     image:       undefined,   // undefined → animated SVG graph; null → striped placeholder; "path.png" → real image
   },
+  {
+    name:        "NousResearch/hermes-agent",
+    url:         "hermes-agent",
+    description: "The agent that grows with you. A multi-agent orchestration system connecting dozens of messaging platforms, local backends, and MCP servers.",
+    langs:       ["Python", "LaTeX", "Shell"],
+    stats:       { nodes: 404, edges: 1069 },
+    model:       "Qwen3.5-2B",
+    image:       undefined,
+  },
 
   // ── Add more repos below ────────────────────────────────────
   // {
@@ -374,7 +383,7 @@ function renderCards() {
 
   REPOS.forEach((repo, idx) => {
     const card = document.createElement('a');
-    card.href = repo.url;
+    card.href = `wrapper.html?id=${repo.url}`;
     card.className = 'repo-card';
 
     // image slot

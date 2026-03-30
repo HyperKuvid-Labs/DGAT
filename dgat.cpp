@@ -443,10 +443,13 @@ DepGraph build_dep_graph(TreeNode* root) {
         bool is_internal = false;
         {
           static const vector<string> try_exts = {
-            "", ".tsx", ".ts", ".jsx", ".js", ".css", ".scss", ".h", ".hpp"
+            "", ".py", ".tsx", ".ts", ".jsx", ".js", ".css", ".scss", ".h", ".hpp"
           };
           static const vector<string> index_exts = {
             ".tsx", ".ts", ".jsx", ".js"
+          };
+          static const vector<string> init_exts = {
+            "/__init__.py"
           };
 
           for (auto& ext : try_exts) {
@@ -460,6 +463,17 @@ DepGraph build_dep_graph(TreeNode* root) {
           if (!is_internal) {
             for (auto& ext : index_exts) {
               string candidate = norm + "/index" + ext;
+              if (known_files.count(candidate)) {
+                norm = candidate;
+                is_internal = true;
+                break;
+              }
+            }
+          }
+          // Python package init — try norm/__init__.py
+          if (!is_internal) {
+            for (auto& ext : init_exts) {
+              string candidate = norm + ext;
               if (known_files.count(candidate)) {
                 norm = candidate;
                 is_internal = true;
@@ -1180,6 +1194,15 @@ string get_grammars_dir() {
   if (fs::exists("grammars")) {
     return "grammars";
   }
+  // binary-relative: check next to the dgat executable
+  try {
+    fs::path bin_dir = fs::read_symlink("/proc/self/exe").parent_path();
+    fs::path bin_grammars = bin_dir / "grammars";
+    if (fs::exists(bin_grammars)) return bin_grammars.string();
+    // also check ../share/dgat/grammars from binary dir (for installed layouts)
+    fs::path share_grammars = bin_dir / ".." / "share" / "dgat" / "grammars";
+    if (fs::exists(share_grammars)) return fs::canonical(share_grammars).string();
+  } catch (...) {}
   if (fs::exists("/usr/local/share/dgat/grammars")) {
     return "/usr/local/share/dgat/grammars";
   }
@@ -1189,8 +1212,31 @@ string get_grammars_dir() {
   return "";
 }
 
+string get_queries_dir() {
+  if (fs::exists("queries")) {
+    return fs::absolute("queries").string();
+  }
+  // binary-relative
+  try {
+    fs::path bin_dir = fs::read_symlink("/proc/self/exe").parent_path();
+    fs::path bin_queries = bin_dir / "queries";
+    if (fs::exists(bin_queries)) return bin_queries.string();
+    fs::path share_queries = bin_dir / ".." / "share" / "dgat" / "queries";
+    if (fs::exists(share_queries)) return fs::canonical(share_queries).string();
+  } catch (...) {}
+  if (fs::exists("/usr/local/share/dgat/queries")) {
+    return "/usr/local/share/dgat/queries";
+  }
+  if (fs::exists("/usr/share/dgat/queries")) {
+    return "/usr/share/dgat/queries";
+  }
+  return "";
+}
+
 string run_tree_sitter_query(const string& lang, const string& file_path, const string& content) {
-  fs::path query_file = fs::absolute("queries/") / (lang + ".scm");
+  string queries_dir = get_queries_dir();
+  if (queries_dir.empty()) return "";
+  fs::path query_file = fs::path(queries_dir) / (lang + ".scm");
   if (!fs::exists(query_file)) {
     return "";
   }
@@ -1293,12 +1339,27 @@ vector<string> extract_imports_via_tree_sitter(const string& file_path, const st
       continue;
     }
 
-    // extract local includes from quotes - already strips quotes via substr
+    // extract from double quotes (e.g. #include "foo.h")
     size_t pos = 0;
     while (true) {
       size_t start = line.find('"', pos);
       if (start == string::npos) break;
       size_t end = line.find('"', start + 1);
+      if (end == string::npos) break;
+      string imp = line.substr(start + 1, end - start - 1);
+      if (!imp.empty() && seen.find(imp) == seen.end()) {
+        seen.insert(imp);
+        imports.push_back(imp);
+      }
+      pos = end + 1;
+    }
+
+    // extract from backticks (tree-sitter uses backticks for text values)
+    pos = 0;
+    while (true) {
+      size_t start = line.find('`', pos);
+      if (start == string::npos) break;
+      size_t end = line.find('`', start + 1);
       if (end == string::npos) break;
       string imp = line.substr(start + 1, end - start - 1);
       if (!imp.empty() && seen.find(imp) == seen.end()) {
@@ -1334,8 +1395,38 @@ vector<string> extract_imports_fallback(const string& content, const string& lan
     }
 
     if (lang == "python") {
-      if (line.rfind("import ", 0) == 0 || line.rfind("from ", 0) == 0) {
-        add(line);
+      if (line.rfind("from ", 0) == 0) {
+        // from X.Y.Z import foo, bar  →  extract "X.Y.Z"
+        // from . import foo  →  extract "."
+        // from .X import foo  →  extract ".X"
+        string rest = trim_copy(line.substr(5));
+        size_t imp_pos = rest.find(" import ");
+        if (imp_pos != string::npos) {
+          string module = trim_copy(rest.substr(0, imp_pos));
+          add(module);
+        } else {
+          add(rest);
+        }
+      } else if (line.rfind("import ", 0) == 0) {
+        // import os  →  extract "os"
+        // import os, sys  →  extract "os" and "sys"
+        // import agent.utils  →  extract "agent.utils"
+        string rest = trim_copy(line.substr(7));
+        size_t comma_pos = 0;
+        while (true) {
+          size_t next = rest.find(',', comma_pos);
+          string module = trim_copy(rest.substr(comma_pos, next == string::npos ? string::npos : next - comma_pos));
+          if (!module.empty()) {
+            // strip "as X" alias
+            size_t as_pos = module.find(" as ");
+            if (as_pos != string::npos) {
+              module = trim_copy(module.substr(0, as_pos));
+            }
+            add(module);
+          }
+          if (next == string::npos) break;
+          comma_pos = next + 1;
+        }
       }
     } else if (lang == "c" || lang == "cpp") {
       if (line.rfind("#include", 0) == 0) {
@@ -1443,6 +1534,56 @@ string normalize_import_path(const string& imp, const string& src_file) {
     if (normalized.rfind(alias, 0) == 0) {
       normalized = resolved + normalized.substr(alias.size());
       break;
+    }
+  }
+
+  // Python relative imports starting with . or ..
+  // from . import X  →  module is "." (resolve against source dir)
+  // from .utils import X  →  module is ".utils" (resolve against source dir)
+  // from ..utils import X  →  module is "..utils" (resolve against source dir)
+  if (normalized.size() > 0 && normalized[0] == '.') {
+    string lang = get_language_from_ext(src_file);
+    if (lang == "python") {
+      // strip leading dots and count them for relative navigation
+      size_t num_dots = 0;
+      while (num_dots < normalized.size() && normalized[num_dots] == '.') num_dots++;
+      string module_part = normalized.substr(num_dots);
+
+      size_t slash = src_file.rfind('/');
+      string src_dir = (slash != string::npos) ? src_file.substr(0, slash) : "";
+
+      // navigate up num_dots - 1 parent directories
+      for (size_t i = 1; i < num_dots; i++) {
+        size_t last_slash = src_dir.rfind('/');
+        if (last_slash != string::npos) {
+          src_dir = src_dir.substr(0, last_slash);
+        } else {
+          src_dir = "";
+        }
+      }
+
+      if (!module_part.empty()) {
+        normalized = src_dir.empty() ? module_part : src_dir + "/" + module_part;
+      } else {
+        // bare "." means the package itself — use __init__.py in source dir
+        normalized = src_dir.empty() ? "__init__" : src_dir + "/__init__";
+      }
+
+      // convert remaining dots to slashes
+      for (auto& c : normalized) { if (c == '.') c = '/'; }
+
+      fs::path p = fs::path(normalized).lexically_normal();
+      return p.generic_string();
+    }
+  }
+
+  // Python absolute dotted imports like "agent.skill_utils" → "agent/skill_utils"
+  if (normalized.find('.') != string::npos) {
+    string lang = get_language_from_ext(src_file);
+    if (lang == "python") {
+      for (auto& c : normalized) { if (c == '.') c = '/'; }
+      fs::path p = fs::path(normalized).lexically_normal();
+      return p.generic_string();
     }
   }
 
@@ -2571,6 +2712,7 @@ int main(int argc, char** argv){
   fs::path root_path = ".";
   bool backend_mode = false;
   bool update_mode  = false;
+  bool deps_only    = false;
   int  port = 8090;
 
   for (int i = 1; i < argc; i++) {
@@ -2578,6 +2720,8 @@ int main(int argc, char** argv){
 
     if (arg == "--backend" || arg == "-b") {
       backend_mode = true;
+    } else if (arg == "--deps-only") {
+      deps_only = true;
     } else if (arg == "update") {
       update_mode = true;
     } else if (arg == "--port" && i + 1 < argc) {
@@ -2630,10 +2774,14 @@ int main(int argc, char** argv){
   }
   cout << "[DGAT] file tree built successfully." << endl;
 
-  cout << "[DGAT] populating file descriptions via vllm..." << endl;
-  populate_descriptions(root.get());
-  create_dgat_blueprint(root.get());
-  cout << "[DGAT] file descriptions populated." << endl;
+  if (!deps_only) {
+    cout << "[DGAT] populating file descriptions via vllm..." << endl;
+    populate_descriptions(root.get());
+    create_dgat_blueprint(root.get());
+    cout << "[DGAT] file descriptions populated." << endl;
+  } else {
+    cout << "[DGAT] skipping file descriptions (--deps-only mode)" << endl;
+  }
 
   // load tsconfig path aliases so "@/..." imports resolve to real paths
   load_tsconfig_aliases(fs::current_path());
@@ -2642,11 +2790,13 @@ int main(int argc, char** argv){
   DepGraph dep_graph = build_dep_graph(root.get());
   cout << "[DGAT] dependency graph built: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
 
-  cout << "[DGAT] populating dependency descriptions via vllm..." << endl;
-  populate_dependency_descriptions(dep_graph);
+  if (!deps_only) {
+    cout << "[DGAT] populating dependency descriptions via vllm..." << endl;
+    populate_dependency_descriptions(dep_graph);
 
-  cout << "[DGAT] populating edge descriptions via vllm..." << endl;
-  populate_edge_descriptions(dep_graph);
+    cout << "[DGAT] populating edge descriptions via vllm..." << endl;
+    populate_edge_descriptions(dep_graph);
+  }
 
   for (const auto& node : dep_graph.nodes) {
     TreeNode* tn = find_node_by_path(root.get(), node.rel_path);

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build:export": "vite build"
+    "build:export": "vite build",
+    "export": "bash export.sh"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",

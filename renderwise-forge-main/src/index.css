@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: 0 0% 5%;
+    --surface: 0 0% 7%;
+    --raised: 0 0% 10%;
+    --border: 0 0% 12%;
+    --border2: 0 0% 18%;
+    --text: 0 0% 91%;
+    --muted: 0 0% 53%;
+    --subtle: 0 0% 27%;
+    --tag-bg: 0 0% 10%;
+    --nav-bg: 0 0% 5% / 0.88;
+    --invert-bg: 0 0% 91%;
+    --invert-text: 0 0% 5%;
+    --code-bg: 0 0% 4%;
+    --code-border: 0 0% 12%;
+
+    --background: var(--bg);
+    --foreground: var(--text);
+    --card: var(--surface);
+    --card-foreground: var(--text);
+    --popover: var(--surface);
+    --popover-foreground: var(--text);
+    --primary: var(--text);
+    --primary-foreground: var(--bg);
+    --secondary: var(--raised);
+    --secondary-foreground: var(--text);
+    --muted-color: var(--raised);
+    --muted-foreground: var(--muted);
+    --accent: var(--raised);
+    --accent-foreground: var(--text);
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --input: var(--border);
+    --ring: var(--text);
+    --radius: 0.5rem;
+  }
+
+  html[data-theme="light"] {
+    --bg: 40 11% 97%;
+    --surface: 0 0% 100%;
+    --raised: 40 5% 94%;
+    --border: 40 5% 91%;
+    --border2: 40 4% 83%;
+    --text: 0 0% 10%;
+    --muted: 0 0% 42%;
+    --subtle: 40 2% 68%;
+    --tag-bg: 40 6% 93%;
+    --nav-bg: 40 11% 97% / 0.92;
+    --invert-bg: 0 0% 10%;
+    --invert-text: 0 0% 97%;
+    --code-bg: 0 0% 10%;
+    --code-border: 0 0% 18%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: hsl(var(--bg));
+    color: hsl(var(--text));
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border2)); border-radius: 10px; }
+  ::selection { background: rgba(255,255,255,0.12); }
+  html[data-theme="light"] ::selection { background: rgba(0,0,0,0.1); }
+
+  h1, h2, h3 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Fade in animation */
+.fade-in {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fi 0.5s ease forwards;
+}
+@keyframes fi { to { opacity: 1; transform: none; } }
+.d1 { animation-delay: .05s; }
+.d2 { animation-delay: .12s; }
+.d3 { animation-delay: .18s; }
+.d4 { animation-delay: .25s; }
+.d5 { animation-delay: .32s; }
+
+/* Node breathe animation for SVG graphs */
+@keyframes node-breathe {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.5; }
+}

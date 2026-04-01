@@ -1,5 +1,3 @@
-# DGAT Software Blueprint
-
 ## Project Overview
 The **Hermes Agent** is a comprehensive, multi-agent orchestration system designed for autonomous, personalized AI development. It functions as a distributed operating system, connecting to dozens of messaging platforms (Telegram, Discord, WhatsApp, Slack, etc.), local development backends (Docker, Modal), and MCP (Model Context Protocol) servers to facilitate complex agent workflows. The system features a robust CLI, seamless ACP (Agent Communication Protocol) integration, and a dynamic ecosystem of 70+ skills ranging from research and code review to creative generation and productivity optimization.
 

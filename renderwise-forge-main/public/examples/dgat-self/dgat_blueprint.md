@@ -1,5 +1,3 @@
-# DGAT Software Blueprint
-
 ## Project Overview
 DGAT (Dependency Graph as a Tool) is an offline codebase analysis system that synchronizes text-based descriptions of project files with tree-sitter syntax trees, resolving cross-language import relationships. Unlike centralized CI systems, DGAT runs locally using a minimal vLLM inference server to generate natural language artifacts for every dependency relationship, merging data into a unified JSON dependency graph and Markdown architectural blueprint.
 

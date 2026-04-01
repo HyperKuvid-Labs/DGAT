@@ -198,4 +198,14 @@ Files already covered by `.gitignore` are automatically excluded from LLM proces
 
 ---
 
+## Docs
+
+- [Overview](docs/overview.md) — how DGAT works end to end
+- [File Tree](docs/file-tree.md) — TreeNode structure, fields, and why each one exists
+- [Dependency Graph](docs/dependency-graph.md) — DepNode, DepEdge, DepGraph, and how the graph is built
+- [Incremental Updates](docs/incremental-updates.md) — how the diff mode works with XXH3 fingerprints
+- [Import Extraction](docs/import-extraction.md) — tree-sitter parsing, regex fallbacks, and path resolution
+
+---
+
 > gonna scavenge some popular repos, and see how my thing behaves with it, and use my populated context for something useful.

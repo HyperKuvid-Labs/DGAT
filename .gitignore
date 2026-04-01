@@ -6,10 +6,14 @@ grammars/
 .vscode/
 .cache/
 
-# Generated DGAT output files (globally ignored; only examples/ snapshots are tracked)
+# Generated DGAT output files — globally ignored
 dgat_blueprint.md
 dep_graph.json
 file_tree.json
-!examples/
+
+# Exception: allow these inside each example under renderwise-forge-main/public/examples/
+!renderwise-forge-main/public/examples/*/file_tree.json
+!renderwise-forge-main/public/examples/*/dep_graph.json
+!renderwise-forge-main/public/examples/*/dgat_blueprint.md
 
 temp/

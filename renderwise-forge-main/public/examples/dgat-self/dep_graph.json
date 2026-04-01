@@ -1,0 +1,687 @@
+{
+  "edges": [
+    {
+      "description": "File A leverages constants and configuration values from File B to conditionally render horizontal and vertical separators automatically for visual symmetry and functional alignment.",
+      "from": "frontend/src/components/ui/separator.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "`dgat_self` dynamically generates `frontend/src/app/globals.css` from its synthesized documentation using `vLLM/LLM`-driven architecture.",
+      "from": "frontend/src/export-main.tsx",
+      "import_stmt": "./app/globals.css",
+      "to": "frontend/src/app/globals.css"
+    },
+    {
+      "description": "File A uses `frontend/theme.json` to load component styles and typography via injected data while maintaining a single-project self-contained analysis output.",
+      "from": "frontend/src/export-main.tsx",
+      "import_stmt": "../theme.json",
+      "to": "frontend/theme.json"
+    },
+    {
+      "description": "File A inverts the inclusion relationship by using the content from file B to render a self-contained deployable structure in a single static file without an external React runtime.",
+      "from": "frontend/src/export-main.tsx",
+      "import_stmt": "./app/page",
+      "to": "frontend/src/app/page.tsx"
+    },
+    {
+      "description": "File A accesses structure constants and utility functions from File B to override Backbone's default component settings during user interaction.",
+      "from": "frontend/src/components/ui/input.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A uses the structured node and panel type definitions provided in file B to maintain a consistent graphical data representation, effectively allowing the visual components to infer and validate their own shape and behavior through strict type enforcement.",
+      "from": "frontend/src/components/GraphView.tsx",
+      "import_stmt": "@/lib/types",
+      "to": "frontend/src/lib/types.ts"
+    },
+    {
+      "description": "`GraphView.tsx` utilizes `fileIcons.ts` to visually categorize and enhance the composite graph visualization of the project with relevant file representations.",
+      "from": "frontend/src/components/GraphView.tsx",
+      "import_stmt": "@/lib/fileIcons",
+      "to": "frontend/src/lib/fileIcons.ts"
+    },
+    {
+      "description": "GrHaT uses `@/lib/utils` to provide span lengths, aggregation limits, and auto-width settings that facilitate the visual symmetry and functionality required by the graph components.",
+      "from": "frontend/src/components/GraphView.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A transforms theme variables from File B into uppercase CSS properties for layout consistency.",
+      "from": "frontend/src/app/layout.tsx",
+      "import_stmt": "./globals.css",
+      "to": "frontend/src/app/globals.css"
+    },
+    {
+      "description": "File A imports the theme configuration and transforms uppercase theme variables upon initialization to apply the styling rules defined in File B.",
+      "from": "frontend/src/app/layout.tsx",
+      "import_stmt": "../../theme.json",
+      "to": "frontend/theme.json"
+    },
+    {
+      "description": "File A imports GraphType from @/lib/types to use TypeScript type annotations required for managing the visual representation and interactive control of individual data nodes.",
+      "from": "frontend/src/components/GraphNodePanel.tsx",
+      "import_stmt": "@/lib/types",
+      "to": "frontend/src/lib/types.ts"
+    },
+    {
+      "description": "File A imports nodespan utilities from file B to normalize visual sizing and behavior across various graph node configurations.",
+      "from": "frontend/src/components/GraphNodePanel.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A uses the icons provided in File B via its import statement to visually represent data nodes within a dynamic flow visualization.",
+      "from": "frontend/src/components/GraphNodePanel.tsx",
+      "import_stmt": "@/lib/fileIcons",
+      "to": "frontend/src/lib/fileIcons.ts"
+    },
+    {
+      "description": "File A uses the custom type definitions from file B to enforce and validate the correct structural data required for rendering Graph View nodes and panels.",
+      "from": "frontend/src/components/DescriptionCardGrid.tsx",
+      "import_stmt": "@/lib/types",
+      "to": "frontend/src/lib/types.ts"
+    },
+    {
+      "description": "File A imports common utility functions and constants from File B to support consistent grid layout, aspect ratio management, and responsive behavior when DisplayCards are rendered.",
+      "from": "frontend/src/components/DescriptionCardGrid.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "In `DescriptionCardGrid.tsx`, the component imports `fileIcons` from `fileIcons.ts` to dynamically generate and render file icons visually, ensuring that the grid layout of DescriptionCards displays relevant graphical representations for the frontend user interface.",
+      "from": "frontend/src/components/DescriptionCardGrid.tsx",
+      "import_stmt": "@/lib/fileIcons",
+      "to": "frontend/src/lib/fileIcons.ts"
+    },
+    {
+      "description": "File A uses the data structure and inferred interface defined in file B to construct a graph-based dependency view where nodes and edges represent the file tree, tree-sitter identifiers, and dynamic LLM descriptions.",
+      "from": "frontend/src/components/DetailPanel.tsx",
+      "import_stmt": "@/lib/types",
+      "to": "frontend/src/lib/types.ts"
+    },
+    {
+      "description": "File A uses @/lib/utils to retrieve static metadata and aggregation constants like span lengths for generating its dependency descriptions and visualizing file trees.",
+      "from": "frontend/src/components/DetailPanel.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A uses the utility functions provided in File B to manage dynamic accessibility and screen reader attributes for its scrollable regions.",
+      "from": "frontend/src/components/ui/scroll-area.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A uses the scroll-area from File B because its inline analysis feature aggregates dependencies (imports) representing the UI context that must render within the FileCardGrid, which is itself nested inside the scrollable area defined in File B.",
+      "from": "frontend/src/components/FileCardGrid.tsx",
+      "import_stmt": "@/components/ui/scroll-area",
+      "to": "frontend/src/components/ui/scroll-area.tsx"
+    },
+    {
+      "description": "The \"frontend\" file A uses `util.ts` file B to leverage its own `DGAT` infrastructure requirements for formatting purpose statements, specific line counts, and portion of its component rendering logic.",
+      "from": "frontend/src/components/FileCardGrid.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A sources visual file icons from File B to display relevant visual representations within its structured output.",
+      "from": "frontend/src/components/FileCardGrid.tsx",
+      "import_stmt": "@/lib/fileIcons",
+      "to": "frontend/src/lib/fileIcons.ts"
+    },
+    {
+      "description": "`FileCardGrid` uses `FileCardGrid.tsx` to fetch its layout data, but since \"No `fileB` references in Artifact A\" is false, I must construct a sentence based on the premise that the user wants to identify a dependency chain. Given the instruction \"in one tight sentence, describe what file A uses from file B and why\", I must assume `fileB` exists as a type definition that helps `fileA`.\n\nHowever, strictly looking at the provided text where `file B` is defined as `frontend/src/lib/types.ts` and `file A` is `frontend/src/components/FileCardGrid.tsx` (implied filename match based on context), the dependency is that `file A` (CardGrid) needs the types defined in `file B` (types.ts) for the node representation.\n\n**Correction**: The prompt asks me to describe what file A uses from file B based on the *files provided*. File A is explicitly named `FileCardGrid.tsx`. File B is explicitly named `types.ts`. The dependency exists. My answer must describe the usage and reason clearly in one sentence without preamble.\n\nFile A (`FileCardGrid.tsx`) uses the Node Interface defined in `types.ts` (`FileCardGrid.ts`) to render its nodes based on the valid data structure enforced by the global type definitions in `types.ts`.\n\nWait, I need to be more precise with the filenames given.\nFile A: `FileCardGrid.tsx`\nFile B: `types.ts`\n\nThe dependency is that `File CardGrid` (`FileCardGrid.tsx`) uses the `types.ts` (`types`) definitions to know the structure of its own active nodes.\n\n**Final Polish**: `File CardGrid` (`FileCardGrid.tsx`) uses the data structures and interfaces defined in `types.ts` (`types`) to ensure its graph node components adhere to the correct layout and validation rules.",
+      "from": "frontend/src/components/FileCardGrid.tsx",
+      "import_stmt": "@/lib/types",
+      "to": "frontend/src/lib/types.ts"
+    },
+    {
+      "description": "FileTree.tsx imports type definitions from lib/types to enable type-safe data inference and component structure enforcement for the directory structure graph composition logic.",
+      "from": "frontend/src/components/FileTree.tsx",
+      "import_stmt": "@/lib/types",
+      "to": "frontend/src/lib/types.ts"
+    },
+    {
+      "description": "File A imports the mounting hook @/lib/utils from File B to efficiently mount and unmount directories when they are shown or hidden.",
+      "from": "frontend/src/components/FileTree.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A imports and utilizes imports listed in file A from file B to determine file type-specific icons for the component's graphical representation.",
+      "from": "frontend/src/components/FileTree.tsx",
+      "import_stmt": "@/lib/fileIcons",
+      "to": "frontend/src/lib/fileIcons.ts"
+    },
+    {
+      "description": "File A imports `scroll-area` to render the current and next markdown links in a scrollable region via the `progressiveLink` component.",
+      "from": "frontend/src/components/MarkdownPanel.tsx",
+      "import_stmt": "@/components/ui/scroll-area",
+      "to": "frontend/src/components/ui/scroll-area.tsx"
+    },
+    {
+      "description": "File A imports utility functions from `/lib/utils.ts` to implement a visual-span-based text editor where the width and aggregation logic dynamically align with the total span length.",
+      "from": "frontend/src/components/MarkdownPanel.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A updates the React component in `page.tsx` with new data structures for handling Graph View nodes and panels, directly reusing the interfaces that define these components, as established by the core logic in `lib/types.ts`.",
+      "from": "frontend/src/app/page.tsx",
+      "import_stmt": "@/lib/types",
+      "to": "frontend/src/lib/types.ts"
+    },
+    {
+      "description": "File A imports `/components/FileTree` because it needs to externalize the component referenced via `@/components/FileTree` to ensure proper loader rules are defined and expose it as a reusable shared component.",
+      "from": "frontend/src/app/page.tsx",
+      "import_stmt": "@/components/FileTree",
+      "to": "frontend/src/components/FileTree.tsx"
+    },
+    {
+      "description": "File A imports File B to render markdown content within the page layout.",
+      "from": "frontend/src/app/page.tsx",
+      "import_stmt": "@/components/MarkdownPanel",
+      "to": "frontend/src/components/MarkdownPanel.tsx"
+    },
+    {
+      "description": "`#/components/DescriptionCardGrid` uses that file to render a grid layout of DescriptionCard objects.",
+      "from": "frontend/src/app/page.tsx",
+      "import_stmt": "@/components/DescriptionCardGrid",
+      "to": "frontend/src/components/DescriptionCardGrid.tsx"
+    },
+    {
+      "description": "File A imports the `GraphNodePanel` component from file B to utilize the managed visual representation and interactive controls for displaying data or process nodes across its layout.",
+      "from": "frontend/src/app/page.tsx",
+      "import_stmt": "@/components/GraphNodePanel",
+      "to": "frontend/src/components/GraphNodePanel.tsx"
+    },
+    {
+      "description": "The page component uses the utility frontend/src/lib/utils to access configuration values like span lengths and auto-width settings for consistent visual styling.",
+      "from": "frontend/src/app/page.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "`frontend/src/components/ui/badge.tsx` securely benefits from `frontend/src/lib/utils.ts` through its `@base-ui/react` imports to access standard configuration constants.",
+      "from": "frontend/src/components/ui/badge.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A utilizes the configuration values provided in `File B` (like `data-size` and grid breakpoints) to dynamically style its components, ensuring consistent alignment and behavior across the UI Kit.",
+      "from": "frontend/src/components/ui/card.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A uses helper data and constants from File B via the `@/lib/utils` module to dynamically configure custom behaviors like span lengths, focus styles, and responsive sizing without modifying the base Component.",
+      "from": "frontend/src/components/ui/button.tsx",
+      "import_stmt": "@/lib/utils",
+      "to": "frontend/src/lib/utils.ts"
+    },
+    {
+      "description": "File A uses `json.hpp` to provide the C++ JSON serialization and decoding functions needed to marshal inja applied Doomgears' data to a JavaScript runtime.",
+      "from": "inja.hpp",
+      "import_stmt": "json.hpp",
+      "to": "json.hpp"
+    },
+    {
+      "description": "`dgat.cpp` imports `inja.hpp` to leverage inja templates for parsing DOM objects and constructing the hierarchical file node structure required for the DGAT project.",
+      "from": "dgat.cpp",
+      "import_stmt": "inja.hpp",
+      "to": "inja.hpp"
+    },
+    {
+      "description": "Dgat.cpp does not use json.hpp because json.hpp is a JavaScript serialization library that Dgat.cpp, an offline codebase analyzer, cannot use.",
+      "from": "dgat.cpp",
+      "import_stmt": "json.hpp",
+      "to": "json.hpp"
+    },
+    {
+      "description": "The dgat frontend relies on file A to analyze the JSON dependencies of file B for its specific project schema, which file B provides to file A as imported code.",
+      "from": "dgat.cpp",
+      "import_stmt": "httplib.h",
+      "to": "httplib.h"
+    },
+    {
+      "description": "`dgat.cpp` uses xxhash64 and xxhash128 hashes from xxhash.h in file A because Boost requires these specific hash functions as precompiled headers to ensure they match the exact xxhash64 and xxhash128 versions declared in `xxhash.h`.",
+      "from": "dgat.cpp",
+      "import_stmt": "xxhash.h",
+      "to": "xxhash.h"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/components/ui/separator.tsx",
+        "frontend/src/components/ui/input.tsx",
+        "frontend/src/components/GraphView.tsx",
+        "frontend/src/components/GraphNodePanel.tsx",
+        "frontend/src/components/DescriptionCardGrid.tsx",
+        "frontend/src/components/DetailPanel.tsx",
+        "frontend/src/components/ui/scroll-area.tsx",
+        "frontend/src/components/FileCardGrid.tsx",
+        "frontend/src/components/FileTree.tsx",
+        "frontend/src/components/MarkdownPanel.tsx",
+        "frontend/src/app/page.tsx",
+        "frontend/src/components/ui/badge.tsx",
+        "frontend/src/components/ui/card.tsx",
+        "frontend/src/components/ui/button.tsx"
+      ],
+      "depends_on": [],
+      "description": "This utility file provides common helper functions and constants required to enable multiple UI components, allowing them to independently access core configuration values such as span lengths, aggregation limits, and auto-width settings for visual symmetry and functionality.",
+      "hash": "",
+      "id": "frontend/src/lib/utils.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "utils.ts",
+      "rel_path": "frontend/src/lib/utils.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/export-main.tsx",
+        "frontend/src/app/layout.tsx"
+      ],
+      "depends_on": [],
+      "description": "globals.css is a file that typically contains the stylesheets used to style the HTML, CSS framework (like Tailwind or Bootstrap), and custom styling for the new application based on its theme options.",
+      "hash": "",
+      "id": "frontend/src/app/globals.css",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "globals.css",
+      "rel_path": "frontend/src/app/globals.css"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/export-main.tsx",
+        "frontend/src/app/layout.tsx"
+      ],
+      "depends_on": [],
+      "description": "Theme.json is a JSON file that defines the visual appearance of an application, including colors, style sheets, and typography. It serves as the primary source for projects utilizing styled-components or Alpine.js to dynamically render modern UI components.",
+      "hash": "",
+      "id": "frontend/theme.json",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "theme.json",
+      "rel_path": "frontend/theme.json"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/export-main.tsx"
+      ],
+      "depends_on": [
+        "frontend/src/lib/types.ts",
+        "frontend/src/components/FileTree.tsx",
+        "frontend/src/components/MarkdownPanel.tsx",
+        "frontend/src/components/DescriptionCardGrid.tsx",
+        "frontend/src/components/GraphNodePanel.tsx",
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "Page.tsx is an external React component file that renders the web page's primary layout and content structure. It is imported as the main entry point for the frontend main export.",
+      "hash": "",
+      "id": "frontend/src/app/page.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "page.tsx",
+      "rel_path": "frontend/src/app/page.tsx"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/components/GraphView.tsx",
+        "frontend/src/components/GraphNodePanel.tsx",
+        "frontend/src/components/DescriptionCardGrid.tsx",
+        "frontend/src/components/DetailPanel.tsx",
+        "frontend/src/components/FileCardGrid.tsx",
+        "frontend/src/components/FileTree.tsx",
+        "frontend/src/app/page.tsx"
+      ],
+      "depends_on": [],
+      "description": "The file types.ts defines JavaScript types and interfaces required for handling the type definitions of Graph View nodes and panels, which allow these components to infer and enforce the correct structure of data objects and graph nodes within the application.",
+      "hash": "",
+      "id": "frontend/src/lib/types.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "types.ts",
+      "rel_path": "frontend/src/lib/types.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/components/GraphView.tsx",
+        "frontend/src/components/GraphNodePanel.tsx",
+        "frontend/src/components/DescriptionCardGrid.tsx",
+        "frontend/src/components/FileCardGrid.tsx",
+        "frontend/src/components/FileTree.tsx"
+      ],
+      "depends_on": [],
+      "description": "fileIcons.ts acts as a data source that provides visual icons representing different file types or categories. This dependency is utilized to visually enhance the Graph View and various component details in the frontend, ensuring that the user interface dynamically displays relevant file representations.",
+      "hash": "",
+      "id": "frontend/src/lib/fileIcons.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "fileIcons.ts",
+      "rel_path": "frontend/src/lib/fileIcons.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/components/FileCardGrid.tsx",
+        "frontend/src/components/MarkdownPanel.tsx"
+      ],
+      "depends_on": [
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "The scroll-area.tsx dependency acts as a handle for rendering and managing the scrollable region within components like FileCardGrid and MarkdownPanel. It provides the necessary structure to define the area where users can interact with or view content that extends beyond the viewport.",
+      "hash": "",
+      "id": "frontend/src/components/ui/scroll-area.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "scroll-area.tsx",
+      "rel_path": "frontend/src/components/ui/scroll-area.tsx"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/app/page.tsx"
+      ],
+      "depends_on": [
+        "frontend/src/lib/types.ts",
+        "frontend/src/lib/utils.ts",
+        "frontend/src/lib/fileIcons.ts"
+      ],
+      "description": "FileTree.tsx is a React component that provides functionality for scanning, searching, and displaying directory structures on the user's local file system.",
+      "hash": "",
+      "id": "frontend/src/components/FileTree.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "FileTree.tsx",
+      "rel_path": "frontend/src/components/FileTree.tsx"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/app/page.tsx"
+      ],
+      "depends_on": [
+        "frontend/src/components/ui/scroll-area.tsx",
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "MarkdownPanel.tsx is a React component that provides an interactive interface for generating, viewing, and editing markdown text within a web application.",
+      "hash": "",
+      "id": "frontend/src/components/MarkdownPanel.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "MarkdownPanel.tsx",
+      "rel_path": "frontend/src/components/MarkdownPanel.tsx"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/app/page.tsx"
+      ],
+      "depends_on": [
+        "frontend/src/lib/types.ts",
+        "frontend/src/lib/utils.ts",
+        "frontend/src/lib/fileIcons.ts"
+      ],
+      "description": "DescriptionCardGrid.tsx is a React component designed to render a grid layout of DescriptionCard objects, serving as a visual container for displaying multiple content items within a web application, likely originating from the frontend source code at the specified entry point.",
+      "hash": "",
+      "id": "frontend/src/components/DescriptionCardGrid.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "DescriptionCardGrid.tsx",
+      "rel_path": "frontend/src/components/DescriptionCardGrid.tsx"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "frontend/src/app/page.tsx"
+      ],
+      "depends_on": [
+        "frontend/src/lib/types.ts",
+        "frontend/src/lib/utils.ts",
+        "frontend/src/lib/fileIcons.ts"
+      ],
+      "description": "GraphNodePanel.tsx is a utility component rendered in the main frontend page that likely manages the visual representation and interactive control of a single data or process node within a diagram or flow visualization.",
+      "hash": "",
+      "id": "frontend/src/components/GraphNodePanel.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "GraphNodePanel.tsx",
+      "rel_path": "frontend/src/components/GraphNodePanel.tsx"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "inja.hpp",
+        "dgat.cpp"
+      ],
+      "depends_on": [],
+      "description": "json.hpp is a widely used header file that defines the official C++ library for marshaling JSON data between C++ and JavaScript. It provides powerful type system mapping, string encoding, and serialization/decoding functions to ensure interoperability between C++ and JavaScript applications.",
+      "hash": "",
+      "id": "json.hpp",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "json.hpp",
+      "rel_path": "json.hpp"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "dgat.cpp"
+      ],
+      "depends_on": [
+        "json.hpp"
+      ],
+      "description": "This file represents the main header declaration for an inja application template used to integrate inja values into Doomgears, as indicated by its usage in dgat.cpp.",
+      "hash": "",
+      "id": "inja.hpp",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "inja.hpp",
+      "rel_path": "inja.hpp"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "dgat.cpp"
+      ],
+      "depends_on": [],
+      "description": "httplib.h is a minimal, fast async HTTP server with client libraries that provides robust coverage of the Hypertext Transfer Protocol (HTTP).",
+      "hash": "",
+      "id": "httplib.h",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "httplib.h",
+      "rel_path": "httplib.h"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "dgat.cpp"
+      ],
+      "depends_on": [],
+      "description": "xxhash.h is a header file that provides common function declarations for computing a large class of hash functions, specifically the xxhash64 and xxhash128 strings, which are available in standard libraries like Boost for software development.",
+      "hash": "",
+      "id": "xxhash.h",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "xxhash.h",
+      "rel_path": "xxhash.h"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/ui/separator.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "# `/frontend/src/components/ui/separator.tsx`\n\nInstantly generates standard-style horizontal and vertical separators from your project's UI library by wrapping React primitives, and renders variants via the `cn` utility.\n\n- Wraps `React.Separator` (from `@base-ui/react`) to allow customization of appearance, properties, and additional slots.\n- Provides both horizontal and vertical layout modes via the `orientation` prop.\n- Dispatches a static click event (`targetとしています`) suitable for interactive elements.\n- Applies a processed class string to the underlying component before rendering.",
+      "hash": "645f556bfb922a930941e68139bcaa13",
+      "id": "frontend/src/components/ui/separator.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "separator.tsx",
+      "rel_path": "frontend/src/components/ui/separator.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/export-main.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/app/globals.css",
+        "frontend/theme.json",
+        "frontend/src/app/page.tsx"
+      ],
+      "description": "### dgat_self/\n\n- **Single-project analysis output**: Generates a self-contained blueprint, file tree, and dependency graph for its own repository.\n- **LLM-driven architecture**: Produces synthesized documentation and visual maps using Qwen3.5-2B via vLLM.\n- **Static content template**: Outputs a pure HTML file (`index.html`) including CSS theming, TypeScript components, and inline run-time script data injected by bash.\n- **No runtime required**: Designed for immediate deployment from disk or hashbang execution; renders immediately without external server infrastructure.\n- **Markdown output**: Bundle of `dgat_blueprint.md` containing descriptions for all files and edges, plus a full parallel file tree.",
+      "hash": "2e4f501c12301ab8af2dfc208ad50635",
+      "id": "frontend/src/export-main.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "export-main.tsx",
+      "rel_path": "frontend/src/export-main.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/ui/input.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "# `input.tsx`\nA generic, default `Input` component imported from the `@base-ui/react` library with minimal Tailwind CSS styling support and no custom logic.\n\n---\n\n### **Responsibilities**\n- Core submission UI component compatible with Next.js's base library via `@base-ui/react/input`.\n- Applies default Backbone styling (h-8, w-full, rounded-lg, border, outline-none) and Tailwind utility classes (no custom overrides).\n- Handles `className` prop for global overrides like `md:text-sm`.\n- Passes all standard input event props (`type`, `value`, `onChange`, `disabled`, etc.) to the underlying library component.\n- Returns the native `<input>` element wrapped in a styled container.",
+      "hash": "258e74c688ddcb2cd1f7f4e1c04b85ec",
+      "id": "frontend/src/components/ui/input.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "input.tsx",
+      "rel_path": "frontend/src/components/ui/input.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/GraphView.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/lib/types.ts",
+        "frontend/src/lib/fileIcons.ts",
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "# dgat blueprint.md\n\nA computed architectural overview of the project, generated by summarizing individual file descriptions and/or interaction details. It describes how disparate file pieces fit into the larger dependency graph, highlighting key components, relationships, and structural organization.\n\n- **Summarizes context**: Combines file metadata with LLM-generated descriptions to paint a high-level picture of the project's software architecture.\n- **Highlights structure**: Shows the topological layout of dependencies, which file contains the most complex logic, and the order of imports.\n- **Links files**: Cross-references specific functions, classes, or modules mentioned in the full dependency graph to show how they interact.\n- **Identifies gaps/stand-alone apps**: Mentions whether the codebase is a monolithic system or consists of isolated services, based on the graph's network density.",
+      "hash": "4276f08cdc37e14e6c728609a7f8193e",
+      "id": "frontend/src/components/GraphView.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "GraphView.tsx",
+      "rel_path": "frontend/src/components/GraphView.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/app/layout.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/app/globals.css",
+        "frontend/theme.json"
+      ],
+      "description": "* Resets Next.js theme context to `themeVars` derived from `theme.json` for consistent styling.\n* Transforms the theme object into uppercase CSS variables (e.g., `--dark`).\n* Exports raw metadata for the page title and description fields.\n* Analyzes filename: `app/layout.tsx` (Layout component) | File describes root layout and theme integration.",
+      "hash": "61bb4ae03bca75a1cd9433ff47268dc6",
+      "id": "frontend/src/app/layout.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "layout.tsx",
+      "rel_path": "frontend/src/app/layout.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/DetailPanel.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/lib/types.ts",
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "* **An LLM-annotated dependency graph inspector that exposes every file's LLM-generated description, its file system tree, and its import relationships.**  \n* **Provides a **Tree**-based file explorer** allowing users to view absolute and relative paths, identifiers, and granular dependency metadata for `.cpp`, `.ts`, `.py`, and `.md` codebases.  \n* **Offers a **Graph**-based dependency view** where nodes represent files (with LLM analysis) and edges display direct import statements and logical references between components.  \n* **Filters and highlights **Git-ignored and copyright-protected files** alongside their full paths and associated LLM descriptions for debugging or review.  \n* **Fetches **static metadata** like file hashes, tree-sitter identifiers, and dependency counts directly from parsed files without requiring a scan.",
+      "hash": "44114ce4293111e97f416f7af9d9efd2",
+      "id": "frontend/src/components/DetailPanel.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "DetailPanel.tsx",
+      "rel_path": "frontend/src/components/DetailPanel.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/FileCardGrid.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/components/ui/scroll-area.tsx",
+        "frontend/src/lib/utils.ts",
+        "frontend/src/lib/fileIcons.ts",
+        "frontend/src/lib/types.ts"
+      ],
+      "description": "### `dgat_leaf_analysis.cpp`\nA utility component designed to generate concise markdown descriptions (3-6 lines) for individual code files and their dependencies. It leverages the `DGAT` infrastructure to analyze the file's content and lineage, outputting a formatted Markdown block that explicitly states the file's purpose, followed by a bulleted list of responsibilities. This analysis is integrated into the larger Graph as a DOT file and executed locally by vLLM.\n\nKey features:\n*   **Inline Analysis**: Automatically generates purpose statements based on the filename and content.\n*   **Structured Responsibilities**: Tracks incoming/exports using `tree-sitter` and sorts imports alphabetically in the output.\n*   **Self-Contained**: The entire logic up to inline Java/Python defines is compiled into a lightweight C++ helper that plugs directly into the `vLLM HTTP API`.\n\n---\n\n### `dgat_outline.cpp`\nA component that parses dependency trees in multiple languages (C, C++, Python, SV, Java, JS, Ruby, PHP, Rust, Go, Sh) and produces readable Markdown. It specifically targets the generation of a comprehensive software blueprint by summarizing imports and exports across the whole project, avoiding verbose build-output in favor of natural language descriptions.\n\nKey features:\n*   **Multi-Language Support**: Benches `tree-sitter` against compiled and source code across diverse ecosystems.\n*   **Export-First Logic**: Allows specifying an output image while still integrating dependencies.\n*   **Systematic Analysis**: Uses graph traversal to accumulate total dependency depths, enabling accurate \"in-degree\" (dependents) and \"out-degree\" (dependents) counts for the blueprint.\n*   **Self-Hosting**: Runs via the local vLLM instance to ensure privacy and avoid cloud API costs.",
+      "hash": "45cd850f7f6c569cdd5a0585350ed595",
+      "id": "frontend/src/components/FileCardGrid.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "FileCardGrid.tsx",
+      "rel_path": "frontend/src/components/FileCardGrid.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/ui/badge.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "# `badge.tsx`\n\nThis component renders a styled, clickable **Status Badge** for linking targets based on the `variant` prop (`default`, `secondary`, `destructive`, `outline`, or `ghost`) and an optional `render` callback. It accepts inline SVG icons via the `@base-ui/react` package and lazy-mounts them for performance.\n\n**Key Responsibilities:**\n- Provides a consistent, branded label for different state types (primary, secondary, errors, defaults, or links).\n- Supports custom rendering logic (`render`) and dynamic props (`className`) for future customization.\n- Generates unstyled `<span>` elements via `useRender` rather than HTML tags, contributing to a lightweight, scalable UI lifecycle.",
+      "hash": "a69222b299611fac5bcd41d11e8afb80",
+      "id": "frontend/src/components/ui/badge.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "badge.tsx",
+      "rel_path": "frontend/src/components/ui/badge.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/ui/card.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "### **File**\nThis React component renders the \"Card\" utility pattern from the UI Kit, defining the structural skeleton for a logical UI card based on its props.\n\n**Responsibilities:**\n*   **Provides Standardized Structure**: Generates a reusable, declarative container with distinct `header`, `title`, `description`, and `footer` sections.\n*   **Controls Dynamic Styling**: Applies context-based classes (e.g., `data-size`) for mobile breakpoints and footer adjustments via a flexbox grid layout.\n*   **Ensures Consistent Margins**: Enforces a uniform gap of `4px` between internal components to maintain grid alignment across different card sizes.",
+      "hash": "fff2bc53e8c7eab0ae7afc89b5987dae",
+      "id": "frontend/src/components/ui/card.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "card.tsx",
+      "rel_path": "frontend/src/components/ui/card.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./frontend/src/components/ui/button.tsx",
+      "depended_by": [],
+      "depends_on": [
+        "frontend/src/lib/utils.ts"
+      ],
+      "description": "### **`frontend/src/components/ui/button.tsx`**\n\n**A reusable, configurable React button component supporting primary, ghost, destructive/link, and icon variants with responsive sizing via Native Tailwind CSS.**\n\n*   **Core Responsibilities:**\n    *   Acts as a bridge to the `@base-ui/react/button` module, composing dynamic CSS via `cn()` (ClassNames).\n    *   Implements native `shrink-0` behavior to exclude UI elements from width calculations.\n    *   Applies tight `gap-1.5` spacing and 4px borders to focus states (`focus-visible`) and mutes them on hover (`active:not-aria-[...]`).\n    *   Manages states including disabled opacity, empty sizing drills (`xs` - 40px to `lg` - 80px), and icon slot integration (`icon-`, `icon-xs/lg`).\n    *   Inherits all configuration from the parent `ButtonPrimitive` prop, triggering layout shifts and spacing adjustments in the base component.",
+      "hash": "be4cfed20e5f467dfad63aa280db439b",
+      "id": "frontend/src/components/ui/button.tsx",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "button.tsx",
+      "rel_path": "frontend/src/components/ui/button.tsx"
+    },
+    {
+      "abs_path": "/home/pradheep/DGAT/./dgat.cpp",
+      "depended_by": [],
+      "depends_on": [
+        "inja.hpp",
+        "json.hpp",
+        "httplib.h",
+        "xxhash.h"
+      ],
+      "description": "Here is a markdown description of the file's functionality:\n\n```markdown\n`dgat.cpp` implements the backend logic for the **DGAT** project. It performs an offline codebase analysis by recursively traversing the project tree, skipping binary files and build artifacts, while respecting `.dgatignore` rules. \n\nThe core responsibilities include:\n1. **Tree Construction:** Building a hierarchical file node structure from the source tree.\n2. **Source Discovery:** Extracting file contents and parsing their language to determine the appropriate syntax-based import resolution strategies.\n3. **Dependency Graph Synthesis:** Scanning imports to identify internal and external dependencies, resolving aliases based on `tsconfig.json`, and creating entries in both `DepNode` and `DepEdge` structs.\n4. **LLM Integration:** Generating natural-language descriptions for dependency imports via local interaction with a Qwen3.5-2B model running on a vLLM server.\n5. **Output Generation:** Merging collected data into a final `DepGraph` structure containing nodes, edges, dependency metadata, and git-defined exclusions.\n```",
+      "hash": "7eb840d099e35af44d3610960739fd1e",
+      "id": "dgat.cpp",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "dgat.cpp",
+      "rel_path": "dgat.cpp"
+    }
+  ]
+}

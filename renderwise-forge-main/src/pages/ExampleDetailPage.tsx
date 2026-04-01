@@ -11,7 +11,7 @@ export default function ExampleDetailPage() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    fetch("/config.json")
+    fetch(`${import.meta.env.BASE_URL}config.json`)
       .then(r => r.json())
       .then((data: ConfigData) => {
         const found = data.examples.find(e => e.id === id);
@@ -107,7 +107,7 @@ export default function ExampleDetailPage() {
             <span className="w-3 h-3 rounded-full bg-[#28C840]" />
             <span className="ml-2 text-[13px] text-dgat-muted font-medium">DGAT Explorer — {example.name}</span>
           </div>
-          <GraphExplorer exampleId={example.id} />
+          <GraphExplorer exampleId={example.id} files={example.files} />
         </div>
       </main>
     </>

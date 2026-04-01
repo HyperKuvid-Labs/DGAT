@@ -9,7 +9,7 @@ export default function ExamplesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/config.json")
+    fetch(`${import.meta.env.BASE_URL}config.json`)
       .then(r => r.json())
       .then((data: ConfigData) => { setExamples(data.examples); setLoading(false); })
       .catch(() => setLoading(false));

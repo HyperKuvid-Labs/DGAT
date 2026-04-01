@@ -40,7 +40,7 @@ export function Navbar({ variant = "home", title }: NavbarProps) {
             <Link to="/examples" className="text-dgat-muted text-sm font-medium no-underline px-3 py-1 rounded-md transition-all duration-150 hover:text-dgat-text hover:bg-raised">Examples</Link>
             <ThemeToggle />
             <a
-              href="https://github.com/pradheeppr/dgat"
+              href="https://github.com/HyperKuvid-Labs/dgat"
               className="bg-dgat-text text-background text-[13px] font-semibold py-[7px] px-4 rounded-[7px] no-underline ml-1.5 transition-opacity duration-150 hover:opacity-80 inline-flex items-center gap-[7px]"
               target="_blank"
               rel="noopener"
@@ -67,7 +67,7 @@ export function Navbar({ variant = "home", title }: NavbarProps) {
           <span className="text-dgat-border2 select-none">·</span>
           <span className="font-heading text-[15px] font-bold text-dgat-text">Examples</span>
           <a
-            href="https://github.com/pradheeppr/dgat"
+            href="https://github.com/HyperKuvid-Labs/dgat"
             className="ml-auto flex items-center gap-1.5 bg-surface border border-dgat-border text-dgat-muted text-[13px] font-medium py-1 px-3 rounded-md no-underline transition-all duration-150 hover:text-dgat-text hover:border-dgat-border2"
             target="_blank"
             rel="noopener"

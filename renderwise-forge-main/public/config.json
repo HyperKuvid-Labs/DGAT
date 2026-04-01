@@ -9,7 +9,13 @@
       "langs": ["C++", "TypeScript", "CSS"],
       "stats": { "nodes": 27, "edges": 44 },
       "model": "Qwen3.5-2B",
-      "image": null
+      "image": null,
+      "files": {
+        "basePath": "examples/dgat-self",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     },
     {
       "id": "hermes-agent",
@@ -20,7 +26,13 @@
       "langs": ["Python", "LaTeX", "Shell"],
       "stats": { "nodes": 404, "edges": 1069 },
       "model": "Qwen3.5-2B",
-      "image": null
+      "image": null,
+      "files": {
+        "basePath": "examples/hermes-agent",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

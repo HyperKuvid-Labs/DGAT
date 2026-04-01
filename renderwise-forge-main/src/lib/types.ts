@@ -8,6 +8,12 @@ export interface ExampleConfig {
   stats: { nodes: number; edges: number };
   model: string | null;
   image: string | null;
+  files?: {
+    basePath?: string;
+    blueprint?: string;
+    tree?: string;
+    depGraph?: string;
+  };
 }
 
 export interface ConfigData {

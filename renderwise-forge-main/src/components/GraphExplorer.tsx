@@ -3,7 +3,8 @@ import Graph from "graphology";
 import Sigma from "sigma";
 import { circular } from "graphology-layout";
 import forceAtlas2 from "graphology-layout-forceatlas2";
-import type { TreeNode } from "@/lib/types";
+import { MarkdownRenderer } from "@/components/markdownpanel";
+import type { TreeNode, ExampleConfig } from "@/lib/types";
 
 interface FileNode {
   name: string;
@@ -29,6 +30,14 @@ interface FileTreeFile {
 }
 
 const basename = (path: string) => path.split("/").pop() || path;
+const normalizePublicPath = (path: string) => (path.startsWith("/") ? path : `/${path}`);
+const joinPath = (base: string, file: string) => `${base.replace(/\/+$/, "")}/${file.replace(/^\/+/, "")}`;
+
+function toCandidatePaths(path: string | undefined, bases: string[]) {
+  if (!path) return [];
+  if (path.startsWith("/")) return [normalizePublicPath(path)];
+  return bases.map((base) => joinPath(base, path));
+}
 
 async function fetchFirst<T>(paths: string[], parser: "json" | "text"): Promise<T> {
   let lastError: unknown;
@@ -76,11 +85,27 @@ function collectFileRecords(nodes: TreeNode[], out: Map<string, TreeNode>) {
   });
 }
 
+function filterNodesWithDependencies(nodes: FileNode[], deps: Set<string>): FileNode[] {
+  return nodes.reduce<FileNode[]>((acc, node) => {
+    if (node.isFile) {
+      if (deps.has(node.path)) {
+        acc.push(node);
+      }
+    } else {
+      const filteredChildren = filterNodesWithDependencies(node.children, deps);
+      if (filteredChildren.length > 0) {
+        acc.push({ ...node, children: filteredChildren });
+      }
+    }
+    return acc;
+  }, []);
+}
+
 // FileTree component
 function FileTreeView({ nodes, selectedNode, onSelect, expandedDirs, onToggleDir }: {
   nodes: FileNode[];
   selectedNode: string | null;
-  onSelect: (name: string) => void;
+  onSelect: (path: string) => void;
   expandedDirs: Set<string>;
   onToggleDir: (path: string) => void;
 }) {
@@ -89,9 +114,9 @@ function FileTreeView({ nodes, selectedNode, onSelect, expandedDirs, onToggleDir
       {nodes.map(node => (
         <div key={node.path}>
           <button
-            onClick={() => node.isFile ? onSelect(node.name) : onToggleDir(node.path)}
+            onClick={() => node.isFile ? onSelect(node.path) : onToggleDir(node.path)}
             className={`w-full text-left px-3 py-1.5 flex items-center gap-2 transition-colors hover:bg-raised cursor-pointer border-none bg-transparent ${
-              selectedNode === node.name ? "bg-raised text-dgat-text" : "text-dgat-muted"
+              selectedNode === node.path ? "bg-raised text-dgat-text" : "text-dgat-muted"
             }`}
             style={{ paddingLeft: `${(node.path.split("/").length - 1) * 12 + 12}px` }}
           >
@@ -124,18 +149,21 @@ function FileTreeView({ nodes, selectedNode, onSelect, expandedDirs, onToggleDir
 
 interface GraphExplorerProps {
   exampleId: string;
+  files?: ExampleConfig["files"];
 }
 
-export function GraphExplorer({ exampleId }: GraphExplorerProps) {
+export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [previousNode, setPreviousNode] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"blueprint" | "graph">("graph");
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [depEdges, setDepEdges] = useState<RawEdge[]>([]);
   const [blueprint, setBlueprint] = useState("");
+  const [selectedRelationDescription, setSelectedRelationDescription] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -146,25 +174,33 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
       setLoading(true);
       setLoadError(null);
       setSelectedNode(null);
+      setSelectedRelationDescription(null);
       setSearchQuery("");
 
-      const exampleBase = `/examples/${exampleId}`;
+      const exampleBases = [
+        ...(files?.basePath ? [normalizePublicPath(files.basePath)] : []),
+        `/examples/${exampleId}`,
+        `/${exampleId}`,
+      ];
 
       const treeCandidates = [
-        `${exampleBase}/file_tree.json`,
-        `${exampleBase}/tree-file.json`,
-        `${exampleBase}/tree_file.json`,
+        ...toCandidatePaths(files?.tree, exampleBases),
+        ...exampleBases.map((base) => `${base}/file_tree.json`),
+        ...exampleBases.map((base) => `${base}/tree-file.json`),
+        ...exampleBases.map((base) => `${base}/tree_file.json`),
       ];
 
       const depCandidates = [
-        `${exampleBase}/dep_graph.json`,
-        `${exampleBase}/dep-graph.json`,
-        `${exampleBase}/depgraph.json`,
+        ...toCandidatePaths(files?.depGraph, exampleBases),
+        ...exampleBases.map((base) => `${base}/dep_graph.json`),
+        ...exampleBases.map((base) => `${base}/dep-graph.json`),
+        ...exampleBases.map((base) => `${base}/depgraph.json`),
       ];
 
       const blueprintCandidates = [
-        `${exampleBase}/dgat_blueprint.md`,
-        `${exampleBase}/blueprint.md`,
+        ...toCandidatePaths(files?.blueprint, exampleBases),
+        ...exampleBases.map((base) => `${base}/dgat_blueprint.md`),
+        ...exampleBases.map((base) => `${base}/blueprint.md`),
       ];
 
       try {
@@ -184,7 +220,7 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
         setExpandedDirs(new Set(rootDirs));
       } catch {
         if (!mounted) return;
-        setLoadError("Could not load one or more example files. Add dgat_blueprint.md, file_tree.json (or tree-file.json), and dep_graph.json (or dep-graph.json) under this example in /public/examples.");
+        setLoadError("Could not load one or more example files. Add dgat_blueprint.md, tree-file.json (or file_tree.json), and dep-graph.json (or dep_graph.json) under /public/examples/<example-id> (or /public/<example-id>), or set explicit paths in config.json.");
         setTreeData([]);
         setDepEdges([]);
         setBlueprint("");
@@ -198,26 +234,32 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
     return () => {
       mounted = false;
     };
-  }, [exampleId]);
+  }, [exampleId, files]);
 
-  const fileTree = useMemo(() => toFileNodes(treeData), [treeData]);
+  const nodesWithDependencies = useMemo(() => {
+    const deps = new Set<string>();
+    depEdges.forEach((edge) => {
+      const from = edge.from || edge.source;
+      const to = edge.to || edge.target;
+      if (from) deps.add(from);
+      if (to) deps.add(to);
+    });
+    return deps;
+  }, [depEdges]);
+
+  const fileRecords = useMemo(() => {
+    const map = new Map<string, TreeNode>();
+    collectFileRecords(treeData, map);
+    return map;
+  }, [treeData]);
+
+  const fileTree = useMemo(() => {
+    const filtered = filterNodesWithDependencies(toFileNodes(treeData), nodesWithDependencies);
+    return filtered;
+  }, [treeData, nodesWithDependencies]);
 
   const graph = useMemo(() => {
     const nextGraph = new Graph();
-    const fileMap = new Map<string, TreeNode>();
-    collectFileRecords(treeData, fileMap);
-
-    fileMap.forEach((file, relPath) => {
-      nextGraph.addNode(relPath, {
-        label: basename(relPath),
-        fullPath: relPath,
-        x: 0,
-        y: 0,
-        size: 5,
-        color: "#444444",
-        description: file.description || `File: ${relPath}`,
-      });
-    });
 
     depEdges.forEach((edge) => {
       const from = edge.from || edge.source;
@@ -225,6 +267,7 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
       if (!from || !to) return;
 
       if (!nextGraph.hasNode(from)) {
+        const fromRecord = fileRecords.get(from);
         nextGraph.addNode(from, {
           label: basename(from),
           fullPath: from,
@@ -232,11 +275,12 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
           y: 0,
           size: 5,
           color: "#444444",
-          description: `File: ${from}`,
+          description: fromRecord?.description || `File: ${from}`,
         });
       }
 
       if (!nextGraph.hasNode(to)) {
+        const toRecord = fileRecords.get(to);
         nextGraph.addNode(to, {
           label: basename(to),
           fullPath: to,
@@ -244,7 +288,7 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
           y: 0,
           size: 5,
           color: "#444444",
-          description: `File: ${to}`,
+          description: toRecord?.description || `File: ${to}`,
         });
       }
 
@@ -272,7 +316,39 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
     }
 
     return nextGraph;
-  }, [treeData, depEdges]);
+  }, [fileRecords, depEdges]);
+
+  const getRelationDescription = useCallback((fromNode: string, toNode: string): string | null => {
+    if (!graph.hasNode(fromNode) || !graph.hasNode(toNode)) return null;
+
+    if (graph.hasEdge(fromNode, toNode)) {
+      const edgeKey = graph.edge(fromNode, toNode);
+      if (!edgeKey) return null;
+      return (graph.getEdgeAttribute(edgeKey, "description") as string) || null;
+    }
+
+    if (graph.hasEdge(toNode, fromNode)) {
+      const edgeKey = graph.edge(toNode, fromNode);
+      if (!edgeKey) return null;
+      return (graph.getEdgeAttribute(edgeKey, "description") as string) || null;
+    }
+
+    return null;
+  }, [graph]);
+
+  const handleSelectNode = useCallback((nextNode: string | null) => {
+    if (!nextNode || !selectedNode) {
+      setSelectedRelationDescription(null);
+      setPreviousNode(selectedNode);
+      setSelectedNode(nextNode);
+      return;
+    }
+
+    const relation = getRelationDescription(selectedNode, nextNode);
+    setSelectedRelationDescription(relation);
+    setPreviousNode(selectedNode);
+    setSelectedNode(nextNode);
+  }, [getRelationDescription, selectedNode]);
 
   // Initialize Sigma
   useEffect(() => {
@@ -290,18 +366,18 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
     sigmaRef.current = renderer;
 
     renderer.on("clickNode", ({ node }) => {
-      setSelectedNode(node);
+      handleSelectNode(node);
     });
 
     renderer.on("clickStage", () => {
-      setSelectedNode(null);
+      handleSelectNode(null);
     });
 
     return () => {
       renderer.kill();
       sigmaRef.current = null;
     };
-  }, [graph, activeTab, loading]);
+  }, [graph, activeTab, loading, handleSelectNode]);
 
   // Highlight neighbors on selection
   useEffect(() => {
@@ -332,7 +408,7 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     if (!sigmaRef.current || !query.trim()) {
-      setSelectedNode(null);
+      handleSelectNode(null);
       return;
     }
       const found = graph.nodes().find(n => {
@@ -342,12 +418,12 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
       return label.toLowerCase().includes(q) || fullPath.toLowerCase().includes(q);
     });
     if (found) {
-      setSelectedNode(found);
+      handleSelectNode(found);
       const camera = sigmaRef.current.getCamera();
       const pos = sigmaRef.current.getNodeDisplayData(found);
       if (pos) camera.animate({ x: pos.x, y: pos.y, ratio: 0.3 }, { duration: 300 });
     }
-  }, [graph]);
+  }, [graph, handleSelectNode]);
 
   const toggleDir = useCallback((path: string) => {
     setExpandedDirs(prev => {
@@ -358,8 +434,13 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
     });
   }, []);
 
-  const nodeDescription = selectedNode ? (graph.getNodeAttribute(selectedNode, "description") as string) || `File: ${selectedNode}` : null;
-  const nodeDeps = selectedNode ? graph.neighbors(selectedNode) : [];
+  const getNodeDescription = (node: string): string => {
+    return fileRecords.get(node)?.description || (graph.hasNode(node) ? (graph.getNodeAttribute(node, "description") as string) : null) || `File: ${node}`;
+  };
+
+  const nodeDescription = selectedNode ? getNodeDescription(selectedNode) : null;
+  const previousNodeDescription = previousNode && selectedRelationDescription ? getNodeDescription(previousNode) : null;
+  const nodeDeps = selectedNode && graph.hasNode(selectedNode) ? graph.neighbors(selectedNode) : [];
 
   return (
     <div className="flex h-[calc(100vh-280px)] min-h-[600px]">
@@ -389,7 +470,7 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
             <FileTreeView
               nodes={fileTree}
               selectedNode={selectedNode}
-              onSelect={setSelectedNode}
+              onSelect={handleSelectNode}
               expandedDirs={expandedDirs}
               onToggleDir={toggleDir}
             />
@@ -415,6 +496,8 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
               <div className="flex-1 bg-background flex items-center justify-center text-[13px] text-dgat-subtle">Loading graph...</div>
             ) : loadError ? (
               <div className="flex-1 bg-background flex items-center justify-center p-6 text-[13px] text-dgat-subtle text-center">{loadError}</div>
+            ) : graph.order === 0 ? (
+              <div className="flex-1 bg-background flex items-center justify-center p-6 text-[13px] text-dgat-subtle text-center">No dependency relationships found in dep_graph.json for this example.</div>
             ) : (
               <div ref={containerRef} className="flex-1 bg-background" />
             )}
@@ -427,7 +510,7 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
             ) : loadError ? (
               <div className="text-[14px] text-dgat-subtle">{loadError}</div>
             ) : (
-              <pre className="text-[14px] text-dgat-muted leading-[1.75] whitespace-pre-wrap font-sans">{blueprint}</pre>
+              <MarkdownRenderer content={blueprint} compact className="max-w-none" />
             )}
           </div>
         )}
@@ -440,13 +523,25 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
         </div>
         {selectedNode ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {previousNodeDescription && (
+              <>
+                <div>
+                  <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">Source File</div>
+                  <div className="font-heading text-[15px] font-bold text-dgat-text">{previousNode}</div>
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">Description</div>
+                  <MarkdownRenderer content={previousNodeDescription} compact />
+                </div>
+              </>
+            )}
             <div>
-              <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">File</div>
+              <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">{previousNodeDescription ? "Target File" : "File"}</div>
               <div className="font-heading text-[15px] font-bold text-dgat-text">{selectedNode}</div>
             </div>
             <div>
               <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">Description</div>
-              <p className="text-[13px] text-dgat-muted leading-[1.6]">{nodeDescription}</p>
+              {nodeDescription && <MarkdownRenderer content={nodeDescription} compact />}
             </div>
             {nodeDeps.length > 0 && (
               <div>
@@ -455,13 +550,19 @@ export function GraphExplorer({ exampleId }: GraphExplorerProps) {
                   {nodeDeps.map(dep => (
                     <button
                       key={dep}
-                      onClick={() => setSelectedNode(dep)}
+                      onClick={() => handleSelectNode(dep)}
                       className="w-full text-left px-2.5 py-1.5 bg-raised border border-dgat-border rounded text-[12px] font-mono text-dgat-muted hover:text-dgat-text hover:border-dgat-border2 transition-colors cursor-pointer"
                     >
                       {basename(dep)}
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+            {selectedRelationDescription && (
+              <div>
+                <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">Relationship</div>
+                <MarkdownRenderer content={selectedRelationDescription} compact />
               </div>
             )}
           </div>

@@ -269,7 +269,7 @@ export default function HomePage() {
               <div className="flex flex-col">
                 {[
                   { num: "01", title: "Clone & build", code: <>git clone https://github.com/HyperKuvid-Labs/dgat<br/>cd dgat<br/>cmake -B build && cmake --build build -j$(nproc)<br/><CodeComment># or: bash install.sh</CodeComment></> },
-                  { num: "02", title: "Start vLLM", code: <><CodeComment># any OpenAI-compatible endpoint works</CodeComment><br/>vllm serve Qwen/Qwen2.5-3B-Instruct --port 8000</> },
+                  { num: "02", title: "Start vLLM", code: <><CodeComment># any OpenAI-compatible endpoint works</CodeComment><br/>vllm serve Qwen/Qwen3.5-2B --port 8000</> },
                   { num: "03", title: "Run on your project", code: <>./build/dgat /path/to/your/project<br/><CodeComment># copy the output files:</CodeComment><br/>cp file_tree.json dep_graph.json dgat_blueprint.md renderwise-forge-main/public/examples/your-project/<br/><CodeComment># then run the frontend:</CodeComment><br/>cd renderwise-forge-main && bun dev<br/><CodeComment># → http://localhost:3000/examples/your-project</CodeComment><br/><span className="text-dgat-text font-semibold">🙂 or submit a PR — we'll merge it for you!</span></> },
                 ].map((step, i) => (
                   <div key={i} className={`grid grid-cols-[28px_1fr] gap-4 py-5 ${i < 2 ? "border-b border-dgat-border" : ""} ${i === 0 ? "pt-0" : ""}`}>

@@ -24,7 +24,7 @@ export default function ExamplesPage() {
         <div className="max-w-[1100px] mx-auto px-10">
           <div className="font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-dgat-subtle mb-2.5">Examples</div>
           <h1 className="font-heading text-[clamp(26px,3.5vw,40px)] font-extrabold text-dgat-text mb-3">Real codebases, fully mapped</h1>
-          <p className="text-[15px] text-dgat-muted max-w-[520px] leading-[1.7]">Each entry below is a codebase run through DGAT. Browse its dependency graph, architectural blueprint, and file descriptions — all generated locally.</p>
+          <p className="text-[15px] text-dgat-muted max-w-[520px] leading-[1.7]">Each entry below is a codebase run through DGAT. Browse its dependency graph, architectural blueprint, and file descriptions — all generated locally with Qwen3.5-2B.</p>
         </div>
       </div>
 

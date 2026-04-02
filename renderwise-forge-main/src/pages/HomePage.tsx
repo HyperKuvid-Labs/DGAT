@@ -314,7 +314,7 @@ export default function HomePage() {
         <div className="max-w-[1100px] mx-auto px-10">
           <div className="font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-dgat-text opacity-40 mb-2.5">Demo</div>
           <h2 className="font-heading text-[clamp(26px,3vw,40px)] font-extrabold text-dgat-text mb-3.5">See it in action</h2>
-          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-5">Screenshots from DGAT scanning its own source tree. <a href="/examples" className="text-dgat-text underline underline-offset-2 hover:opacity-80 transition-opacity">Check out the examples page — latest is HazyResearch/ThunderKittens →</a></p>
+          <p className="text-[15px] text-dgat-muted max-w-[750px] leading-[1.7] mb-5">Screenshots from DGAT scanning <a href="https://github.com/NousResearch/hermes-agent" className="text-dgat-text underline underline-offset-2 hover:opacity-80 transition-opacity" target="_blank" rel="noopener noreferrer"><b>NousResearch/hermes-agent</b></a>. Check out the examples page — latest is <a href="/examples/thunder-kittens" className="text-dgat-text underline underline-offset-2 hover:opacity-80 transition-opacity"><b>HazyResearch/ThunderKitten</b></a></p>
           <div className="flex border border-dgat-border rounded-lg overflow-hidden w-fit mb-5 flex-wrap">
             {(Object.keys(TABS) as Array<keyof typeof TABS>).map(key => (
               <button

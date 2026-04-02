@@ -24,7 +24,27 @@ interface MarkdownRendererProps {
   compact?: boolean;
 }
 
+function sanitizeMarkdown(content: string): string {
+  const fencedMdRegex = /^```markdown\s*\n([\s\S]*?)\n```$/;
+  const match = content.trim().match(fencedMdRegex);
+  if (match) return match[1].trim();
+  return content;
+}
+
+export function extractBlueprintTitle(content: string): string {
+  const sanitized = sanitizeMarkdown(content);
+  const titleMatch = sanitized.match(/^(?:#\s+|##\s+)(.+)$/m);
+  if (titleMatch) return titleMatch[1].trim();
+  return "Blueprint";
+}
+
+export function stripBlueprintTitle(content: string): string {
+  const sanitized = sanitizeMarkdown(content);
+  return sanitized.replace(/^(?:#\s+|##\s+).+$/m, "").replace(/^\n+/, "").trim();
+}
+
 export function MarkdownRenderer({ content, className, compact = false }: MarkdownRendererProps) {
+  const sanitized = sanitizeMarkdown(content);
   return (
     <div className={cn(compact ? "px-0 py-0" : "px-10 py-8 max-w-[680px]", className)}>
       <ReactMarkdown
@@ -88,7 +108,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
           },
 
           ul({ children }) {
-            return <ul className="mb-4 space-y-1.5 pl-1">{children}</ul>;
+            return <ul className="mb-4 pl-1">{children}</ul>;
           },
           ol({ children }) {
             return (
@@ -99,9 +119,9 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
           },
           li({ children }) {
             return (
-              <li className="text-[15px] text-[#888] leading-[1.8] flex gap-2.5 items-start">
-                <span className="text-[#333] mt-[7px] shrink-0 text-[8px]">▸</span>
-                <span>{children}</span>
+              <li className="text-[15px] text-[#888] leading-[1.8] flex gap-2.5 items-start mb-1.5">
+                <span className="text-[#333] mt-[2px] shrink-0 text-[8px]">▸</span>
+                <div className="min-w-0 [&>p]:m-0 [&>p]:leading-[1.8] [&>p:last-child]:mb-0">{children}</div>
               </li>
             );
           },
@@ -158,7 +178,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
           },
         }}
       >
-        {content}
+        {sanitized}
       </ReactMarkdown>
     </div>
   );

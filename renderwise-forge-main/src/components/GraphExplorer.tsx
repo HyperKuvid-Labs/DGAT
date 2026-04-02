@@ -3,7 +3,7 @@ import Graph from "graphology";
 import Sigma from "sigma";
 import { circular } from "graphology-layout";
 import forceAtlas2 from "graphology-layout-forceatlas2";
-import { MarkdownRenderer } from "@/components/markdownpanel";
+import { MarkdownRenderer, extractBlueprintTitle, stripBlueprintTitle } from "@/components/markdownpanel";
 import type { TreeNode, ExampleConfig } from "@/lib/types";
 
 interface FileNode {
@@ -504,13 +504,13 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
           </>
         ) : (
           <div className="flex-1 overflow-y-auto p-8">
-            <h2 className="font-heading text-xl font-bold text-dgat-text mb-4">DGAT Software Blueprint</h2>
+            <h2 className="font-heading text-xl font-bold text-dgat-text mb-4">{blueprint ? extractBlueprintTitle(blueprint) : "Blueprint"}</h2>
             {loading ? (
               <div className="text-[14px] text-dgat-subtle">Loading blueprint...</div>
             ) : loadError ? (
               <div className="text-[14px] text-dgat-subtle">{loadError}</div>
             ) : (
-              <MarkdownRenderer content={blueprint} compact className="max-w-none" />
+              <MarkdownRenderer content={stripBlueprintTitle(blueprint)} compact className="max-w-none" />
             )}
           </div>
         )}

@@ -161,7 +161,7 @@ export default function HomePage() {
         <div className="max-w-[1100px] mx-auto px-10">
           <div className="font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-dgat-text opacity-40 mb-2.5">How it works</div>
           <h2 className="font-heading text-[clamp(26px,3vw,40px)] font-extrabold text-dgat-text mb-3.5">From source to graph in one command</h2>
-          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-[52px]">DGAT handles everything — parsing, fingerprinting, LLM description, and graph construction — in a single pass. <a href="/internals" className="text-dgat-text underline underline-offset-2 hover:opacity-80 transition-opacity">Refer internals for more info on design and architecture decisions →</a></p>
+          <p className="text-[15px] text-dgat-muted max-w-[750px] leading-[1.7] mb-[52px]">DGAT handles everything — parsing, fingerprinting, LLM description, and graph construction — in a single pass. Refer <a href="/internals" className="text-dgat-text underline underline-offset-2 hover:opacity-80 transition-opacity">internals</a> for more info on design and architecture decisions</p>
           <div className="grid grid-cols-1 md:grid-cols-3 border border-dgat-border rounded-[10px] overflow-hidden">
             {[
               {

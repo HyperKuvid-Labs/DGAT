@@ -68,6 +68,7 @@ install_tree_sitter_grammars() {
   local grammars=(
     "tree-sitter-c"
     "tree-sitter-cpp"
+    "tree-sitter-cuda"
     "tree-sitter-python"
     "tree-sitter-go"
     "tree-sitter-javascript"

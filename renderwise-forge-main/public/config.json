@@ -6,10 +6,10 @@
       "description": "DGAT analysing its own source tree. Backend engine, frontend components, library headers — every dependency mapped and described.",
       "github": "https://github.com/pradheeppr/dgat",
       "website": null,
-      "langs": ["C++", "TypeScript", "CSS"],
+      "langs": ["C++"],
       "stats": { "nodes": 27, "edges": 44 },
       "model": "Qwen3.5-2B",
-      "image": null,
+      "image": "examples/dgat-self/dgat.jpg",
       "files": {
         "basePath": "examples/dgat-self",
         "blueprint": "dgat_blueprint.md",
@@ -26,9 +26,25 @@
       "langs": ["Python", "LaTeX", "Shell"],
       "stats": { "nodes": 404, "edges": 1069 },
       "model": "Qwen3.5-2B",
-      "image": null,
+      "image": "examples/hermes-agent/hermes-agent.png",
       "files": {
         "basePath": "examples/hermes-agent",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
+    }, {
+      "id": "thunder-kittens",
+      "name": "HazyResearch/ThunderKittens",
+      "description": "Tile primitives for speedy kernels",
+      "github": "https://github.com/HazyResearch/ThunderKittens",
+      "website": null,
+      "langs": ["CUDA", "Python", "Makefile"],
+      "stats": { "nodes": 280, "edges": 740 },
+      "model": "Qwen3.5-2B",
+      "image": "examples/thunder-kittens/thunderkittens.png",
+      "files": {
+        "basePath": "examples/thunder-kittens",
         "blueprint": "dgat_blueprint.md",
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"

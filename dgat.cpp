@@ -1144,6 +1144,7 @@ string get_language_from_ext(const string& file_path) {
     {".c", "c"}, {".h", "c"},
     {".cpp", "cpp"}, {".cc", "cpp"}, {".cxx", "cpp"}, {".c++", "cpp"},
     {".hpp", "cpp"}, {".hh", "cpp"}, {".hxx", "cpp"}, {".h++", "cpp"},
+    {".cu", "cuda"}, {".cuh", "cuda"},
     {".py", "python"}, {".pyw", "python"},
     {".go", "go"},
     {".js", "javascript"}, {".mjs", "javascript"}, {".cjs", "javascript"},

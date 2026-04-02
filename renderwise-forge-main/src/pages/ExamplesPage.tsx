@@ -51,31 +51,25 @@ export default function ExamplesPage() {
 
                 {/* Body */}
                 <div className="p-[18px] flex-1 flex flex-col gap-2">
-                  <div className="flex justify-between items-start gap-2.5">
-                    <div>
-                      <div className="font-heading text-base font-bold text-dgat-text leading-tight">{repo.name}</div>
-                      {repo.model && <div className="font-mono text-[10.5px] text-dgat-subtle">✦ {repo.model}</div>}
-                    </div>
-                    <div className="flex gap-1 flex-wrap flex-shrink-0">
-                      {repo.langs.map(l => (
-                        <span key={l} className="font-mono text-[10px] py-0.5 px-1.5 rounded bg-dgat-tag border border-dgat-border text-dgat-muted">{l}</span>
-                      ))}
-                    </div>
+                  <div>
+                    <div className="font-heading text-base font-bold text-dgat-text leading-tight">{repo.name}</div>
+                    {repo.model && <div className="font-mono text-[10.5px] text-dgat-subtle">✦ {repo.model}</div>}
                   </div>
                   <p className="text-[13.5px] text-dgat-muted leading-[1.55] flex-1">{repo.description}</p>
-                  <div className="flex gap-3.5 pt-2.5 border-t border-dgat-border">
-                    <div className="text-[12px] text-dgat-subtle flex items-baseline gap-1">
-                      <span className="font-mono text-[13px] text-dgat-text font-medium">{repo.stats.nodes}</span> nodes
-                    </div>
-                    <div className="text-[12px] text-dgat-subtle flex items-baseline gap-1">
-                      <span className="font-mono text-[13px] text-dgat-text font-medium">{repo.stats.edges}</span> edges
-                    </div>
-                    {repo.langs.length > 0 && (
+                  <div className="flex items-center justify-between pt-2.5 border-t border-dgat-border gap-2">
+                    <div className="flex gap-3.5 flex-shrink-0">
                       <div className="text-[12px] text-dgat-subtle flex items-baseline gap-1">
-                        <span className="font-mono text-[13px] text-dgat-text font-medium">{repo.langs[0]}</span>
-                        {repo.langs[1] && <> · <span className="font-mono text-[13px] text-dgat-text font-medium">{repo.langs[1]}</span></>}
+                        <span className="font-mono text-[13px] text-dgat-text font-medium">{repo.stats.nodes}</span> nodes
                       </div>
-                    )}
+                      <div className="text-[12px] text-dgat-subtle flex items-baseline gap-1">
+                        <span className="font-mono text-[13px] text-dgat-text font-medium">{repo.stats.edges}</span> edges
+                      </div>
+                    </div>
+                    <div className="flex gap-1 flex-wrap justify-end flex-shrink-0">
+                      {repo.langs.map(l => (
+                        <span key={l} className="font-mono text-[10px] py-0.5 px-1.5 rounded bg-dgat-tag border border-dgat-border text-dgat-muted whitespace-nowrap">{l}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

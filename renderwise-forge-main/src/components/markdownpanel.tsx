@@ -55,7 +55,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
             const isBlock = className?.includes("language-");
             if (isBlock) {
               return (
-                <pre className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg px-5 py-4 overflow-x-auto my-5">
+                <pre className="bg-[hsl(var(--md-code-block-bg))] border border-[hsl(var(--md-code-block-border))] rounded-lg px-5 py-4 overflow-x-auto my-5">
                   <code className={cn("text-[13px] font-mono leading-[1.7] text-[#ce9178]", className)} {...props}>
                     {children}
                   </code>
@@ -63,7 +63,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
               );
             }
             return (
-              <code className="text-[13px] font-mono bg-[#1a1a1a] text-[#ce9178] px-1.5 py-0.5 rounded border border-[#222]" {...props}>
+              <code className="text-[13px] font-mono bg-[hsl(var(--md-code-inline-bg))] text-[hsl(var(--md-heading))] px-1.5 py-0.5 rounded border border-[hsl(var(--md-code-inline-border))]" {...props}>
                 {children}
               </code>
             );
@@ -71,29 +71,29 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
 
           h1({ children }) {
             return (
-              <h1 className="text-[24px] font-bold text-[#e8e8e8] mt-0 mb-5 pb-3 border-b border-[#1e1e1e] leading-tight tracking-tight">
+              <h1 className="text-[24px] font-bold text-[hsl(var(--md-heading))] mt-0 mb-5 pb-3 border-b border-[hsl(var(--md-border))] leading-tight tracking-tight">
                 {children}
               </h1>
             );
           },
           h2({ children }) {
             return (
-              <h2 className="text-[18px] font-semibold text-[#d0d0d0] mt-8 mb-3 flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-[#9B72CF]/60 shrink-0 inline-block" />
+              <h2 className="text-[18px] font-semibold text-[hsl(var(--md-heading))] mt-8 mb-3 flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-[hsl(var(--md-accent))]/60 shrink-0 inline-block" />
                 {children}
               </h2>
             );
           },
           h3({ children }) {
             return (
-              <h3 className="text-[16px] font-semibold text-[#b8b8b8] mt-6 mb-2">
+              <h3 className="text-[16px] font-semibold text-[hsl(var(--md-heading))] mt-6 mb-2">
                 {children}
               </h3>
             );
           },
           h4({ children }) {
             return (
-              <h4 className="text-[14px] font-semibold text-[#999] mt-4 mb-1.5">
+              <h4 className="text-[14px] font-semibold text-[hsl(var(--md-strong))] mt-4 mb-1.5">
                 {children}
               </h4>
             );
@@ -101,7 +101,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
 
           p({ children }) {
             return (
-              <p className="text-[15px] text-[#888] leading-[1.9] mb-4">
+              <p className="text-[15px] text-[hsl(var(--md-text))] leading-[1.9] mb-4">
                 {children}
               </p>
             );
@@ -112,15 +112,15 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
           },
           ol({ children }) {
             return (
-              <ol className="list-decimal pl-5 mb-4 space-y-1.5 text-[15px] text-[#888]">
+              <ol className="list-decimal pl-5 mb-4 space-y-1.5 text-[15px] text-[hsl(var(--md-text))]">
                 {children}
               </ol>
             );
           },
           li({ children }) {
             return (
-              <li className="text-[15px] text-[#888] leading-[1.8] flex gap-2.5 items-start mb-1.5">
-                <span className="text-[#333] mt-[2px] shrink-0 text-[8px]">▸</span>
+              <li className="text-[15px] text-[hsl(var(--md-text))] leading-[1.8] flex gap-2.5 items-start mb-1.5">
+                <span className="text-[hsl(var(--md-border))] mt-[2px] shrink-0 text-[8px]">▸</span>
                 <div className="min-w-0 [&>p]:m-0 [&>p]:leading-[1.8] [&>p:last-child]:mb-0">{children}</div>
               </li>
             );
@@ -128,7 +128,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
 
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-[3px] border-[#9B72CF]/40 pl-4 py-1 my-5 bg-[#9B72CF]/[0.04] rounded-r-md">
+              <blockquote className="border-l-[3px] border-[hsl(var(--md-accent))]/40 pl-4 py-1 my-5 bg-[hsl(var(--md-accent))]/[0.04] rounded-r-md">
                 {children}
               </blockquote>
             );
@@ -149,32 +149,32 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
 
           table({ children }) {
             return (
-              <div className="overflow-x-auto my-5 rounded-lg border border-[#1e1e1e]">
+              <div className="overflow-x-auto my-5 rounded-lg border border-[hsl(var(--md-border))]">
                 <table className="w-full text-[13.5px] border-collapse">{children}</table>
               </div>
             );
           },
           thead({ children }) {
-            return <thead className="bg-[#141414] border-b border-[#1e1e1e]">{children}</thead>;
+            return <thead className="bg-[hsl(var(--md-table-head-bg))] border-b border-[hsl(var(--md-border))]">{children}</thead>;
           },
           th({ children }) {
-            return <th className="text-left px-4 py-2.5 text-[12px] uppercase tracking-wider text-[#555] font-semibold">{children}</th>;
+            return <th className="text-left px-4 py-2.5 text-[12px] uppercase tracking-wider text-[hsl(var(--md-table-head-text))] font-semibold">{children}</th>;
           },
           td({ children }) {
-            return <td className="px-4 py-2.5 border-b border-[#141414] text-[#777]">{children}</td>;
+            return <td className="px-4 py-2.5 border-b border-[hsl(var(--md-table-head-bg))] text-[hsl(var(--md-table-cell-text))]">{children}</td>;
           },
           tr({ children }) {
-            return <tr className="hover:bg-[#111] transition-colors">{children}</tr>;
+            return <tr className="hover:bg-[hsl(var(--md-table-row-hover))] transition-colors">{children}</tr>;
           },
 
           hr() {
-            return <hr className="border-[#1e1e1e] my-6" />;
+            return <hr className="border-[hsl(var(--md-border))] my-6" />;
           },
           strong({ children }) {
-            return <strong className="font-semibold text-[#c0c0c0]">{children}</strong>;
+            return <strong className="font-semibold text-[hsl(var(--md-strong))]">{children}</strong>;
           },
           em({ children }) {
-            return <em className="italic text-[#777]">{children}</em>;
+            return <em className="italic text-[hsl(var(--md-text))]">{children}</em>;
           },
         }}
       >
@@ -218,38 +218,38 @@ export function MarkdownPanel({ filePath, title, apiBase, staticContent, classNa
     <div className={cn("flex flex-col h-full", className)}>
 
       {/* ── Panel header ─────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 h-12 border-b border-[#1e1e1e] shrink-0 bg-[#0e0e0e]">
+      <div className="flex items-center justify-between px-5 h-12 border-b border-[hsl(var(--md-border))] shrink-0 bg-[hsl(var(--md-code-block-bg))]">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1.5 rounded-md bg-[#9B72CF]/10 border border-[#9B72CF]/20 shrink-0">
-            <FileText size={12} className="text-[#9B72CF]" />
+          <div className="p-1.5 rounded-md bg-[hsl(var(--md-accent))]/10 border border-[hsl(var(--md-accent))]/20 shrink-0">
+            <FileText size={12} className="text-[hsl(var(--md-accent))]" />
           </div>
-          <span className="text-[13px] font-medium text-[#888] font-mono truncate">{title}</span>
+          <span className="text-[13px] font-medium text-[hsl(var(--md-text))] font-mono truncate">{title}</span>
         </div>
         <button
           onClick={fetchContent}
           disabled={state === "loading"}
-          className="p-1.5 rounded-md text-[#333] hover:text-[#777] hover:bg-[#1a1a1a] transition-colors disabled:opacity-30"
+          className="p-1.5 rounded-md text-[hsl(var(--md-border))] hover:text-[hsl(var(--md-text))] hover:bg-[hsl(var(--md-code-inline-bg))] transition-colors disabled:opacity-30"
         >
           <RefreshCw size={11} className={cn(state === "loading" && "animate-spin")} />
         </button>
       </div>
 
       {/* ── Content ──────────────────────────────────── */}
-      <ScrollArea className="flex-1 bg-[#0e0e0e]">
+      <ScrollArea className="flex-1 bg-[hsl(var(--md-code-block-bg))]">
         {(state === "idle" || state === "loading") && (
           <div className="flex flex-col items-center justify-center h-48 gap-3">
-            <div className="w-5 h-5 border-2 border-[#9B72CF]/30 border-t-[#9B72CF] rounded-full animate-spin" />
-            <span className="text-[11px] text-[#333]">Loading…</span>
+            <div className="w-5 h-5 border-2 border-[hsl(var(--md-accent))]/30 border-t-[hsl(var(--md-accent))] rounded-full animate-spin" />
+            <span className="text-[11px] text-[hsl(var(--md-border))]">Loading…</span>
           </div>
         )}
 
         {state === "error" && (
           <div className="flex flex-col items-center justify-center h-48 gap-3 px-6 text-center">
             <AlertCircle size={18} className="text-red-400/60" />
-            <p className="text-[12px] text-[#555]">{errorMsg}</p>
+            <p className="text-[12px] text-[hsl(var(--md-table-head-text))]">{errorMsg}</p>
             <button
               onClick={fetchContent}
-              className="text-[11px] px-3 py-1.5 rounded-md bg-[#1a1a1a] hover:bg-[#222] text-[#666] border border-[#222] transition-colors"
+              className="text-[11px] px-3 py-1.5 rounded-md bg-[hsl(var(--md-code-inline-bg))] hover:bg-[hsl(var(--md-code-inline-border))] text-[hsl(var(--md-text))] border border-[hsl(var(--md-border))] transition-colors"
             >
               Retry
             </button>

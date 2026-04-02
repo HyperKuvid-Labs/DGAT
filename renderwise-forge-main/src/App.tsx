@@ -8,6 +8,8 @@ import { initTheme } from "@/lib/theme";
 import HomePage from "./pages/HomePage";
 import ExamplesPage from "./pages/ExamplesPage";
 import ExampleDetailPage from "./pages/ExampleDetailPage";
+import DocsPage from "./pages/DocsPage";
+import DocsDetailPage from "./pages/DocsDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,8 @@ const App = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/examples" element={<ExamplesPage />} />
             <Route path="/examples/:id" element={<ExampleDetailPage />} />
+            <Route path="/internals" element={<DocsPage />} />
+            <Route path="/internals/:id" element={<DocsDetailPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

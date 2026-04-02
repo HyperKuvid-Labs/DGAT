@@ -17,10 +17,10 @@ export function Footer() {
           </span>
         </div>
         <div className="flex gap-5">
-          <a href="https://github.com/pradheeppr/dgat" className="text-[13px] text-dgat-muted no-underline transition-colors duration-150 hover:text-dgat-text" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/HyerKuvid-Labs/dgat" className="text-[13px] text-dgat-muted no-underline transition-colors duration-150 hover:text-dgat-text" target="_blank" rel="noopener">GitHub</a>
           <a href="https://github.com/HyperKuvid-Labs/alpha-stack" className="text-[13px] text-dgat-muted no-underline transition-colors duration-150 hover:text-dgat-text" target="_blank" rel="noopener">alpha-stack</a>
           <Link to="/examples" className="text-[13px] text-dgat-muted no-underline transition-colors duration-150 hover:text-dgat-text">Examples</Link>
-          <a href="https://github.com/pradheeppr/dgat/blob/main/LICENSE" className="text-[13px] text-dgat-muted no-underline transition-colors duration-150 hover:text-dgat-text" target="_blank" rel="noopener">License</a>
+          <a href="https://github.com/HyerKuvid-Labs/dgat/blob/main/LICENSE" className="text-[13px] text-dgat-muted no-underline transition-colors duration-150 hover:text-dgat-text" target="_blank" rel="noopener">License</a>
         </div>
       </div>
     </footer>

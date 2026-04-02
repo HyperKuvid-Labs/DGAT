@@ -17,12 +17,11 @@ const ArrowIcon = () => (
 );
 
 const TABS = {
+  overview: { label: "Overview", url: "localhost:3000 — Overview", img: "ui-overview.png" },
   blueprint: { label: "Blueprint", url: "localhost:3000 — Blueprint", img: "ui-blueprint-panel.png" },
-  depGraph: { label: "Dep graph", url: "localhost:3000 — Graph", img: "ui-dep-graph-file-selected.png" },
-  nodeInspect: { label: "Node inspect", url: "localhost:3000 — Graph", img: "ui-graph-node-inspection.png" },
-  edgeInspect: { label: "Edge inspect", url: "localhost:3000 — Graph", img: "ui-graph-edge-inspection.png" },
-  inspector: { label: "Inspector", url: "localhost:3000 — Inspector", img: "ui-file-inspector.png" },
+  nodeInspect: { label: "Node inspect", url: "localhost:3000 — Graph", img: "ui-node-inspection.png" },
   cli: { label: "CLI scan", url: "Terminal — dgat scan", img: "dgat-scan-cli.png" },
+  depGraphBuild: { label: "Dep graph build", url: "localhost:3000 — Graph", img: "dgat-dep-graph-build.png" },
   vllm: { label: "vLLM", url: "Terminal — vLLM server", img: "vllm-server-running.png" },
 };
 
@@ -86,7 +85,7 @@ function HeroGraph() {
 }
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<keyof typeof TABS>("blueprint");
+  const [activeTab, setActiveTab] = useState<keyof typeof TABS>("overview");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -133,7 +132,7 @@ export default function HomePage() {
             </div>
             <div className="inline-flex items-center bg-surface border border-dgat-border rounded-[7px] overflow-hidden fade-in d4">
               <span className="py-2 px-3 bg-raised border-r border-dgat-border font-mono text-[12px] text-dgat-subtle">$</span>
-              <code className="py-2 px-3.5 text-[13px] text-dgat-text">git clone https://github.com/HyperKuvid-Labs/dgat</code>
+              <code className="py-2 px-3.5 text-[12px] text-dgat-text whitespace-nowrap">git clone https://github.com/HyperKuvid-Labs/dgat</code>
               <button
                 onClick={handleCopy}
                 className="py-2 px-2.5 bg-transparent border-none border-l border-dgat-border text-dgat-subtle cursor-pointer transition-all hover:text-dgat-text hover:bg-raised"
@@ -162,7 +161,7 @@ export default function HomePage() {
         <div className="max-w-[1100px] mx-auto px-10">
           <div className="font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-dgat-text opacity-40 mb-2.5">How it works</div>
           <h2 className="font-heading text-[clamp(26px,3vw,40px)] font-extrabold text-dgat-text mb-3.5">From source to graph in one command</h2>
-          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-[52px]">DGAT handles everything — parsing, fingerprinting, LLM description, and graph construction — in a single pass.</p>
+          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-[52px]">DGAT handles everything — parsing, fingerprinting, LLM description, and graph construction — in a single pass. <a href="/internals" className="text-dgat-text underline underline-offset-2 hover:opacity-80 transition-opacity">Refer internals for more info on design and architecture decisions →</a></p>
           <div className="grid grid-cols-1 md:grid-cols-3 border border-dgat-border rounded-[10px] overflow-hidden">
             {[
               {
@@ -212,7 +211,7 @@ export default function HomePage() {
                 icon: <><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3" /><path d="M9 12l2 2 4-4" /></>,
                 title: "Multi-language extraction",
                 desc: "Tree-sitter grammars for precision, regex fallback for everything else.",
-                pills: ["C++", "TypeScript", "Python", "Go", "Rust", "Java", "C#"],
+                pills: ["C++", "TypeScript", "Python", "Go", "Rust", "Java", "C#", "CUDA"],
               },
               {
                 icon: <><circle cx="5" cy="5" r="2" /><circle cx="19" cy="5" r="2" /><circle cx="12" cy="19" r="2" /><line x1="7" y1="5" x2="17" y2="5" /><line x1="6" y1="6.5" x2="11" y2="17.5" /><line x1="18" y1="6.5" x2="13" y2="17.5" /></>,
@@ -271,7 +270,7 @@ export default function HomePage() {
                 {[
                   { num: "01", title: "Clone & build", code: <>git clone https://github.com/HyperKuvid-Labs/dgat<br/>cd dgat<br/>cmake -B build && cmake --build build -j$(nproc)<br/><CodeComment># or: bash install.sh</CodeComment></> },
                   { num: "02", title: "Start vLLM", code: <><CodeComment># any OpenAI-compatible endpoint works</CodeComment><br/>vllm serve Qwen/Qwen2.5-3B-Instruct --port 8000</> },
-                  { num: "03", title: "Run on your project", code: <>./build/dgat /path/to/your/project<br/><CodeComment># then open the frontend:</CodeComment><br/>cd frontend && bun dev<br/><CodeComment># → http://localhost:3000</CodeComment></> },
+                  { num: "03", title: "Run on your project", code: <>./build/dgat /path/to/your/project<br/><CodeComment># copy the output files:</CodeComment><br/>cp file_tree.json dep_graph.json dgat_blueprint.md renderwise-forge-main/public/examples/your-project/<br/><CodeComment># then run the frontend:</CodeComment><br/>cd renderwise-forge-main && bun dev<br/><CodeComment># → http://localhost:3000/examples/your-project</CodeComment><br/><span className="text-dgat-text font-semibold">🙂 or submit a PR — we'll merge it for you!</span></> },
                 ].map((step, i) => (
                   <div key={i} className={`grid grid-cols-[28px_1fr] gap-4 py-5 ${i < 2 ? "border-b border-dgat-border" : ""} ${i === 0 ? "pt-0" : ""}`}>
                     <div className="font-mono text-[11px] text-dgat-subtle pt-1 tracking-wide">{step.num}</div>
@@ -282,26 +281,28 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-8 p-4 bg-raised border border-dgat-border rounded-lg">
-                <div className="font-mono text-[10px] font-semibold tracking-[0.1em] uppercase text-dgat-subtle mb-1.5">Coming soon</div>
-                <p className="text-[13px] text-dgat-muted leading-[1.6]">Support for OpenAI, Anthropic, Ollama, and any OpenAI-compatible endpoint — configurable via a single flag.</p>
-              </div>
             </div>
-            <div className="p-7 bg-surface border border-dgat-border rounded-[10px]">
-              <div className="font-heading text-lg font-bold text-dgat-text mb-1.5">Requirements</div>
-              <div className="text-[13px] text-dgat-muted mb-5 leading-[1.6]">You'll need these installed before building. The frontend is optional — the backend serves a static HTML export too.</div>
-              <div className="flex flex-col gap-2">
-                {[
-                  "C++17 compiler — GCC 11+ or Clang 14+",
-                  "CMake 3.16+",
-                  <>vLLM (or any <code className="text-[12px] text-dgat-text">OpenAI-compat</code> endpoint) on localhost</>,
-                  "Node.js 18+ or Bun (frontend only)",
-                ].map((req, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-[13.5px] text-dgat-muted">
-                    <span className="w-[5px] h-[5px] rounded-full bg-dgat-subtle flex-shrink-0" />
-                    {req}
-                  </div>
-                ))}
+            <div className="flex flex-col gap-4">
+              <div className="p-7 bg-surface border border-dgat-border rounded-[10px]">
+                <div className="font-heading text-lg font-bold text-dgat-text mb-1.5">Requirements</div>
+                <div className="text-[13px] text-dgat-muted mb-5 leading-[1.6]">You'll need these installed before building. The frontend is optional — the backend serves a static HTML export too.</div>
+                <div className="flex flex-col gap-2">
+                  {[
+                    "C++17 compiler — GCC 11+ or Clang 14+",
+                    "CMake 3.16+",
+                    <>vLLM (or any <code className="text-[12px] text-dgat-text">OpenAI-compat</code> endpoint) on localhost</>,
+                    "Node.js 18+ or Bun (frontend only)",
+                  ].map((req, i) => (
+                    <div key={i} className="flex items-center gap-2.5 text-[13.5px] text-dgat-muted">
+                      <span className="w-[5px] h-[5px] rounded-full bg-dgat-subtle flex-shrink-0" />
+                      {req}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-4 bg-raised border border-dgat-border rounded-lg">
+                <div className="font-mono text-[11px] font-bold tracking-[0.08em] uppercase text-dgat-text mb-1.5">Coming soon</div>
+                <p className="text-[13px] text-dgat-muted leading-[1.6]">Support for OpenAI, Anthropic, Ollama, and any OpenAI-compatible endpoint — configurable via a single flag.</p>
               </div>
             </div>
           </div>
@@ -313,7 +314,7 @@ export default function HomePage() {
         <div className="max-w-[1100px] mx-auto px-10">
           <div className="font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-dgat-text opacity-40 mb-2.5">Demo</div>
           <h2 className="font-heading text-[clamp(26px,3vw,40px)] font-extrabold text-dgat-text mb-3.5">See it in action</h2>
-          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-5">Screenshots from DGAT scanning its own source tree.</p>
+          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-5">Screenshots from DGAT scanning its own source tree. <a href="/examples" className="text-dgat-text underline underline-offset-2 hover:opacity-80 transition-opacity">Check out the examples page — latest is HazyResearch/ThunderKittens →</a></p>
           <div className="flex border border-dgat-border rounded-lg overflow-hidden w-fit mb-5 flex-wrap">
             {(Object.keys(TABS) as Array<keyof typeof TABS>).map(key => (
               <button
@@ -325,21 +326,13 @@ export default function HomePage() {
               </button>
             ))}
           </div>
-          <div className="border border-dgat-border rounded-[10px] overflow-hidden">
-            <div className="h-[34px] bg-raised border-b border-dgat-border flex items-center px-3 gap-[5px]">
-              <div className="w-[9px] h-[9px] rounded-full bg-[#FF5F57]" />
-              <div className="w-[9px] h-[9px] rounded-full bg-[#FEBC2E]" />
-              <div className="w-[9px] h-[9px] rounded-full bg-[#28C840]" />
-              <div className="flex-1 text-center font-mono text-[10.5px] text-dgat-subtle">{TABS[activeTab].url}</div>
-            </div>
-            <div className="h-[520px] overflow-hidden bg-background">
-              <img
-                src={`/${TABS[activeTab].img}`}
-                alt={`DGAT ${TABS[activeTab].label} screenshot`}
-                className="w-full h-full object-contain"
-                loading="lazy"
-              />
-            </div>
+          <div className="border border-dgat-border rounded-[10px] overflow-hidden bg-background">
+            <img
+              src={`/${TABS[activeTab].img}`}
+              alt={`DGAT ${TABS[activeTab].label} screenshot`}
+              className="w-full h-auto rounded-[10px]"
+              loading="lazy"
+            />
           </div>
         </div>
       </section>

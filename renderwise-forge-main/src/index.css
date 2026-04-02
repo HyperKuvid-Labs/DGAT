@@ -20,6 +20,21 @@
     --invert-text: 0 0% 5%;
     --code-bg: 0 0% 4%;
     --code-border: 0 0% 12%;
+    --md-heading: 0 0% 91%;
+    --md-text: 0 0% 53%;
+    --md-strong: 0 0% 80%;
+    --md-code-text: 0 0% 80%;
+    --md-code-inline-bg: 0 0% 10%;
+    --md-code-inline-border: 0 0% 14%;
+    --md-code-block-bg: 0 0% 4%;
+    --md-code-block-border: 0 0% 12%;
+    --md-border: 0 0% 12%;
+    --md-table-head-bg: 0 0% 8%;
+    --md-table-head-text: 0 0% 33%;
+    --md-table-cell-text: 0 0% 47%;
+    --md-table-row-hover: 0 0% 7%;
+    --md-accent: 267 42% 65%;
+    --md-accent-bg: 267 42% 65%;
 
     --background: var(--bg);
     --foreground: var(--text);
@@ -57,6 +72,21 @@
     --invert-text: 0 0% 97%;
     --code-bg: 0 0% 10%;
     --code-border: 0 0% 18%;
+    --md-heading: 0 0% 10%;
+    --md-text: 0 0% 42%;
+    --md-strong: 0 0% 18%;
+    --md-code-text: 0 0% 80%;
+    --md-code-inline-bg: 40 12% 92%;
+    --md-code-inline-border: 40 8% 85%;
+    --md-code-block-bg: 0 0% 6%;
+    --md-code-block-border: 0 0% 14%;
+    --md-border: 40 5% 88%;
+    --md-table-head-bg: 40 6% 93%;
+    --md-table-head-text: 0 0% 35%;
+    --md-table-cell-text: 0 0% 38%;
+    --md-table-row-hover: 40 5% 95%;
+    --md-accent: 267 42% 55%;
+    --md-accent-bg: 267 42% 55%;
   }
 
   * {

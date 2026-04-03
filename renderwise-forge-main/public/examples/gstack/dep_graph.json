@@ -1,0 +1,438 @@
+{
+  "edges": [
+    {
+      "description": "File A uses the auth.ts module to serve authentication and authorization logic for accessing design system source files.",
+      "from": "design/src/iterate.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "File A uses file B to import the session dependency to manage stateful distributed API interactions for sequential processing workflows.",
+      "from": "design/src/iterate.ts",
+      "import_stmt": "./session",
+      "to": "design/src/session.ts"
+    },
+    {
+      "description": "File A imports ./auth to leverage File B's external authentication module for verifying identity and authorizing user permissions within the design system's source files.",
+      "from": "design/src/generate.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "File A imports the brief contract from design/src/brief to provision the necessary CLI commands and webhook integrations required for generating content plans and building responsive UI layouts within its production workflow.",
+      "from": "design/src/generate.ts",
+      "import_stmt": "./brief",
+      "to": "design/src/brief.ts"
+    },
+    {
+      "description": "File A utilizes File B's session management capabilities to coordinate sequential, stateful workflow processing across distributed API interactions, which ensures all compiled code meets the required build standards before deployment.",
+      "from": "design/src/generate.ts",
+      "import_stmt": "./session",
+      "to": "design/src/session.ts"
+    },
+    {
+      "description": "The `design/src/generate.ts` module imports the utility functions from `design/src/check.ts` to validate and format generated TypeScript code before deployment.",
+      "from": "design/src/generate.ts",
+      "import_stmt": "./check",
+      "to": "design/src/check.ts"
+    },
+    {
+      "description": "File A imports the authentication logic from file B to verify user identity and authorize permissions while comparing configuration updates in its CLI tool.",
+      "from": "design/src/diff.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "File A imports and utilizes dependencies and configuration from `design/src/auth` to leverage its authentication and authorization functions for validating user permissions in its rigid design variant system.",
+      "from": "design/src/variants.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "File A uses the content generation and orchestration capabilities provided by File B to inject motion and data into the rendering pipeline while adhering to the technical constraints defined in File B.",
+      "from": "design/src/variants.ts",
+      "import_stmt": "./brief",
+      "to": "design/src/brief.ts"
+    },
+    {
+      "description": "File A uses the `./auth` module to verify the current user's identity and apply authorized permissions derived from the design system's source file security model.",
+      "from": "design/src/evolve.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "Design-to-code.ts imports the auth module via the assertion statement to dynamically load functionality determined by the current user identity within the design system.",
+      "from": "design/src/design-to-code.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "file A uses the serialization and deserialization of memory objects provided by file B to correctly parse and reconstruct state between the design module and the CLI when using command-line tools.",
+      "from": "design/src/design-to-code.ts",
+      "import_stmt": "./memory",
+      "to": "design/src/memory.ts"
+    },
+    {
+      "description": "file A imports `./auth` from file B to authenticate user sessions and manage authorization roles while processing memory object data during serialization and deserialization.",
+      "from": "design/src/memory.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "File A imports the authentication module from File B to verify user identity and authorize permissions within its own generated code.",
+      "from": "design/src/check.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "File A invokes the modules defined in File B via delegation to execute execution logic, such as generation, diff, and serving commands, while File B defines the command-line interface logic and functionality that File A uses to implement these capabilities.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./commands",
+      "to": "design/src/commands.ts"
+    },
+    {
+      "description": "`design/src/cli.ts` relies on `design/src/generate.ts` for the build and publish operations to ensure compiled code meets financial requirements before deployment.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./generate",
+      "to": "design/src/generate.ts"
+    },
+    {
+      "description": "File A imports File B to delegate the shared execution logic for shell-style commands to File B, which handles validation and formatting via imported utility methods.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./check",
+      "to": "design/src/check.ts"
+    },
+    {
+      "description": "File A delegates the generic file comparison logic provided by file B to handle both facial assets looping and path-value translation through glob patterns into direct paths.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./compare",
+      "to": "design/src/compare.ts"
+    },
+    {
+      "description": "File A utilizes `./variants` to offload specific execution logic for out-of-manual-incommon transformations to modules that can inspect and modify the output before final rendering.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./variants",
+      "to": "design/src/variants.ts"
+    },
+    {
+      "description": "File A utilizes the TypeScript declaration-to-JavaScript code generation features provided by file B to implement and serve its own shell-style commands.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./iterate",
+      "to": "design/src/iterate.ts"
+    },
+    {
+      "description": "File A imports `./auth` from `design/src/auth` to perform identity verification and authorize user permissions before executing the design generation or diffing workflow.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./auth",
+      "to": "design/src/auth.ts"
+    },
+    {
+      "description": "File A relies on file B's JSON storage mechanism to serialize and reconstruct the session state required for executing core shell commands and managing workflow initiation.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./memory",
+      "to": "design/src/memory.ts"
+    },
+    {
+      "description": "`design/src/cli.ts` imports utility functions from `design/src/diff.ts` to determine structural or content differences in configuration updates, enabling efficient detection of changes in the running environment.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./diff",
+      "to": "design/src/diff.ts"
+    },
+    {
+      "description": "File A uses the evolutionary mutation logic of `evolve.ts` to handle generating new TypeScript models and identifying appropriate tool commands based on the current design runtime context for its specific shell commands.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./evolve",
+      "to": "design/src/evolve.ts"
+    },
+    {
+      "description": "File A uses the pattern matching and glob-based asset listing capabilities provided by design-to-code.ts because it needs to iterate over facial assets for generation and diffing within a CLI session.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./design-to-code",
+      "to": "design/src/design-to-code.ts"
+    },
+    {
+      "description": "File A utilizes the high-performance, file-independent streaming capabilities defined in file B to serve locally without a broker, enabling data transmission and process execution without HTTP requests to the Sensei server.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./serve",
+      "to": "design/src/serve.ts"
+    },
+    {
+      "description": "File A calls the external media feed interface defined in file B via the \"./gallery\" dynamic import to bridge shell-style glob pattern matching with external gallery API consumption for facial assets.",
+      "from": "design/src/cli.ts",
+      "import_stmt": "./gallery",
+      "to": "design/src/gallery.ts"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/iterate.ts",
+        "design/src/generate.ts",
+        "design/src/diff.ts",
+        "design/src/variants.ts",
+        "design/src/evolve.ts",
+        "design/src/design-to-code.ts",
+        "design/src/memory.ts",
+        "design/src/check.ts",
+        "design/src/cli.ts"
+      ],
+      "depends_on": [],
+      "description": "The auth.ts dependency serves as an external authentication module to verify identity and authorize user permissions across the design system's source files.",
+      "hash": "",
+      "id": "design/src/auth.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "auth.ts",
+      "rel_path": "design/src/auth.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/iterate.ts",
+        "design/src/generate.ts"
+      ],
+      "depends_on": [],
+      "description": "The external dependency session.ts likely manages statefulness and distributed sessions for API interactions within the design generation application. It is imported by design/src/iterate.ts and design/src/generate.ts to support sequential workflow processing or session-based data management for iterative task generation.",
+      "hash": "",
+      "id": "design/src/session.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "session.ts",
+      "rel_path": "design/src/session.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/generate.ts",
+        "design/src/variants.ts"
+      ],
+      "depends_on": [],
+      "description": "The brief.ts dependency provides the contract for generating content plans or briefs in the design workflow, enabling features like CLI commands, webhooks, and frontend integration for creating responsive UI layouts.",
+      "hash": "",
+      "id": "design/src/brief.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "brief.ts",
+      "rel_path": "design/src/brief.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/generate.ts",
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts"
+      ],
+      "description": "This dependency is a file named `check.ts` imported by `design/src/generate.ts` and `design/src/cli.ts`, suggesting it likely contains helper functions or utility methods used to perform validation, formatting, or automated checks on generated and CLI-related code.",
+      "hash": "",
+      "id": "design/src/check.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "check.ts",
+      "rel_path": "design/src/check.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/design-to-code.ts",
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts"
+      ],
+      "description": "The memory.ts dependency handles the serialization and deserialization of memory objects between the design module and the CLI, ensuring state is correctly parsed and reconstructed across different parts of the application when using command-line tools.",
+      "hash": "",
+      "id": "design/src/memory.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "memory.ts",
+      "rel_path": "design/src/memory.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [],
+      "description": "Commands.ts is the TypeScript source file that defines the command-line interface logic and functionality for the design CLI application.",
+      "hash": "",
+      "id": "design/src/commands.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "commands.ts",
+      "rel_path": "design/src/commands.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts",
+        "design/src/brief.ts",
+        "design/src/session.ts",
+        "design/src/check.ts"
+      ],
+      "description": "The external dependency generate.ts is used to create, build, and publish TypeScript code to a production environment located in the generate directory. It is imported by design/src/cli.ts to execute build and publish operations for the design project, ensuring that all compiled code meets required build standards before deployment.",
+      "hash": "",
+      "id": "design/src/generate.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "generate.ts",
+      "rel_path": "design/src/generate.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [],
+      "description": "The compare.ts package provides generic file comparison logic, specifically designed to simplify and standardize comparison operations across the software ecosystem.",
+      "hash": "",
+      "id": "design/src/compare.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "compare.ts",
+      "rel_path": "design/src/compare.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts",
+        "design/src/brief.ts"
+      ],
+      "description": "The variants.ts dependency provides configurable transformation rules and extension logic that allow downstream modules to modify, validate, or customize the software's output before it is rendered or executed.",
+      "hash": "",
+      "id": "design/src/variants.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "variants.ts",
+      "rel_path": "design/src/variants.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts",
+        "design/src/session.ts"
+      ],
+      "description": "Iterate.ts provides the core functionality for generating JavaScript code from TypeScript declarations and is the superseed to TypeLogic. It enables the CLI module to export TypeScript files directly for compilation, ensuring integration with standard JavaScript build tools.",
+      "hash": "",
+      "id": "design/src/iterate.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "iterate.ts",
+      "rel_path": "design/src/iterate.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts"
+      ],
+      "description": "diff.ts is a utility library that calculates the differences between two objects or arrays, typically used to efficiently detect changes in data structures such as files, settings, or deployed code. In the provided example, it is imported to compare configuration updates against the current running environment in the CLI tool.",
+      "hash": "",
+      "id": "design/src/diff.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "diff.ts",
+      "rel_path": "design/src/diff.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts"
+      ],
+      "description": "evolve.ts provides the core logic to mutate the TS model its associated runtime output based on the current context, such as determining the correct TypeScript version from the reflect data or resolving the corresponding tool command.",
+      "hash": "",
+      "id": "design/src/evolve.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "evolve.ts",
+      "rel_path": "design/src/evolve.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [
+        "design/src/auth.ts",
+        "design/src/memory.ts"
+      ],
+      "description": "design-to-code.ts is a library for automating the conversion of design assets into functional code.",
+      "hash": "",
+      "id": "design/src/design-to-code.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "design-to-code.ts",
+      "rel_path": "design/src/design-to-code.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [],
+      "description": "The services.ts file is a high-performance JavaScript streaming server that allows web workers or clients directly to handle data transmission without a broker backend. It is designed to optimize multi-client communication by enabling sensei to manage client-side request duration efficiently and support infinite data flow.",
+      "hash": "",
+      "id": "design/src/serve.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "serve.ts",
+      "rel_path": "design/src/serve.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "design/src/cli.ts"
+      ],
+      "depends_on": [],
+      "description": "The gallery.ts file likely contains functionality for displaying, managing, or interacting with an external image, video, or media feed. It serves as the entry point for external media consumption within the design application, satisfying the requirement to display content sourced from an external gallery API or storage.",
+      "hash": "",
+      "id": "design/src/gallery.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "gallery.ts",
+      "rel_path": "design/src/gallery.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/gstack/./design/src/cli.ts",
+      "depended_by": [],
+      "depends_on": [
+        "design/src/commands.ts",
+        "design/src/generate.ts",
+        "design/src/check.ts",
+        "design/src/compare.ts",
+        "design/src/variants.ts",
+        "design/src/iterate.ts",
+        "design/src/auth.ts",
+        "design/src/memory.ts",
+        "design/src/diff.ts",
+        "design/src/evolve.ts",
+        "design/src/design-to-code.ts",
+        "design/src/serve.ts",
+        "design/src/gallery.ts"
+      ],
+      "description": "**`design/src/cli.ts`**: The CLI entry point for the stateless gstack design tool, handling command dispatch, API key auth, and specific execution logic (generation, diffing, serving).\n\n**Key Responsibilities:**\n*   **Command Dispatch & Auth**: Parses user arguments and initializes runtime authentication (`~/.gstack/openai.json`).\n*   **Core Shell Commands**: Executes shell-style commands like `generate`, `diff`, and `serve` by delegates-ing specific execution logic across modules.\n*   **Image Handling**: Bridges glob patterns and flat paths to list facial assets for comparison or generation.\n*   **Session Management**: Controls workflow initiation via `iterate` using JSON file storage for session state.",
+      "hash": "a29745daf7a33740e9369917560c239b",
+      "id": "design/src/cli.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "cli.ts",
+      "rel_path": "design/src/cli.ts"
+    }
+  ]
+}

@@ -49,6 +49,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "gstack",
+      "name": "garrytan/gstack",
+      "description": "Use Garry Tan's exact Claude Code setup: 23 opinionated tools that serve as CEO, Designer, Eng Manager, Release Manager, Doc Engineer, and QA",
+      "github": "https://github.com/garrytan/gstack",
+      "website": null,
+      "langs": ["Typescript", "Go", "Shell", "Javascript"],
+      "stats": { "nodes": 16, "edges": 27 },
+      "model": "Qwen3.5-2B",
+      "image": "examples/gstack/gstack.jpg",
+      "files": {
+        "basePath": "examples/gstack",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

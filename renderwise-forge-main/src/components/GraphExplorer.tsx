@@ -254,9 +254,8 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
   }, [treeData]);
 
   const fileTree = useMemo(() => {
-    const filtered = filterNodesWithDependencies(toFileNodes(treeData), nodesWithDependencies);
-    return filtered;
-  }, [treeData, nodesWithDependencies]);
+    return toFileNodes(treeData);
+  }, [treeData]);
 
   const graph = useMemo(() => {
     const nextGraph = new Graph();
@@ -344,11 +343,15 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
       return;
     }
 
-    const relation = getRelationDescription(selectedNode, nextNode);
-    setSelectedRelationDescription(relation);
+    if (graph.hasNode(selectedNode) && graph.hasNode(nextNode)) {
+      const relation = getRelationDescription(selectedNode, nextNode);
+      setSelectedRelationDescription(relation);
+    } else {
+      setSelectedRelationDescription(null);
+    }
     setPreviousNode(selectedNode);
     setSelectedNode(nextNode);
-  }, [getRelationDescription, selectedNode]);
+  }, [getRelationDescription, selectedNode, graph]);
 
   // Initialize Sigma
   useEffect(() => {
@@ -384,7 +387,7 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
     if (!sigmaRef.current) return;
     const sigma = sigmaRef.current;
 
-    if (selectedNode) {
+    if (selectedNode && graph.hasNode(selectedNode)) {
       const neighbors = new Set(graph.neighbors(selectedNode));
       neighbors.add(selectedNode);
 
@@ -439,8 +442,11 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
   };
 
   const nodeDescription = selectedNode ? getNodeDescription(selectedNode) : null;
-  const previousNodeDescription = previousNode && selectedRelationDescription ? getNodeDescription(previousNode) : null;
-  const nodeDeps = selectedNode && graph.hasNode(selectedNode) ? graph.neighbors(selectedNode) : [];
+  const nodeInGraph = selectedNode ? graph.hasNode(selectedNode) : false;
+  const previousInGraph = previousNode ? graph.hasNode(previousNode) : false;
+  const showRelationship = previousInGraph && nodeInGraph && selectedRelationDescription;
+  const previousNodeDescription = previousInGraph && showRelationship ? getNodeDescription(previousNode) : null;
+  const nodeDeps = nodeInGraph ? graph.neighbors(selectedNode) : [];
 
   return (
     <div className="flex h-[calc(100vh-280px)] min-h-[600px]">
@@ -543,7 +549,7 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
               <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">Description</div>
               {nodeDescription && <MarkdownRenderer content={nodeDescription} compact />}
             </div>
-            {nodeDeps.length > 0 && (
+            {nodeInGraph && nodeDeps.length > 0 && (
               <div>
                 <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-2">Dependencies ({nodeDeps.length})</div>
                 <div className="space-y-1">
@@ -559,7 +565,7 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
                 </div>
               </div>
             )}
-            {selectedRelationDescription && (
+            {showRelationship && (
               <div>
                 <div className="font-mono text-[10px] text-dgat-subtle uppercase tracking-wider mb-1">Relationship</div>
                 <MarkdownRenderer content={selectedRelationDescription} compact />
@@ -568,7 +574,7 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
-            <p className="text-[13px] text-dgat-subtle text-center">Click a node in the graph to inspect its details and dependencies.</p>
+            <p className="text-[13px] text-dgat-subtle text-center">Click a node in the file tree or graph to inspect.</p>
           </div>
         )}
       </div>

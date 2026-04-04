@@ -88,7 +88,7 @@
       "github": "https://github.com/PufferAI/PufferLib",
       "website": "https://puffer.ai/",
       "langs": ["C", "Python", "C++", "CUDA"],
-      "stats": { "nodes": 15, "edges": 25 },
+      "stats": { "nodes": 802, "edges": 567 },
       "model": "Qwen3.5-2B",
       "image": "examples/pufferlib/pufferlib.png",
       "files": {

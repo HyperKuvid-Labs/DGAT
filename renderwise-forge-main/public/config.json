@@ -81,6 +81,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "pufferlib",
+      "name": "PufferAI/PufferLib",
+      "description": "Puffing up reinforcement learning",
+      "github": "https://github.com/PufferAI/PufferLib",
+      "website": "https://puffer.ai/",
+      "langs": ["C", "Python", "C++", "CUDA"],
+      "stats": { "nodes": 15, "edges": 25 },
+      "model": "Qwen3.5-2B",
+      "image": "examples/pufferlib/pufferlib.png",
+      "files": {
+        "basePath": "examples/pufferlib",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

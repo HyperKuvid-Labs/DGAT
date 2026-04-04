@@ -84,7 +84,8 @@ install_tree_sitter_grammars() {
     "tree-sitter-yaml"
     "tree-sitter-toml"
     "tree-sitter-sql"
-    "tree-sitter-markdown"
+    "tree-sitter-markdown",
+    "tree-sitter-ipython"
   )
 
   for grammar in "${grammars[@]}"; do

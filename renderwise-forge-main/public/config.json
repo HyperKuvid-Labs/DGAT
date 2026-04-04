@@ -65,6 +65,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "turboquant_cutile",
+      "name": "DevTechJr/turboquant_cutile",
+      "description": "turboquant-based compression engine for LLM KV cache",
+      "github": "https://github.com/DevTechJr/turboquant_cutile",
+      "website": "https://devtechjr.github.io/turboquant_cutile/index.html",
+      "langs": ["Python", "Jupyter", "HTML", "CSS"],
+      "stats": { "nodes": 8, "edges": 6 },
+      "model": "Qwen3.5-2B",
+      "image": "examples/turboquant_cutile/turboquant_cutile.jpg",
+      "files": {
+        "basepath": "examples/turboquant_cutile",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

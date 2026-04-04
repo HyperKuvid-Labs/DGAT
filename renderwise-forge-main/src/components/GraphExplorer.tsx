@@ -158,7 +158,7 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [previousNode, setPreviousNode] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"blueprint" | "graph">("graph");
+  const [activeTab, setActiveTab] = useState<"blueprint" | "graph">("blueprint");
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [depEdges, setDepEdges] = useState<RawEdge[]>([]);
@@ -465,8 +465,9 @@ export function GraphExplorer({ exampleId, files }: GraphExplorerProps) {
           <button
             onClick={() => setActiveTab("graph")}
             className={`flex-1 py-2 text-[12px] font-medium border-none cursor-pointer transition-colors ${activeTab === "graph" ? "bg-raised text-dgat-text" : "bg-transparent text-dgat-muted hover:bg-raised"}`}
+            title="Visual dependency graph showing how files import and relate to each other"
           >
-            Graph
+            DepGraph
           </button>
         </div>
         <div className="flex-1 overflow-y-auto">

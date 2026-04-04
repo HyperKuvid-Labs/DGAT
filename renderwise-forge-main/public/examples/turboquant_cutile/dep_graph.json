@@ -1,0 +1,159 @@
+{
+  "edges": [
+    {
+      "description": "File A imports the specific constant value for bit-width from File B so it can accurately set the state machine parameters for 2-bit or 3-bit quantization logic.",
+      "from": "turboquant_cutile/compress.py",
+      "import_stmt": ".constants",
+      "to": "turboquant_cutile/constants.py"
+    },
+    {
+      "description": "File A uses the `turboquant_cutile` module from File B as the external infrastructure dependency that Python imports to execute the notebook cells and generate necessary module metadata for the provided package infrastructure.",
+      "from": "turboquant_b200_patch1.ipynb",
+      "import_stmt": "turboquant_cutile",
+      "to": "turboquant_cutile/__init__.py"
+    },
+    {
+      "description": "File A imports from file B to utilize the Flax data structures and folding logic required to execute external notes under Python installation, as enabled by default metadata generation from codebook definitions.",
+      "from": "turboquant_cutile/__init__.py",
+      "import_stmt": ".codebook",
+      "to": "turboquant_cutile/codebook.py"
+    },
+    {
+      "description": "A imports `.host` from the same project directory to enable core functionality that external Python installation permits.",
+      "from": "turboquant_cutile/__init__.py",
+      "import_stmt": ".host",
+      "to": "turboquant_cutile/host.py"
+    },
+    {
+      "description": "File A utilizes the data structures and algorithms defined in file B to perform calibrated LloydMax quantization evaluation.",
+      "from": "tests/test_codebook.py",
+      "import_stmt": "turboquant_cutile.codebook",
+      "to": "turboquant_cutile/codebook.py"
+    },
+    {
+      "description": "file A performs Unsigned 8-bit comparisons and array accesses using the integer constants defined in file B to stream through the bits for the Fibonacci number lookups in `turboquant_decompress_2bit` and expressions in `turboquant_decompress_3bit`.",
+      "from": "turboquant_cutile/decompress.py",
+      "import_stmt": ".constants",
+      "to": "turboquant_cutile/constants.py"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "turboquant_cutile/compress.py",
+        "turboquant_cutile/decompress.py"
+      ],
+      "depends_on": [],
+      "description": "constants.py provides a collection of Python constants that are imported by compress.py and decompress.py within the turboquant_cutile library.\n\nT",
+      "hash": "",
+      "id": "turboquant_cutile/constants.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "constants.py",
+      "rel_path": "turboquant_cutile/constants.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "turboquant_b200_patch1.ipynb"
+      ],
+      "depends_on": [
+        "turboquant_cutile/codebook.py",
+        "turboquant_cutile/host.py"
+      ],
+      "description": "The external dependency requires Python to be installed for existing notebook cells to execute, while also generating module metadata files that can be used by the provided Python package infrastructure.",
+      "hash": "",
+      "id": "turboquant_cutile/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "turboquant_cutile/__init__.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "turboquant_cutile/__init__.py",
+        "tests/test_codebook.py"
+      ],
+      "depends_on": [],
+      "description": "The codebook.py module appears to provide data structures or algorithms for organizing and searching flax models, likely associated with the Turbquant library. It is used by the project's main entry point to facilitate model folding or conversion logic, as indicated by its imports in __init__.py and verification tests.",
+      "hash": "",
+      "id": "turboquant_cutile/codebook.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "codebook.py",
+      "rel_path": "turboquant_cutile/codebook.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "turboquant_cutile/__init__.py"
+      ],
+      "depends_on": [],
+      "description": "host.py appears to be a module or script that serves as the entry point or core logic for the turbocutile library within the turboquant_cutile project, though its specific functions are not listed in the provided information.",
+      "hash": "",
+      "id": "turboquant_cutile/host.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "host.py",
+      "rel_path": "turboquant_cutile/host.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/turboquant_cutile/./turboquant_cutile/compress.py",
+      "depended_by": [],
+      "depends_on": [
+        "turboquant_cutile/constants.py"
+      ],
+      "description": "**Description: TurboQuant compression kernels (2-4 bit MSE + 1-bit QJL) for Qwen2.5**\n\n- Loads, normalizes, and quantizes tensor data using `CUDA tile` operations\n- Applies multiple masking/dithering steps to compress sequences to 2-bit (4 levels) or 3-bit (8 levels)\n- Supports both value-only and multiplied-value modes\n- Outputs integer U8 indices, signed B8 integers, precision floats, and normalization stats for efficient quantization",
+      "hash": "0a91703f3ec8f73f6254949ec9a6e0e5",
+      "id": "turboquant_cutile/compress.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "compress.py",
+      "rel_path": "turboquant_cutile/compress.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/turboquant_cutile/./turboquant_b200_patch1.ipynb",
+      "depended_by": [],
+      "depends_on": [
+        "turboquant_cutile/__init__.py"
+      ],
+      "description": "**TurboQuant cuTile Kernel Demo: Blackwell B200 B200 Roofline Analysis and ASL Verification**\nThis notebook is an end-to-end demonstration of the TurboQuant algorithm infrastructure, utilizing cuTile kernels to compress KV cache, verify attention score fidelity, and perform stress testing on the NVIDIA Blackwell A100 GPU.\n*   **Kernel Verification**: Validates accuracy of compressed attention via correlation with masked standard FP16 attention and direct PyTorch baseline.\n*   **BlueJourney Roofline**: Conducts memory-compute bluejourney analysis on the A100, showing current TQ implementation is memory-bound and full-fusion shifts to compute-bound territory.\n*   **Model Integration**: Shrinks a real LLM (Qwen2-1.5B) KV cache by 5x with TurboQuant compression and measures preservation of output quality.\n*   **Stress & Reconstruction**: Performs long-context stress tests (up to 128K tokens), memory breakdown visualizations, and verifies exact token reconstruction when decompressing.",
+      "hash": "5c98059908e98654b11da0f25ac6e3e5",
+      "id": "turboquant_b200_patch1.ipynb",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "turboquant_b200_patch1.ipynb",
+      "rel_path": "turboquant_b200_patch1.ipynb"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/turboquant_cutile/./tests/test_codebook.py",
+      "depended_by": [],
+      "depends_on": [
+        "turboquant_cutile/codebook.py"
+      ],
+      "description": "**`tests/test_codebook.py`** verifies the numerical correctness of the `LloydMax` quantization algorithm by ensuring symmetric centroids, sorted boundaries, ideal distortion bounds, and exact round-trip mapping.\n\n*   Validates centroid symmetry and magnitude against theoretical limits.\n*   Confirms boundaries are monotonically sorted and contained between sparse levels.\n*   Measures and enforces MSE distortions to stay within established theoretical paper bounds.\n*   Ensures perfect reconstruction via quantization-dequantization identity maps and nearest-neighbor lookup accuracy.",
+      "hash": "e80d77ee44d05bec50b7cad535fa7a48",
+      "id": "tests/test_codebook.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_codebook.py",
+      "rel_path": "tests/test_codebook.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/turboquant_cutile/./turboquant_cutile/decompress.py",
+      "depended_by": [],
+      "depends_on": [
+        "turboquant_cutile/constants.py"
+      ],
+      "description": "**Quick Code Review Pass: File Analysis and Description**\n\nThis file `turboquant_cutile/decompress.py` implements a CUDA kernel-based **value decomposition function** for turboquantization, specifically designed to extract 3-bit or 2-bit centroids from quantized residuals.\n\n**Key Responsibilities:**\n\n*   **Kernel Architecture:** Defines two optimized CUDA kernels (`turboquant_decompress_3bit` and `turboquant_decompress_2bit`) that handle multi-level/tree-based centroid lookups.\n*   **8-Bit Arithmetic:** Performs **Unsigned 8-bit** comparisons (`idx > 0.5`, `idx > 6.5`, etc.) to determine which bitrate level is needed for specific values in the 8-bit indices.\n*   **Value Reconstruction:** Computes intermediate values `y_hat` by selecting intermediate bias constants (`c0` through `c7`) via conditional selection logic.\n*   **F16 Output Generation:** Utilizes efficient matrix multiplication on the computed `y_hat` to generate the final **f16 values**, then rescales them by the stored Norms to produce the output.\n*   **Horizontal Coalescing:** The code utilizes the `tid>` style kernel (`ct.tile`) providing improved memory coalescing and OCAL (Organic Coalesced Accustomed Layout) performance optimizations.",
+      "hash": "d10bce01791afefe83d89c5f572b80d2",
+      "id": "turboquant_cutile/decompress.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "decompress.py",
+      "rel_path": "turboquant_cutile/decompress.py"
+    }
+  ]
+}

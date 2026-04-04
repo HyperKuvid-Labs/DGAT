@@ -76,6 +76,7 @@ bool matches_dgatignore(const string& rel_path);
 string sanitize_utf8(const string& input);
 vector<string> extract_imports(const string& file_path, const string& content);
 vector<string> extract_imports_fallback(const string& content, const string& lang);
+vector<string> extract_imports_via_tree_sitter(const string& file_path, const string& content);
 string normalize_import_path(const string& imp, const string& src_file);
 bool is_path_in_gitignore(const string& rel_path);
 string extract_assistant_text(const json& response_json);
@@ -160,6 +161,362 @@ struct DepGraph {
   vector<DepEdge> edges;
   unordered_map<string, int> path_to_node;
 };
+
+// notebook cell stuff — tracks individual cells and their relationships
+struct NotebookCell {
+  int index;
+  string cell_type;       // "code", "markdown", "raw"
+  string source;          // concatenated source lines
+  int execution_count;    // -1 if not executed
+  bool has_been_executed;
+  vector<string> imports; // extracted imports from this cell
+  vector<string> defines; // functions, classes, variables defined
+  vector<string> uses;    // variables/functions used from other cells
+  vector<int> depends_on_cells; // cell indices this cell depends on
+};
+
+// parsed notebook container — holds all cells and aggregated metadata
+struct ParsedNotebook {
+  vector<NotebookCell> cells;
+  int nbformat;
+  string kernel_name;
+  string language;
+  string code_content;      // concatenated code cells only
+  string markdown_content;  // concatenated markdown cells only
+  vector<string> all_imports;
+  bool is_valid;
+  string error_message;
+  ParsedNotebook() : nbformat(0), is_valid(false) {}
+};
+
+// forward decls for notebook parsing
+ParsedNotebook parse_notebook_file(const string& abs_path);
+vector<string> extract_cell_definitions(const string& source);
+vector<string> extract_cell_uses(const string& source, const vector<string>& defined_in_cell);
+void build_cell_dependencies(ParsedNotebook& notebook);
+vector<string> extract_notebook_imports(const ParsedNotebook& notebook);
+string notebook_to_description_content(const ParsedNotebook& notebook);
+string extract_notebook_source_for_imports(const ParsedNotebook& notebook);
+
+// normalize notebook source field — can be array of strings or single string
+static string normalize_notebook_source(const json& source_field) {
+  if (source_field.is_array()) {
+    string result;
+    for (const auto& line : source_field) {
+      if (line.is_string()) result += line.get<string>();
+    }
+    return result;
+  }
+  if (source_field.is_string()) return source_field.get<string>();
+  return "";
+}
+
+// parse a .ipynb file into our ParsedNotebook struct
+ParsedNotebook parse_notebook_file(const string& abs_path) {
+  ParsedNotebook nb;
+  try {
+    ifstream f(abs_path);
+    if (!f.is_open()) {
+      nb.error_message = "could not open file";
+      return nb;
+    }
+    json root = json::parse(f);
+    f.close();
+
+    nb.nbformat = root.value("nbformat", 0);
+
+    // grab kernel/language from metadata
+    if (root.contains("metadata") && root["metadata"].is_object()) {
+      auto& meta = root["metadata"];
+      if (meta.contains("kernelspec") && meta["kernelspec"].is_object()) {
+        nb.kernel_name = meta["kernelspec"].value("name", "");
+      }
+      if (meta.contains("language_info") && meta["language_info"].is_object()) {
+        nb.language = meta["language_info"].value("name", "");
+      }
+    }
+
+    if (!root.contains("cells") || !root["cells"].is_array()) {
+      nb.error_message = "no cells array found";
+      return nb;
+    }
+
+    for (size_t i = 0; i < root["cells"].size(); i++) {
+      const auto& cell = root["cells"][i];
+      if (!cell.is_object()) continue;
+
+      NotebookCell nc;
+      nc.index = static_cast<int>(i);
+      nc.cell_type = cell.value("cell_type", "code");
+      nc.source = normalize_notebook_source(cell.value("source", json("")));
+
+      // execution count — default -1 if missing
+      if (cell.contains("execution_count") && cell["execution_count"].is_number_integer()) {
+        nc.execution_count = cell["execution_count"].get<int>();
+        nc.has_been_executed = nc.execution_count > 0;
+      } else {
+        nc.execution_count = -1;
+        nc.has_been_executed = false;
+      }
+
+      // skip empty cells
+      if (trim_copy(nc.source).empty()) continue;
+
+      nb.cells.push_back(nc);
+    }
+
+    if (nb.cells.empty()) {
+      nb.error_message = "no non-empty cells";
+      return nb;
+    }
+
+    // build code_content and markdown_content
+    string code_acc, md_acc;
+    for (auto& c : nb.cells) {
+      if (c.cell_type == "code") {
+        if (!code_acc.empty()) code_acc += "\n\n";
+        code_acc += "# --- cell " + to_string(c.index) + " ---\n" + c.source;
+      } else if (c.cell_type == "markdown") {
+        if (!md_acc.empty()) md_acc += "\n\n";
+        md_acc += c.source;
+      }
+    }
+    nb.code_content = code_acc;
+    nb.markdown_content = md_acc;
+
+    // extract imports and definitions per code cell
+    for (auto& c : nb.cells) {
+      if (c.cell_type != "code") continue;
+      c.imports = extract_imports_fallback(c.source, "python");
+      c.defines = extract_cell_definitions(c.source);
+    }
+
+    // aggregate all imports
+    {
+      unordered_set<string> seen;
+      for (const auto& c : nb.cells) {
+        for (const auto& imp : c.imports) {
+          if (!seen.count(imp)) {
+            seen.insert(imp);
+            nb.all_imports.push_back(imp);
+          }
+        }
+      }
+    }
+
+    // build cross-cell dependencies
+    build_cell_dependencies(nb);
+
+    nb.is_valid = true;
+  } catch (const exception& e) {
+    nb.error_message = string("parse error: ") + e.what();
+  }
+  return nb;
+}
+
+// extract top-level definitions from a code cell source
+vector<string> extract_cell_definitions(const string& source) {
+  vector<string> defs;
+  istringstream iss(source);
+  string line;
+  unordered_set<string> seen;
+
+  while (getline(iss, line)) {
+    line = trim_copy(line);
+    // skip comments and blank lines
+    if (line.empty() || line.rfind("#", 0) == 0) continue;
+
+    // def func_name(
+    if (line.rfind("def ", 0) == 0) {
+      size_t paren = line.find('(');
+      if (paren != string::npos) {
+        string name = trim_copy(line.substr(4, paren - 4));
+        if (!name.empty() && !seen.count(name)) {
+          seen.insert(name);
+          defs.push_back(name);
+        }
+      }
+    }
+    // class ClassName
+    else if (line.rfind("class ", 0) == 0) {
+      size_t paren = line.find('(');
+      size_t colon = line.find(':');
+      size_t end_pos = (paren != string::npos) ? min(paren, colon) : colon;
+      if (end_pos != string::npos && end_pos > 6) {
+        string name = trim_copy(line.substr(6, end_pos - 6));
+        if (!name.empty() && !seen.count(name)) {
+          seen.insert(name);
+          defs.push_back(name);
+        }
+      }
+    }
+    // top-level variable assignment: name = ...
+    else {
+      size_t eq = line.find('=');
+      if (eq != string::npos && eq > 0 && (eq + 1 < line.size()) && line[eq + 1] != '=') {
+        // check it's top-level (no leading whitespace)
+        if (!isspace(static_cast<unsigned char>(line[0]))) {
+          string name = trim_copy(line.substr(0, eq));
+          // strip possible tuple unpacking: a, b = ... → take first
+          size_t comma = name.find(',');
+          if (comma != string::npos) name = trim_copy(name.substr(0, comma));
+          // must be a valid identifier
+          if (!name.empty() && isalpha(static_cast<unsigned char>(name[0])) && !seen.count(name)) {
+            seen.insert(name);
+            defs.push_back(name);
+          }
+        }
+      }
+    }
+  }
+  return defs;
+}
+
+// simple python keyword/builtin set for filtering
+static const unordered_set<string> python_keywords_builtins = {
+  "if", "else", "elif", "for", "while", "return", "yield", "break", "continue",
+  "pass", "raise", "try", "except", "finally", "with", "as", "import", "from",
+  "class", "def", "lambda", "global", "nonlocal", "assert", "del", "in", "not",
+  "and", "or", "is", "True", "False", "None", "self", "print", "len", "range",
+  "int", "str", "float", "list", "dict", "set", "tuple", "bool", "type",
+  "isinstance", "issubclass", "hasattr", "getattr", "setattr", "delattr",
+  "super", "property", "staticmethod", "classmethod", "abs", "all", "any",
+  "bin", "callable", "chr", "compile", "complex", "dir", "divmod", "enumerate",
+  "eval", "exec", "filter", "format", "frozenset", "hash", "help", "hex",
+  "id", "input", "iter", "locals", "map", "max", "min", "next", "object",
+  "oct", "open", "ord", "pow", "repr", "reversed", "round", "slice", "sorted",
+  "sum", "vars", "zip", "__name__", "__file__", "__doc__", "__init__",
+};
+
+// extract identifiers used in source that aren't defined in this cell
+vector<string> extract_cell_uses(const string& source, const vector<string>& defined_in_cell) {
+  unordered_set<string> local_defs(defined_in_cell.begin(), defined_in_cell.end());
+  unordered_set<string> uses;
+  vector<string> result;
+
+  // simple word-boundary scan — collect identifiers
+  string current;
+  auto flush_word = [&]() {
+    if (current.size() >= 2 && isalpha(static_cast<unsigned char>(current[0]))) {
+      // skip keywords/builtins and local defs
+      if (!python_keywords_builtins.count(current) && !local_defs.count(current)) {
+        if (!uses.count(current)) {
+          uses.insert(current);
+          result.push_back(current);
+        }
+      }
+    }
+    current.clear();
+  };
+
+  for (char c : source) {
+    if (isalnum(static_cast<unsigned char>(c)) || c == '_') {
+      current += c;
+    } else {
+      flush_word();
+    }
+  }
+  flush_word();
+
+  return result;
+}
+
+// build cross-cell dependency links
+void build_cell_dependencies(ParsedNotebook& notebook) {
+  // collect defines per cell index for quick lookup
+  unordered_map<int, vector<string>> defines_by_idx;
+  for (const auto& c : notebook.cells) {
+    if (c.cell_type == "code") {
+      defines_by_idx[c.index] = c.defines;
+    }
+  }
+
+  for (size_t i = 0; i < notebook.cells.size(); i++) {
+    auto& c = notebook.cells[i];
+    if (c.cell_type != "code") continue;
+
+    c.uses = extract_cell_uses(c.source, c.defines);
+
+    // check each use against defines from earlier cells
+    unordered_set<int> dep_set;
+    for (const auto& use : c.uses) {
+      for (size_t j = 0; j < i; j++) {
+        if (notebook.cells[j].cell_type != "code") continue;
+        const auto& defs = defines_by_idx[notebook.cells[j].index];
+        if (find(defs.begin(), defs.end(), use) != defs.end()) {
+          dep_set.insert(notebook.cells[j].index);
+        }
+      }
+    }
+    c.depends_on_cells.assign(dep_set.begin(), dep_set.end());
+    sort(c.depends_on_cells.begin(), c.depends_on_cells.end());
+  }
+}
+
+// aggregate all imports from code cells
+vector<string> extract_notebook_imports(const ParsedNotebook& notebook) {
+  return notebook.all_imports;
+}
+
+// build a structured string for the LLM description prompt
+string notebook_to_description_content(const ParsedNotebook& notebook) {
+  if (!notebook.is_valid) return "";
+
+  // count cells by type
+  size_t code_count = 0, md_count = 0, executed = 0;
+  for (const auto& c : notebook.cells) {
+    if (c.cell_type == "code") { code_count++; if (c.has_been_executed) executed++; }
+    else if (c.cell_type == "markdown") md_count++;
+  }
+
+  string out = "[notebook: " + to_string(code_count) + " code cells, "
+    + to_string(md_count) + " markdown cells, "
+    + to_string(executed) + " executed";
+  if (!notebook.kernel_name.empty()) out += ", kernel: " + notebook.kernel_name;
+  if (!notebook.language.empty()) out += ", lang: " + notebook.language;
+  out += "]\n\n";
+
+  // cell dependency summary
+  bool has_deps = false;
+  for (const auto& c : notebook.cells) {
+    if (c.cell_type == "code" && !c.depends_on_cells.empty()) {
+      has_deps = true;
+      break;
+    }
+  }
+  if (has_deps) {
+    out += "cell dependencies:\n";
+    for (const auto& c : notebook.cells) {
+      if (c.cell_type == "code" && !c.depends_on_cells.empty()) {
+        out += "  cell " + to_string(c.index) + " depends on cells: ";
+        for (size_t j = 0; j < c.depends_on_cells.size(); j++) {
+          if (j > 0) out += ", ";
+          out += to_string(c.depends_on_cells[j]);
+        }
+        out += "\n";
+      }
+    }
+    out += "\n";
+  }
+
+  // render cells
+  for (const auto& c : notebook.cells) {
+    out += "## cell " + to_string(c.index) + " (" + c.cell_type;
+    if (c.cell_type == "code") {
+      if (c.has_been_executed) out += ", executed";
+      else out += ", not executed";
+    }
+    out += ")\n";
+    out += trim_copy(c.source) + "\n\n";
+  }
+
+  return out;
+}
+
+// extract concatenated code cell source for import extraction
+string extract_notebook_source_for_imports(const ParsedNotebook& notebook) {
+  return notebook.code_content;
+}
 
 void print_dep_graph(const DepGraph& graph) {
   cout << "\n========================================" << endl;
@@ -368,7 +725,13 @@ void collect_source_files(TreeNode* node, unordered_map<string, string>& content
     string lang = get_language_from_ext(node->rel_path);
     if (!lang.empty()) {
       files[node->rel_path] = node;
-      if (!is_likely_binary_file(node->abs_path)) {
+      if (lang == "ipython") {
+        // parse notebook and store structured content instead of raw json
+        ParsedNotebook nb = parse_notebook_file(node->abs_path);
+        if (nb.is_valid) {
+          contents[node->rel_path] = notebook_to_description_content(nb);
+        }
+      } else if (!is_likely_binary_file(node->abs_path)) {
         ifstream infile(node->abs_path);
         if (infile.is_open()) {
           stringstream buffer;
@@ -418,7 +781,27 @@ DepGraph build_dep_graph(TreeNode* root) {
     futures.push_back(pool.enqueue([&]() {
       string lang = get_language_from_ext(rel_path);
 
-      vector<string> imports = extract_imports(rel_path, content);
+      vector<string> imports;
+      if (lang == "ipython") {
+        // notebooks need abs_path to read from disk
+        auto it = files.find(rel_path);
+        if (it != files.end()) {
+          ParsedNotebook nb = parse_notebook_file(it->second->abs_path);
+          if (nb.is_valid) {
+            // try tree-sitter on concatenated code cells first
+            string code = nb.code_content;
+            vector<string> ts_imports = extract_imports_via_tree_sitter(rel_path, code);
+            if (!ts_imports.empty()) {
+              imports = ts_imports;
+            } else {
+              // fallback to manual extraction per cell
+              imports = extract_notebook_imports(nb);
+            }
+          }
+        }
+      } else {
+        imports = extract_imports(rel_path, content);
+      }
 
       vector<pair<string, string>> local_edges;
 
@@ -1146,6 +1529,7 @@ string get_language_from_ext(const string& file_path) {
     {".hpp", "cpp"}, {".hh", "cpp"}, {".hxx", "cpp"}, {".h++", "cpp"},
     {".cu", "cuda"}, {".cuh", "cuda"},
     {".py", "python"}, {".pyw", "python"},
+    {".ipynb", "ipython"},
     {".go", "go"},
     {".js", "javascript"}, {".mjs", "javascript"}, {".cjs", "javascript"},
     {".jsx", "javascript"},
@@ -1256,7 +1640,14 @@ string run_tree_sitter_query(const string& lang, const string& file_path, const 
   string grammars_dir = get_grammars_dir();
   string cmd = "tree-sitter query";
   if (!grammars_dir.empty()) {
-    cmd += " -p " + grammars_dir + "/node_modules/tree-sitter-" + lang;
+    // handle scoped packages like @abir-taheer/tree-sitter-ipython
+    string grammar_pkg = grammars_dir + "/node_modules/tree-sitter-" + lang;
+    if (!fs::exists(grammar_pkg)) {
+      // try scoped package path
+      string scoped = grammars_dir + "/node_modules/@abir-taheer/tree-sitter-" + lang;
+      if (fs::exists(scoped)) grammar_pkg = scoped;
+    }
+    cmd += " -p " + grammar_pkg;
   }
   cmd += " " + query_file.string() + " " + tmp_input + " 2>&1";
 
@@ -1487,6 +1878,34 @@ vector<string> extract_imports_fallback(const string& content, const string& lan
         if (semi != string::npos) line = line.substr(0, semi);
         add(trim_copy(line.substr(3)));
       }
+    } else if (lang == "ipython") {
+      // treat as python — notebooks are python code in cells
+      if (line.rfind("from ", 0) == 0) {
+        string rest = trim_copy(line.substr(5));
+        size_t imp_pos = rest.find(" import ");
+        if (imp_pos != string::npos) {
+          string module = trim_copy(rest.substr(0, imp_pos));
+          add(module);
+        } else {
+          add(rest);
+        }
+      } else if (line.rfind("import ", 0) == 0) {
+        string rest = trim_copy(line.substr(7));
+        size_t comma_pos = 0;
+        while (true) {
+          size_t next = rest.find(',', comma_pos);
+          string module = trim_copy(rest.substr(comma_pos, next == string::npos ? string::npos : next - comma_pos));
+          if (!module.empty()) {
+            size_t as_pos = module.find(" as ");
+            if (as_pos != string::npos) {
+              module = trim_copy(module.substr(0, as_pos));
+            }
+            add(module);
+          }
+          if (next == string::npos) break;
+          comma_pos = next + 1;
+        }
+      }
     }
   }
 
@@ -1494,13 +1913,20 @@ vector<string> extract_imports_fallback(const string& content, const string& lan
 }
 
 vector<string> extract_imports(const string& file_path, const string& content) {
+  // notebooks need special handling — parse json and extract from code cells
+  string lang = get_language_from_ext(file_path);
+  if (lang == "ipython") {
+    ParsedNotebook nb = parse_notebook_file(file_path);
+    if (nb.is_valid) return extract_notebook_imports(nb);
+    return {};
+  }
+
   vector<string> imports = extract_imports_via_tree_sitter(file_path, content);
 
   if (!imports.empty()) {
     return imports;
   }
 
-  string lang = get_language_from_ext(file_path);
   if (lang == "bash") {
     return extract_file_mentions(content, ".sh");
   }
@@ -1967,7 +2393,23 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
     futures.push_back(pool.enqueue([&, node, rc, folder_structure, blueprint_json]() {
       string file_content;
 
-      if (is_likely_binary_file(node->abs_path)) {
+      // handle notebooks separately — use structured cell content
+      if (get_language_from_ext(node->rel_path) == "jupyter") {
+        ParsedNotebook nb = parse_notebook_file(node->abs_path);
+        if (nb.is_valid) {
+          file_content = notebook_to_description_content(nb);
+        } else {
+          lock_guard<mutex> lock(tree_mutex);
+          node->description = string("skipped notebook: ") + nb.error_message;
+          int count = ++processed;
+          if (count % 5 == 0 || count == total) {
+            float pct = (float)count / total * 100;
+            cout << "\r[DGAT] File descriptions: " << count << "/" << total
+                 << " (" << fixed << setprecision(1) << pct << "%)" << flush;
+          }
+          return;
+        }
+      } else if (is_likely_binary_file(node->abs_path)) {
         lock_guard<mutex> lock(tree_mutex);
         node->description = "Binary or non-text file skipped.";
         int count = ++processed;
@@ -1977,23 +2419,23 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
                << " (" << fixed << setprecision(1) << pct << "%)" << flush;
         }
         return;
-      }
+      } else {
+        ifstream infile(node->abs_path, ios::binary);
+        if (infile.is_open()) {
+          stringstream buffer;
+          buffer << infile.rdbuf();
+          file_content = buffer.str();
+          file_content = sanitize_utf8(file_content);
 
-      ifstream infile(node->abs_path, ios::binary);
-      if (infile.is_open()) {
-        stringstream buffer;
-        buffer << infile.rdbuf();
-        file_content = buffer.str();
-        file_content = sanitize_utf8(file_content);
+          size_t blueprint_tokens = estimate_tokens(rc);
+          size_t folder_tokens = estimate_tokens(folder_structure);
+          size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
 
-        size_t blueprint_tokens = estimate_tokens(rc);
-        size_t folder_tokens = estimate_tokens(folder_structure);
-        size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
+          if (available_tokens > 20000) available_tokens = 20000;
+          if (available_tokens < 1000) available_tokens = 3000;
 
-        if (available_tokens > 20000) available_tokens = 20000;
-        if (available_tokens < 1000) available_tokens = 3000;
-
-        file_content = chunk_content(file_content, available_tokens);
+          file_content = chunk_content(file_content, available_tokens);
+        }
       }
 
       digest_t hash = fast_fingerprint(file_content);
@@ -2288,7 +2730,23 @@ void populate_descriptions(TreeNode* root) {
     futures.push_back(pool.enqueue([&, node, rc, folder_structure, blueprint_json]() {
       string file_content;
 
-      if (is_likely_binary_file(node->abs_path)) {
+      // handle notebooks separately — use structured cell content
+      if (get_language_from_ext(node->rel_path) == "jupyter") {
+        ParsedNotebook nb = parse_notebook_file(node->abs_path);
+        if (nb.is_valid) {
+          file_content = notebook_to_description_content(nb);
+        } else {
+          lock_guard<mutex> lock(tree_mutex);
+          node->description = string("skipped notebook: ") + nb.error_message;
+          int count = ++processed;
+          if (count % 5 == 0 || count == total) {
+            float pct = (float)count / total * 100;
+            cout << "\r[DGAT] File descriptions: " << count << "/" << total
+                 << " (" << fixed << setprecision(1) << pct << "%)" << flush;
+          }
+          return;
+        }
+      } else if (is_likely_binary_file(node->abs_path)) {
         lock_guard<mutex> lock(tree_mutex);
         node->description = "Binary or non-text file skipped.";
         int count = ++processed;
@@ -2298,23 +2756,23 @@ void populate_descriptions(TreeNode* root) {
                << " (" << fixed << setprecision(1) << pct << "%)" << flush;
         }
         return;
-      }
+      } else {
+        ifstream infile(node->abs_path, ios::binary);
+        if (infile.is_open()) {
+          stringstream buffer;
+          buffer << infile.rdbuf();
+          file_content = buffer.str();
+          file_content = sanitize_utf8(file_content);
 
-      ifstream infile(node->abs_path, ios::binary);
-      if (infile.is_open()) {
-        stringstream buffer;
-        buffer << infile.rdbuf();
-        file_content = buffer.str();
-        file_content = sanitize_utf8(file_content);
+          size_t blueprint_tokens = estimate_tokens(rc);
+          size_t folder_tokens = estimate_tokens(folder_structure);
+          size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
 
-        size_t blueprint_tokens = estimate_tokens(rc);
-        size_t folder_tokens = estimate_tokens(folder_structure);
-        size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
+          if (available_tokens > 20000) available_tokens = 20000;
+          if (available_tokens < 1000) available_tokens = 3000;
 
-        if (available_tokens > 20000) available_tokens = 20000;
-        if (available_tokens < 1000) available_tokens = 3000;
-
-        file_content = chunk_content(file_content, available_tokens);
+          file_content = chunk_content(file_content, available_tokens);
+        }
       }
 
       digest_t hash = fast_fingerprint(file_content);

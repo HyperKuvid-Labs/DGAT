@@ -5,6 +5,7 @@ tmp/
 grammars/
 .vscode/
 .cache/
+.claude/
 
 # Generated DGAT output files — globally ignored
 dgat_blueprint.md
@@ -17,3 +18,4 @@ file_tree.json
 !renderwise-forge-main/public/examples/*/dgat_blueprint.md
 
 temp/
+tmp/

@@ -345,13 +345,6 @@ export default function HomePage() {
               <div className="inline-block border border-white/20 rounded-full py-1 px-3 font-mono text-[11px] text-dgat-invert-text opacity-50 mb-3.5">live demo — dgat on dgat</div>
               <div className="font-heading text-[28px] font-extrabold leading-[1.15] text-dgat-invert-text mb-2.5 tracking-tight">Explore a real analysis</div>
               <p className="text-[15px] text-dgat-invert-text opacity-55 leading-[1.65] max-w-[480px]">Browse the full dependency graph of DGAT's own source tree — 27 nodes, 44 edges, every file and import described by Qwen3.5-2B. Generated entirely locally.</p>
-              <div className="flex items-center gap-1.5 mt-3">
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-dgat-invert-text opacity-35 flex-shrink-0">
-                  <circle cx="8" cy="8" r="6" />
-                  <path d="M8 5v3.5M8 10.5v.5" />
-                </svg>
-                <span className="font-mono text-[9.5px] text-dgat-invert-text opacity-35 leading-tight">AI-generated descriptions · may contain inaccuracies</span>
-              </div>
             </div>
             <div className="flex flex-col gap-2.5 flex-shrink-0">
               <Link to="/examples/dgat-self" className="bg-dgat-invert-text text-dgat-invert-bg font-semibold text-sm py-2.5 px-5 rounded-[7px] no-underline whitespace-nowrap inline-flex items-center gap-[7px] transition-opacity hover:opacity-80">

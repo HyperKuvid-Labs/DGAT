@@ -97,6 +97,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "heavyball",
+      "name": "HomebrewML/HeavyBall",
+      "description": "Efficient optimizers",
+      "github": "https://github.com/HomebrewML/HeavyBall",
+      "website": null,
+      "langs": ["Python"],
+      "stats": { "nodes": 38, "edges": 54 },
+      "model": "Qwen3.5-2B",
+      "image": "examples/heavyball/heavyball.jpeg",
+      "files": {
+        "basePath": "examples/heavyball",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

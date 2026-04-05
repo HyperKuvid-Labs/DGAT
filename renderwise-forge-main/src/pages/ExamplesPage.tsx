@@ -25,6 +25,13 @@ export default function ExamplesPage() {
           <div className="font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-dgat-subtle mb-2.5">Examples</div>
           <h1 className="font-heading text-[clamp(26px,3.5vw,40px)] font-extrabold text-dgat-text mb-3">Real codebases, fully mapped</h1>
           <p className="text-[15px] text-dgat-muted max-w-[750px] leading-[1.7]">Each entry below is a codebase run through DGAT. Browse its dependency graph, architectural blueprint, and file descriptions — all generated locally with Qwen3.5-2B.</p>
+          <div className="flex items-center gap-1.5 mt-3">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-dgat-subtle flex-shrink-0">
+              <circle cx="8" cy="8" r="6" />
+              <path d="M8 5v3.5M8 10.5v.5" />
+            </svg>
+            <span className="font-mono text-[9.5px] text-dgat-subtle leading-tight">AI-generated descriptions · may contain inaccuracies</span>
+          </div>
         </div>
       </div>
 
@@ -55,13 +62,7 @@ export default function ExamplesPage() {
                     <div className="font-heading text-base font-bold text-dgat-text leading-tight">{repo.name}</div>
                     {repo.model && <div className="font-mono text-[10.5px] text-dgat-subtle">✦ {repo.model}</div>}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-dgat-subtle flex-shrink-0">
-                      <circle cx="8" cy="8" r="6" />
-                      <path d="M8 5v3.5M8 10.5v.5" />
-                    </svg>
-                    <span className="font-mono text-[9.5px] text-dgat-subtle leading-tight">AI-generated descriptions · may contain inaccuracies</span>
-                  </div>
+
                   <p className="text-[13.5px] text-dgat-muted leading-[1.55] flex-1">{repo.description}</p>
                   <div className="flex items-center justify-between pt-2.5 border-t border-dgat-border gap-2">
                     <div className="flex gap-3.5 flex-shrink-0">

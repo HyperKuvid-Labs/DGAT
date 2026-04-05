@@ -1,0 +1,1330 @@
+{
+  "abs_path": "/home/pradheep/Desktop/HeavyBall/.",
+  "children": [
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./.dgatignore",
+      "children": [],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "# `.dgatignore`\n\nSkip a `heavyball` submodule detection file specifically excluding:\n- `.dgatignore`-prefixed files which ignore diff-based analysis\n- `dep_graph.json` and `tree_visualizations` derived from analysis (tree plot)\n- `example_training_job` related integration and build files\n\nFiles like `benchmarks/bindings.py` also get ignored.",
+      "error_traces": [],
+      "hash": "c3e676f89687c90519129cf15b37ddde",
+      "is_file": true,
+      "name": ".dgatignore",
+      "rel_path": ".dgatignore",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./.github",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./.github/workflows",
+          "children": [
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./.github/workflows/build-ci-image.yaml",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "**Builds a published Docker image for the CI workflow to automate training tests.**\n\n*   **Builds Docker images** using the `build.sh` script based on the `Dockerfile` in the `ci` directory.\n*   **Automates CI pipelines** by triggering builds on `push` events to main, ensuring test images are available for continuous integration.\n*   **Maintains artifact integrity** through the `build-ci-image.yaml` workflow, which restricts package permissions to `write` and uploads only to `ghcr.io/homebrewml/heavyball-ci`.\n*   **Supports manual command-line jobs** via `workflow_dispatch`, allowing immediate builds without waiting for a push event.",
+              "error_traces": [],
+              "hash": "c5802a27396e1391a90a4e279d6c16b3",
+              "is_file": true,
+              "name": "build-ci-image.yaml",
+              "rel_path": ".github/workflows/build-ci-image.yaml",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./.github/workflows/ci.yaml",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "**Continuous integration pipeline for verifying code style, formatting, and test coverage before pushing to branches.**\n\n*   Runs pre-commit hooks (code formatting and linting) on every push, pull request, and create event.\n*   Executes Ruff linter and formatter checks (`--check`) against the codebase.\n*   Assembles and runs targeted test suites described in `scripts/run_ci_tests.sh`.\n*   Manages build caches for development dependencies (PyTorch, black, ruff, flake8) and installs Robust Python Interpreter.\n*   Configures Git LFS for large benchmark images using DGAT format.",
+              "error_traces": [],
+              "hash": "a1ff6c47b21423cf76abc7ebf75cbb8f",
+              "is_file": true,
+              "name": "ci.yaml",
+              "rel_path": ".github/workflows/ci.yaml",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./.github/workflows/gpu-tests.yaml",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "** spawns reproducible GPU tests for HeavyBall using the `ci/gpu_tests.py` suite.  \n```text\n- Waits for Kinova's VASTAI GPU jobs via an API key, executes all 24 test cases from `ci/gpu_tests.py`, and parses results into `gpu-test-results.json`.\n- Validates test outcomes by checking if expected passes occurred for specific benchmarks, grafted optimizers, and triangular SGD coupling.\n- Executes cleanup routines by deleting model instances running on VASTAI if the test suite failed.\n- Updates GitHub issues personally for PRs requiring GPU work or with specific test labels.\n```",
+              "error_traces": [],
+              "hash": "e67ddbd962c8bcbac7e910e43c42ebdc",
+              "is_file": true,
+              "name": "gpu-tests.yaml",
+              "rel_path": ".github/workflows/gpu-tests.yaml",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./.github/workflows/release.yaml",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "**`#github/workflows/release.yaml`**\n\nA GitHub Actions pipeline that triggers on tagged or published releases to:\n1.  Read and validate the project version from `pyproject.toml`.\n2.  Build distributions using the `setup.py` or pre-built binaries.\n3.  Publish to PyPI via the `guvicode` package after verifying the tag matches the version string.\n\n- Verifies the release tag corresponds to the latest `pyproject.toml` version.\n- Performs the actual build and publishes to PyPI's dist repo.",
+              "error_traces": [],
+              "hash": "a1dc55ed685012d41ae20ee462d7a23b",
+              "is_file": true,
+              "name": "release.yaml",
+              "rel_path": ".github/workflows/release.yaml",
+              "version": 0
+            }
+          ],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "",
+          "error_traces": [],
+          "hash": "00000000000000000000000000000000",
+          "is_file": false,
+          "name": "workflows",
+          "rel_path": ".github/workflows",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "00000000000000000000000000000000",
+      "is_file": false,
+      "name": ".github",
+      "rel_path": ".github",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./.gitignore",
+      "children": [],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "# File: `.gitignore`\n\n*A common exclusion file that prevents accidental build artifacts, version control files, and system caches from being tracked by Git.*\n\n**Key responsibilities:**\n*   **Prevents build artifacts**: Excludes `.pyc` bytecode, `.so` extension files, and `.egg-info` metadata that should not be committed.\n*   **Preserves source trees**: Blocks cached database files (`db.sqlite3`), instance folders for deployment (Flask), and temporary build outputs.\n*   **Maintains reproducibility**: Excludes `.coverage` and `.htmlcov` files to prevent large test reports from cluttering the repository.\n*   **Protects system state**: Includes `.env` files, environment configuration folders (`.venv`, `.tox`), and snapshot folders to ensure authentication keys and test states aren't committed.\n*   **Enforces code quality**: Keeps `.pytest_cache` and `.setuptools` files, which are generated only during CI/CD, out of the working directory.",
+      "error_traces": [],
+      "hash": "4d98fb0098155031d819a26dab29e7af",
+      "is_file": true,
+      "name": ".gitignore",
+      "rel_path": ".gitignore",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./LICENSE",
+      "children": [],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "[!important file_description] `LICENSE` is a BSD-3-Clause open source license (not provided in content) that governs permission to use, modify, and distribute `HeavyBall`.\n\n- **Permissive License**: Allows commercial use, modification, and redistribution without restricting source code access.\n- **No Attribution Required**: Users can freely use the code in proprietary projects without citing Lucas Nestler or HeavyBall in recognized formats.\n- **Limitations**: Explicitly disclaims warranties, holds the original copyright holder liable for damages, and disclaims implied warranties like merchantability.",
+      "error_traces": [],
+      "hash": "621a862e43a57e645f0d17db6c692a28",
+      "is_file": true,
+      "name": "LICENSE",
+      "rel_path": "LICENSE",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./README.md",
+      "children": [],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "# HeavyBall Overview\n\nA high-performance PyTorch optimizer library featuring composable, end-to-end fused Triton kernels for custom training workloads. It replaces base optimizers with specialized building blocks like Laplacian momentum, Shampoo, and third-order momentum, integrating memory-efficient features like ECC and warning masks into every operation. Ready to use out-of-the-box or fully customizable for state-of-the-art performance.\n\n*   Provides full-plant PyTorch optimizers via a composable, chainable `BaseOpt` API.\n*   Implements advanced algebraic momentum techniques (e.g., Laplacian, SOAP) and high-order methods under a unified interface.\n*   Employs aggressive domain-specific optimizations, including فور gris, BSP, and CCS techniques.\n*   Supports distributed training (DDP/FSDP), environment-specific backends, and automatic checkpoint restoration.",
+      "error_traces": [],
+      "hash": "922402198641dd830e09cd10943e6d24",
+      "is_file": true,
+      "name": "README.md",
+      "rel_path": "README.md",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./assets",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./assets/benchmark_matrix.png",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "Binary or non-text file skipped.",
+          "error_traces": [],
+          "hash": "7fffffffffffffff00000000006eb0fa",
+          "is_file": true,
+          "name": "benchmark_matrix.png",
+          "rel_path": "assets/benchmark_matrix.png",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./assets/delayed_psgd.png",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "Binary or non-text file skipped.",
+          "error_traces": [],
+          "hash": "00000000000000000000000000000000",
+          "is_file": true,
+          "name": "delayed_psgd.png",
+          "rel_path": "assets/delayed_psgd.png",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./assets/memory.png",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "Binary or non-text file skipped.",
+          "error_traces": [],
+          "hash": "00000000000000000000000000000000",
+          "is_file": true,
+          "name": "memory.png",
+          "rel_path": "assets/memory.png",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "00000000000000000000000000000000",
+      "is_file": false,
+      "name": "assets",
+      "rel_path": "assets",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./benchmarks",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./benchmarks/bench_optimizer_step.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "```content\n**File Analysis: `benchmarks/bench_optimizer_step.py`**\n\nThis benchmark script validates optimized PyTorch optimizer steps across various levels of difficulty, specifically measuring execution latency for the `heavyball` library.\n\n**Key Responsibilities:**\n*   Generates synthetic parameter tensors with gradient history using CUDA to ensure deterministic runtimes.\n*   Measures `step()` execution time on warmed-up programs to compute median latency per sequence of shapes and loss profiles.\n*   Outputs results as median execution time in microseconds to evaluate optimization gains.\n*   Serves as a core component of the benchmark suite that tracks performance regressions (e.g., reducing from 10.63ms to 4.15ms in later versions).\n```",
+          "error_traces": [],
+          "hash": "663ac7fc998c23456bb313fd47c77c62",
+          "is_file": true,
+          "name": "bench_optimizer_step.py",
+          "rel_path": "benchmarks/bench_optimizer_step.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./benchmarks/bench_singular_values.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**`bench_singular_values.py`** evaluates the accuracy of HeavyBall's fused `max`/`min` SVD implementations against DYNAMO's native CuDNN/`torch.linalg.svdvals` across various tensor shapes and dtypes.\n\n1. Generates random symmetric and non-symmetric matrices using Hilbert-basis scaling to ensure non-singular inputs.\n2. Measures absolute relative error (`rerr`) between `max_singular_value` and `torch.linalg.svdvals` for compute-reduced (power-of-2) cases.\n3. Measures absolute relative error for non-compute-reduced cases, which may incur errors from floating-point adjustments.\n4. Performs parallel evaluation over 11 bit types, four matrix dimensions, eleven condition numbers, and three power iteration counts.\n5. Outputs sorted results to a CLI CSV file sorted by complexity and condition number, displaying Pareto-optimal performance across dtype, power iteration, and shape.",
+          "error_traces": [],
+          "hash": "5ab654c94a58a2d39b1b5f5e4456603e",
+          "is_file": true,
+          "name": "bench_singular_values.py",
+          "rel_path": "benchmarks/bench_singular_values.py",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "00000000000000000000000000000000",
+      "is_file": false,
+      "name": "benchmarks",
+      "rel_path": "benchmarks",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./build.sh",
+      "children": [],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "### The main build script runs `pip install` and `twine` to package `heavyball` for PyPI release.\n\n*   Prepares a standalone build environment ensuring the source tree is fresh.\n*   Assembles the `dist` directory containing packaged executables and source tarballs.\n*   Performs a direct upload to PyPI for new version releases.\n*   Cleans up intermediate files like cached packages and egg-info.",
+      "error_traces": [],
+      "hash": "a11ef5e4645ee6462d94c3228f8dccf8",
+      "is_file": true,
+      "name": "build.sh",
+      "rel_path": "build.sh",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./ci",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./ci/Dockerfile",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**Core boilerplate for CI/CD**, but specifically contains `PyTorch` image build + `pytest`/`gpytorch` test runners.\n\n1.  Defines minimal Docker image for HeavyBall benchmark tests\n2.  Installs PyTorch (2.11), gpytorch, and optimization benchmarks\n3.  Executes standard CI workflows (build, GPU tests, release)\n4.  Manages development and GPU test environments via Docker and YAML",
+          "error_traces": [],
+          "hash": "6cb238e69c7b722c5c045184b6a75b56",
+          "is_file": true,
+          "name": "Dockerfile",
+          "rel_path": "ci/Dockerfile",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./ci/gpu_tests.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**File analyzes GPU resource requests, validates test execution logins, and exports measurement results.\n\n*   Validates GPU environment variables and detects available hardware resources.\n*   Creates SSH instances on the container orchestration web portal for testing.\n*   Manages queue management and tracks instance execution logs.\n*   Aggregates CPU-bound test results into a structured JSON report.",
+          "error_traces": [],
+          "hash": "a6e27415f4a5473af970f9061327f48a",
+          "is_file": true,
+          "name": "gpu_tests.py",
+          "rel_path": "ci/gpu_tests.py",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "0000000000000000000000000001e851",
+      "is_file": false,
+      "name": "ci",
+      "rel_path": "ci",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets",
+          "children": [
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets/benchmark_matrix.png",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "Binary or non-text file skipped.",
+              "error_traces": [],
+              "hash": "00000000000000000000721f46e03b20",
+              "is_file": true,
+              "name": "benchmark_matrix.png",
+              "rel_path": "docs/assets/benchmark_matrix.png",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets/early_stopping.png",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "Binary or non-text file skipped.",
+              "error_traces": [],
+              "hash": "0000721f46e03b200000000000006251",
+              "is_file": true,
+              "name": "early_stopping.png",
+              "rel_path": "docs/assets/early_stopping.png",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets/hiker_analogy_diagram.png",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "Binary or non-text file skipped.",
+              "error_traces": [],
+              "hash": "0000721f46e03b2000000000000060b1",
+              "is_file": true,
+              "name": "hiker_analogy_diagram.png",
+              "rel_path": "docs/assets/hiker_analogy_diagram.png",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets/psgd_efficiency_cache.png",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "Binary or non-text file skipped.",
+              "error_traces": [],
+              "hash": "00000000000000000000000000000000",
+              "is_file": true,
+              "name": "psgd_efficiency_cache.png",
+              "rel_path": "docs/assets/psgd_efficiency_cache.png",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets/psgd_efficiency_cache_triu_as_line.png",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "Binary or non-text file skipped.",
+              "error_traces": [],
+              "hash": "00000000000000000000000000000000",
+              "is_file": true,
+              "name": "psgd_efficiency_cache_triu_as_line.png",
+              "rel_path": "docs/assets/psgd_efficiency_cache_triu_as_line.png",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets/psgd_efficiency_triu_as_line.png",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "Binary or non-text file skipped.",
+              "error_traces": [],
+              "hash": "00000000000000000000000000000000",
+              "is_file": true,
+              "name": "psgd_efficiency_triu_as_line.png",
+              "rel_path": "docs/assets/psgd_efficiency_triu_as_line.png",
+              "version": 0
+            },
+            {
+              "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/assets/saddle_point_comparison.gif",
+              "children": [],
+              "depended_by": [],
+              "depends_on": [],
+              "description": "Binary or non-text file skipped.",
+              "error_traces": [],
+              "hash": "00000000000000000000000000000000",
+              "is_file": true,
+              "name": "saddle_point_comparison.gif",
+              "rel_path": "docs/assets/saddle_point_comparison.gif",
+              "version": 0
+            }
+          ],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "",
+          "error_traces": [],
+          "hash": "00000000000000000000721f46e03b20",
+          "is_file": false,
+          "name": "assets",
+          "rel_path": "docs/assets",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/benchmark.md",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**HeavyBall_Benchmark_Diagnostic.md** describes a diagnostic benchmark suite designed to expose hidden optimizer failures.\n\n*   **Identifies Silent Failures**: Tests for convergence into suboptimal basins without explicit error reporting.\n*   **Assesses Termination Stability**: Measures raw capability by running 1,000 hyperparameter trials per task for up to 1M steps.\n*   **Proactively Manages Risks**: Flags risks like getting stuck at saddle points and differentiable landscape traversal.\n*   **Provides Granular Metrics**: Outputs detailed pass/fail rates per task for 150+ diagnostic challenges.\n*   **Visualizes Systemic Weaknesses**: Creates benchmark matrices to map optimizer strengths against multiple specific failure cases.",
+          "error_traces": [],
+          "hash": "f43be2b10da65a93716cacddb5013a25",
+          "is_file": true,
+          "name": "benchmark.md",
+          "rel_path": "docs/benchmark.md",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/heavyball2.md",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**# HeavyBall 2.0.0_Summary**\n\n### A lightweight, chainable optimizer library enabling mixed-precision training, SAGSGD support, and advanced features like MARS, caution, and Newton-Schulz orthogonalization with automatic checkpoint migration.",
+          "error_traces": [],
+          "hash": "10c14b09591104be6ee666d5f9e0a1a0",
+          "is_file": true,
+          "name": "heavyball2.md",
+          "rel_path": "docs/heavyball2.md",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/heavyball3.md",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**;`HeavyBall 3.0.0` (heavyball3.md) describes the high-level release notes, API renames, behavioral changes, and migration path for version 3.0.**\n\n*   Eliminates `Foreach*` prefixes and updates `foreach->` to `multi_tensor=` in constructors.\n*   Renames `Branch` to `Parallel` for custom chainable code.\n*   Makes `ScheduleFree` and `MSAM` `eval()`/`train()` methods idempotent (`eval()` twice is safe).\n*   Clarifies the `consume_grad` flag and introduces `orig_shapes` for explicit distributed parameter shape handling.\n*   Deprecates several unused/S sacrificial kwargs like `ad高水平`, `normalize_grads`, `correct_bias`, `stochastic_schedule`, `inverse_free`, and `adaptive`.\n*   Updates shared `NAS` sampler kwargs (e.g. `constraints_func`, `consider_running_trials`).\n*   Migrates checkpoints using the provided migration CLI.\n*   Preserves backward compatibility by keeping legacy class names where available.",
+          "error_traces": [],
+          "hash": "bdece943397d351b8656861870bd1747",
+          "is_file": true,
+          "name": "heavyball3.md",
+          "rel_path": "docs/heavyball3.md",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./docs/psgd_efficiency.md",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "# PSGD Efficiency Landscapes: Trade-offs and Mechanisms\n\nThis guide explains the computational trade-offs and optimization strategies applied to various PS GD variants.\n\n**Key Responsibilities:**\n*   **Core Architectures:** Details how `triu_as_line` memory-reduces preconditioner storage without relying on cacheability.\n*   **Memory Optimizations:** Describes the `CachedPSGDKron` variants that balance duplicated memory against per-step overhead.\n*   **Scheduling Strategies:** Outlines methods like Lorentz/PaLM_alpha-beta for different optimization requirements.\n*   **Fusion Strategies:** Explains how `update_fps` and `slow_fps` replay/hide optimization paths to manage statelessness.",
+          "error_traces": [],
+          "hash": "a85ff226cbe72ee08cf11d77fb41d921",
+          "is_file": true,
+          "name": "psgd_efficiency.md",
+          "rel_path": "docs/psgd_efficiency.md",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "00000000000000000000000000000000",
+      "is_file": false,
+      "name": "docs",
+      "rel_path": "docs",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./examples",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./examples/autoencoder.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "### **autoencoder.py**\n\nAn example training script for a custom PyTorch autoencoder that utilizes HeavyBall optimizers like PSGDKron and Muon for multi-processing within Deep Learning.\n\n*   Defines an autencodar trunk for autoencoder as a PyTorch `nn.Module` with a residual connection block\n*   Implements a custom neural network training loop with automatic parameter splitting for mixed-use losses\n*   Applies MARS and dynamic batching strategies using a custom SGD-based optimizer with heavy objects\n*   Wraps training operations in `Numpy Remapping` and tensor clipping utilities using `torch.no_grad()`\n*   Generates embeddings for reconstruction visualization and metric logging via tensorboard",
+          "error_traces": [],
+          "hash": "6b76544b9f0857cf9fc5ab1071d904d9",
+          "is_file": true,
+          "name": "autoencoder.py",
+          "rel_path": "examples/autoencoder.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./examples/branched_optimizer.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/chainable.py"
+          ],
+          "description": "**File Description**\n\nThis example script extends the `base` estimator with a custom `GraftedAdam` optimizer that applies a non-linear scaling gradient update derived from the Adam optimizer's exponential moving average (EMA) during training.\n\n**Responsibilities:**\n*   Defines an `GraftedAdam` optimizer class inheriting from `heavyball.chainable.BaseOpt` with custom parallel transformation logic.\n*   Imports and configures the `bartower/models/infer/estimator.py` (`base.py`) class for reference.\n*   Executes a training loop on the Fashion-MNIST dataset to demonstrate inference-time gradient scaling.\n*   Includes a custom `_graft` function that adjusts gradients to be less noisy by a function of the current EMA state norm.\n*   Defaults to CPU device and runs for 20 epochs starting from a dense dataset subset.",
+          "error_traces": [],
+          "hash": "ef75d748ab6ae56280f85bfa231cb50c",
+          "is_file": true,
+          "name": "branched_optimizer.py",
+          "rel_path": "examples/branched_optimizer.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./examples/ddp_training.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**Example script for distributed training with HeavyBall optimizers (DDP/FSDP support)**\n\n*   Executes a mini-training loop over FSDP/DistributedDataParallel wrapped models\n*   Unifies multiple optimizer configurations (AdamW, SOAP, Muon, Apollo) via `--opt` flag\n*   Integrates momentum variants (LaProp, NAdam, RMSprop, ADOPT, AdEMAMix, LaPropOrtho, Muon variants)\n*   Configures model types (Conv2d, Linear), criterion, and distributed sampler receipt\n*   Compiles optimizer kernels via autocast, SLOP, ConsensusOptimizer enabled, torch.compile(fullgraph=True)",
+          "error_traces": [],
+          "hash": "5f87921a0bd3aa2dc3663d993e19d7be",
+          "is_file": true,
+          "name": "ddp_training.py",
+          "rel_path": "examples/ddp_training.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./examples/ecc_bf16.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**Conducts a numerical benchmark on gradient precision using layer norm loss over 10k steps across fp32, bf16, and an ECC-bf16+8 variant.**\n\n*   Performs cross-precision comparisons for a naive AdamW optimizer against HeavyBall variations.\n*   Validates performance of custom efficiency checks and error handling utilities.\n*   Tests core components like MARS support, careful update gating, and ecm memory optimizations.\n*   Depicts behavior during the 0, end-of-dataset, and best-of-10 trials phases.\n*   Includes configuration presets testing Naive AdamW in standard, state-preserved, and auxiliary modes.",
+          "error_traces": [],
+          "hash": "3958f8ff0596db1e78948fb06d6761d8",
+          "is_file": true,
+          "name": "ecc_bf16.py",
+          "rel_path": "examples/ecc_bf16.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./examples/fsdp_training.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "```markdown\n## Wikipedia-style Python module docstring\n\n**Key responsibilities:**\n- Dumps HeavyBall optimizer code to a single static view containing imports, model creation, and training macro\n- Narrows focus to FSDP examples by omitting vanilla PyTorch code\n- Benchmarks speedups for distribution over a single device node\n- Preserves HeavyBall's API compatibility with raw PyTorch calling conventions\n```",
+          "error_traces": [],
+          "hash": "e2814c43aff347a70e0a817c0944c966",
+          "is_file": true,
+          "name": "fsdp_training.py",
+          "rel_path": "examples/fsdp_training.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./examples/modify_functions.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**File:** `examples/modify_functions.py`  \n**Description:** Demonstrates utility functions for dynamically inserting layer transformations into named optimizer chains by using the chainable API to modify optimizer parameters at runtime.  \n\n**Key Responsibilities:**\n- Defines a standard loss function (MSE) for a multi-layer neural network to provide training baselines.\n- Creates an optimizer chain wrapping custom `modify_functions.transform` hooks (`orthogonalize_update`).\n- Implements an `EfficientOptimizer` for sample-efficient SFT by integrating linear and GPT-like transformers into the optimizer lifecycle, enabling zero-shot parameter sharing.\n- Includes a `LinearTransform` that sets an initial learning rate on trainable parameters based on forward pass magnitudes.",
+          "error_traces": [],
+          "hash": "794349eb9e432637e7dc9aa877ad0d2c",
+          "is_file": true,
+          "name": "modify_functions.py",
+          "rel_path": "examples/modify_functions.py",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "000000058c8279e90000000000000030",
+      "is_file": false,
+      "name": "examples",
+      "rel_path": "examples",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./heavyball",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./heavyball/__init__.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "```markdown\n**File purpose:** This `__init__.py` serves as the entry point exposing the HeavyBall optimizer family to users and tooling; it wraps PyTorch's standard optimizers like SGD and AdamW while providing 17+ specialized building blocks including MARS (MARS), SOAP (Shampoo), and LaProp. Conveniently, all modules are instantiable via utility mixins or Proto programming, supporting distributed (DDP/FSDP) modes with ECC support.\n```",
+          "error_traces": [],
+          "hash": "e9c6a46ce92aea762ee38b43922cc3c1",
+          "is_file": true,
+          "name": "__init__.py",
+          "rel_path": "heavyball/__init__.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./heavyball/chainable.py",
+          "children": [],
+          "depended_by": [
+            "test/test_ecc.py",
+            "test/test_compile_step.py",
+            "test/test_soap.py",
+            "examples/branched_optimizer.py",
+            "test/utils.py"
+          ],
+          "depends_on": [],
+          "description": "```markdown\n**heavyball/chainable.py**: A compiler-based optimizer toolkit implementing HeavyBall composable transforms.  \n- Defines `FunctionTransform`, `Parallel`, and `Route` classes for executing composite optimization pipelines  \n- Supports precompiled Triton kernels via `torch.compile(fullgraph=True)` for efficiency  \n- Implements lazy guards for secure state initialization and escape hatches for flexible estimation updates  \n- Orchestrates advanced behaviors like warmed-up GSDE summations, gradient masking, and ECC state compression  \n- Facilitates distributed training scenarios by routing sparse, sharded parameters through parallel branches or all-to-all exchanges  \n```",
+          "error_traces": [],
+          "hash": "d029bfa36cfd27f9c438a3738e43dd6d",
+          "is_file": true,
+          "name": "chainable.py",
+          "rel_path": "heavyball/chainable.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./heavyball/helpers.py",
+          "children": [],
+          "depended_by": [
+            "test/test_helpers_cpu.py"
+          ],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**`heavyball/helpers.py`**: A robust set of utility functions and specialized BoTorch/HBO optimization samplers. 3-5 bullet points:\n\n*   Implements `BoTorchSampler` and `HEBOSampler` for Bayesian Optimization (BoTorch) using a GPyTorch surrogate to search parameter spaces efficiently.\n*   Provides specialized samplers including `ImplicitNaturalGradientSampler` for calculating incoherent natural gradients and `FastINGO` for implicit natural gradient updates.\n*   Includes `ManualSeedContext` to manage random state seeding during optimization trials.\n*   Wraps `optuna` helpers (`SimpleAPIBaseSampler`, `FastINGO`, `ImplicitNaturalGradientSampler`) into a unified interface for easy integration.",
+          "error_traces": [],
+          "hash": "ab680164a0c7240057d755b521035495",
+          "is_file": true,
+          "name": "helpers.py",
+          "rel_path": "heavyball/helpers.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./heavyball/utils.py",
+          "children": [],
+          "depended_by": [
+            "test/test_stochastic_utils_cpu.py",
+            "test/test_utils_property.py",
+            "test/test_ecc.py",
+            "test/benchmark_psgd_lb.py",
+            "test/test_memory.py",
+            "test/test_bf16_params.py",
+            "test/test_memory_leak.py",
+            "test/test_bf16_storage.py",
+            "test/benchmark_precond_fitting.py",
+            "heavyball/helpers.py",
+            "test/test_channels_last.py",
+            "test/test_clip.py",
+            "benchmarks/bench_singular_values.py",
+            "test/test_bf16_q.py",
+            "test/test_nd_param.py",
+            "test/test_utils_cpu.py",
+            "test/test_foreach.py",
+            "test/test_caution.py",
+            "test/test_chainable_cpu.py",
+            "test/test_hook.py",
+            "test/test_closure.py",
+            "test/test_ema.py",
+            "test/test_distributed.py",
+            "test/test_mars.py",
+            "test/test_merge.py",
+            "test/test_no_grad.py",
+            "test/test_save_restore.py",
+            "test/test_singular_values.py",
+            "test/test_psgd_precond_init_stability.py",
+            "test/test_param_ecc_compile.py",
+            "test/test_optimizer_cpu_smoke.py"
+          ],
+          "depends_on": [],
+          "description": "HeavyBall's `utils.py` provides backend implementations for compounding PyTorch optimizers by fusing their logic into compilable Triton kernels and CPU functions, replacing high-level adapter libraries with optimized building blocks.\n\n- Compiles the entire optimizer update logic into fused kernels via `torch.compile`.\n- Implements specialized matrix functions like sign epistasis (mSign), benefits from the NewtSchulz setting, and zeroth power methods.\n- Supports parallel execution of contributor-based projects for advanced preconditioning.\n- Reduces memory usage by combining gradient and update data sharing and advanced warmup schedulers for scaling algorithms.\n- Includes a robust hook system to manage custom storage blocks and transformations for efficient gradient updates.",
+          "error_traces": [],
+          "hash": "56e78422650274a49e4bbecb252fd62a",
+          "is_file": true,
+          "name": "utils.py",
+          "rel_path": "heavyball/utils.py",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "00000000000000000000000000000000",
+      "is_file": false,
+      "name": "heavyball",
+      "rel_path": "heavyball",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./pre-commit.yaml",
+      "children": [],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "# `pre-commit.yaml` | Pre-commit configuration hook for enforcing code quality rules and git hooks\n\n**- Instantly run Ruff linter and formatter on all Python files**  \n**- Integrate with Pre-commit Hooks for standard checks like trailing whitespace**  \n**- Manually maintain support for extra hooks: check-merge-conflict, check-toml, check-yaml, end-of-file-fixer, mixed-line-ending**  \n**<code>pre-commit.yaml</code> ensures a robust, consistent development workflow by combining automated linters with custom checks for YAML/TML formatting and file integrity.**",
+      "error_traces": [],
+      "hash": "478fedad3e0baf2befd9251775256375",
+      "is_file": true,
+      "name": "pre-commit.yaml",
+      "rel_path": "pre-commit.yaml",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./scripts",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./scripts/migrate_optimizer_state.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**Migrates HeavyBall optimizer state dicts from legacy versions (1.x/2.x) into the modern 3.x layout.**\n\n*   Auto-detects and parses legacy state formats, renaming deprecated keys (e.g., `foreach` → `multi_tensor`).\n*   Reshapes neural parameter storages to match current tensor views and memory layouts.\n*   Transforms flat state structures into nested dictionaries compatible with 3.x optimizer signatures.\n*   Performs dry-run previews or overwrites checkpoint files based on arguments.\n*   Automatically handles top-level optimizer class aliases (e.g., `PaLMSOAP` → `SOAP`).",
+          "error_traces": [],
+          "hash": "379a06eb745beeda33b851d354485a3f",
+          "is_file": true,
+          "name": "migrate_optimizer_state.py",
+          "rel_path": "scripts/migrate_optimizer_state.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./scripts/run_ci_tests.sh",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**scripts/run_ci_tests.sh**: Generates unified pytest configurations for CI by dynamically registering test runners from a list in `run_list` and conditionally populating a test suite for the `push` branch. It reduces noise from standard PyTest tools by suppressing deprecation warnings.\n\n*   Periodically runs core test suites using `run_list`: `test_toy_training`, `test_cpu_features`, `test_chainable_cpu`, `test_helpers_cpu`, and `test_utils_cpu`.\n*   Executes specific heavy-weight tests like `test_migrate_cli` and `test_toy_training` exclusively when the environment is in the `push` branch.\n*   Minimizes startup overhead by disabling `pkg_resources` deprecation warnings and standard PyTest noise.",
+          "error_traces": [],
+          "hash": "46135cbe4c58cc744d077a5f34e12f6f",
+          "is_file": true,
+          "name": "run_ci_tests.sh",
+          "rel_path": "scripts/run_ci_tests.sh",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "0000721f46e03b200000000000003a21",
+      "is_file": false,
+      "name": "scripts",
+      "rel_path": "scripts",
+      "version": 0
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/HeavyBall/./test",
+      "children": [
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/benchmark_precond_fitting.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**Runs PyTorch benchmark suites (LightBench) to measure AllenNevt optimizer step latencies and precond fitting error rates.**\n\n**Key Responsibilities:**\n*   Generates optimized benchmark configurations (grid search) over matrix dynamic coupling strength and precond learning rates.\n*   Executes core optimizer steps using LightBench's silent failure detection framework and computes runtime latencies.\n*   Evaluates precond modeling correctness in two ways: comparing against manually generated exact Hessians (relative error) and validating against Neural Methods Gradient predictions (gradient matches).\n*   Outputs structured CSV data for plotting and logs detailed results in a `runs/` directory.",
+          "error_traces": [],
+          "hash": "424b12a7d2adba981968552cde1c779c",
+          "is_file": true,
+          "name": "benchmark_precond_fitting.py",
+          "rel_path": "test/benchmark_precond_fitting.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/benchmark_psgd_lb.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "# `benchmark_psgd_lb.py`\n\n**Name Meaning**: Compares the bottleneck (salient parameters) for successive scaling laws in a PSDG preconditioner's bounding box directly against the parallelogram shape.\n\n**Key Responsibilities:**\n- **Preconditioning Budget Analysis**: Calculates the exact Singular Value Decomposition (SVD) cost and successive approximations of the PSDG Bounding Box (BB).\n- **Metric Calculation**: Measures performance across power iteration iterations (0, 1, 2) and normalizes results for Schwarz and power iteration scaling.\n- **Benchmark Execution**: Runs the benchmark matrix plot to estimate compilation speeds of `heavyball` for pure preconditioner ops (2nd order) compared to 1st order optimizers.\n- **Visual Comparison**: Visualizes relative error and time complexities to validate `heavyball`'s preconditioning accuracy.",
+          "error_traces": [],
+          "hash": "0ee1f444ddec64ab5baaad42fb936634",
+          "is_file": true,
+          "name": "benchmark_psgd_lb.py",
+          "rel_path": "test/benchmark_psgd_lb.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/readme.md",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**Test Coverage Specification for HeavyBall Optimizers**\n\nA LeanMarkdown file describing test scenarios, currently marked as incomplete. It outlines three unverified tests: regression checks against SOAP integration, peak memory performance verification, and runtime calculate efficiency measurements.",
+          "error_traces": [],
+          "hash": "1c1a764039e3749d93eb33473d4e1304",
+          "is_file": true,
+          "name": "readme.md",
+          "rel_path": "test/readme.md",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_ademamix.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**adapts**\n> Based on filename and content, the file tests specific adaptive algorithm behaviors and core optimization transforms within the `heavyball` library.\n- Asserts that the `AdEMAMix` optimizer's internal gradient buffers (`exp_avg_fast`, `exp_avg_slow`, `exp_avg_sq`) match a reference PyTorch algorithm.\n- Verifies that the `SOAPAdEMAMix` optimizer correctly projects incoming gradients into the SOAP eigenbasis before updating.",
+          "error_traces": [],
+          "hash": "b59a510c80c4cfbb5d1a9fb697d4c6e7",
+          "is_file": true,
+          "name": "test_ademamix.py",
+          "rel_path": "test/test_ademamix.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_bf16_params.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "```markdown\n# Test file validates correctness of BF16 parameter handling in Optimizers\n\n* Allocates test data and runs optimizer steps across multiple dtypes (`float32`, `bfloat16`) and depths.\n* Compares results against `float32` behavior using tolerance checks to identify memory or precision bugs.\n* Runs comprehensive regressions using the `REPRESENTATIVE_OPTS` fixture to cover edge cases.\n* Deploys the `torch.cuda.is_available()` check to skip execution on non-CUDA targets.\n* Uses `dynamo.cache_size_limit` to limit compilation caching for faster, more reproducible set-ups.\n```",
+          "error_traces": [],
+          "hash": "3503430094c79dc94773fd19e7edfce1",
+          "is_file": true,
+          "name": "test_bf16_params.py",
+          "rel_path": "test/test_bf16_params.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_bf16_q.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Tests for bf16/q4f focal stability in heavyball optimizer, including param_ecc, param msg_q4f, and compilation tests.**\n\n*   Runs comprehensive CPU and GPU smoke tests for BF16 quantized (q4f) PyTorch optimizer features.\n*   Validates focal drift stability across SGD, AdamW, Muon, and other heavyball optimization methods.\n*   Confirms correct behavior of param_ecc, eccentricity, param msg, and q4f compression techniques under various optimization stacks.\n*   Tests parameter-level quantization and compilation-friendly check for edge cases in bf16+8 and bf16+16 optimization modes.",
+          "error_traces": [],
+          "hash": "2c65ed975d50d60a5c07ca14cf93ea40",
+          "is_file": true,
+          "name": "test_bf16_q.py",
+          "rel_path": "test/test_bf16_q.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_bf16_storage.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Loads representative PyTorch shards and validates FFT-based cosine similarity preservation for segregated GPU-optimized Python optimizers under mixed float storage types.**\n\n*   Iteratively trains shallow NNs using `get_optim()` to populate parameter groups with optimized units.\n*   Stores individual parameter states per shot in both `float32` and `bfloat16`.\n*   Verifies numerical equivalence (cos $\\ge$ 0.9, norm ratio $\\in$ [0.9, 1.1]) between CUDA and CPU float versions after sharding logic.",
+          "error_traces": [],
+          "hash": "94d8203ea343087c3f13d460b963aeca",
+          "is_file": true,
+          "name": "test_bf16_storage.py",
+          "rel_path": "test/test_bf16_storage.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_caution.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "*   Tests whether the `caution` flag safely updates parameter states without altering optimizers used for loss surfaces.\n*   Validates that applying `caution=True` yields identical or better loss values than `caution=False`.\n*   Runs checks on default representative optimizers across different depths, layers, and training runs.\n*   Includes Dynamo compilation settings to verify robustness in graph fusion contexts.",
+          "error_traces": [],
+          "hash": "7303535305a40237c94bb07655c71acf",
+          "is_file": true,
+          "name": "test_caution.py",
+          "rel_path": "test/test_caution.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_chainable_cpu.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "# 🔍 `test/test_chainable_cpu.py` - A unit test suite verifying the composable Chainable API's correctness on CPU for various optimizers.\n\n*   **Runs all optimizer methods** on CPU via fast evaluation to catch compilation errors early.\n*   **Validates non-gather optimizers** confirm elements are processed correctly without requiring parameter repartitioning.\n*   **Validates gather optimizers** ensure shape-dependent reductions capture and merge multi-processed states properly.\n*   **Tests custom branching operations** using the `Parallel` and `merge_fn` constructs to isolate transform logic.\n*   **Performs critical edge case checks** like multi-tensor merging and strict tensor identity preservation.",
+          "error_traces": [],
+          "hash": "7bab01149a333a2312d9ad1201529faa",
+          "is_file": true,
+          "name": "test_chainable_cpu.py",
+          "rel_path": "test/test_chainable_cpu.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_channels_last.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Tests HeavyBall's automatic parameter quantization consistency and memory efficiency throughout distributed micro-batch training.**\n\n*   Verifies that metric updates remain identical when switching between CPU and CUDA backends across mixed multibatch sizes.\n*   Validates optimal rank-0 reshaping strategies for `lightning` batch-by-batch training with `channels_last` memory formats.\n*   Confirms correctness of `torch.compile` graph stability when processing quantized checkpoint data.\n*   Ensures quantization-aware training (QAT) and apex micro-batch optimizers handle storage formats correctly.\n*   Locates native TorchDynamo bugs when executing `deepspeed` with `lazy_is_checkpointing=True`.",
+          "error_traces": [],
+          "hash": "1187a7a32f6c3f88a0f572eed1131ba6",
+          "is_file": true,
+          "name": "test_channels_last.py",
+          "rel_path": "test/test_channels_last.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_clip.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Test the `heavyball.clip()` transform integrations for gradient-based clipping mechanisms across all optimizer variants.**\n\n*   Validates `gradient_clipping()` and `update_clipping()` flags on `RMSprop`, `L2`, `Global norm`, and `RMSNorm` optimizers.\n*   Confirms that clipping logic functions as expected within Triton kernels using both compile mode (`None`) and default execution modes.\n*   Ensures numerical stability (no NaN/Inf) and gradient magnitude constraints are met post-optimization step.\n*   Tests comprehensive parameter configurations including various scales, norms, and different compile settings.",
+          "error_traces": [],
+          "hash": "779f66ab1c2bab3a812298e42baf9815",
+          "is_file": true,
+          "name": "test_clip.py",
+          "rel_path": "test/test_clip.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_closure.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Tests optimizer composition, closure, and parameter e.c.c. updates for PyTorch optimizers.**\n\n- Checks that custom optimizer arguments are correctly sourced and passed to inner optimizers.\n- Validates that optimized loss closures modify forward-wraps without affecting parameter gradients.\n- Confirms the optimizer correctly tracks state sizes and handles transient states.\n- Verifies parametric e.c.c. (e.c.c.) updates zip with grad-corrector changes.\n- Ensures features like gradient masking and split optimization apply correctly.",
+          "error_traces": [],
+          "hash": "72cf7a660a9c7ddb57f176a55efa7d29",
+          "is_file": true,
+          "name": "test_closure.py",
+          "rel_path": "test/test_closure.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_compile_step.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/chainable.py"
+          ],
+          "description": "**`test_compile_step`** validates that HeavyBall optimizers behave identically when compiled (with full graph fusion/tuning) versus eager execution by training models with both seeds.\n\n*   Runs synthetic training steps using 2 identical models instead of real checkpoints.\n*   Compares the final `.state_dict` of optimized models against original models.\n*   Performs strict numerical tolerance checks (<1e-4) to ensure fidelity.\n*   Excludes pitfalls like SplitOpt configuration and skip-listed XLA paths.",
+          "error_traces": [],
+          "hash": "e6c4a23792445a2741c6547d0ee80d43",
+          "is_file": true,
+          "name": "test_compile_step.py",
+          "rel_path": "test/test_compile_step.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_cpu_features.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "**Test suite for non-PSGD HeavyBall optimizers**\n\n*   Verifies core methods (AdamW, SOAP, Muon) execute correctly on CPU-only hardware.\n*   Validates the `caution` flag prevents update overshoot compared to baseline SGD.\n*   Confirms the `mars` (MARS variance reduction) flag produces divergent results.\n*   Ensures `SAMWrapper` correctly rejectsOptimizerState modifications.\n*   Maintains parameter groups within an optimizer group independently.\n*   Checks that string-based clipping shorthand arguments are properly recognized.\n*   Validates `eval()` and `train()` mode switching is idempotent.",
+          "error_traces": [],
+          "hash": "db213d336b4d66a0a2b326f5c3569bb1",
+          "is_file": true,
+          "name": "test_cpu_features.py",
+          "rel_path": "test/test_cpu_features.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_distributed.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "# test/test_distributed.py  \nThis file validates the use of DistributedDataParallel (DDP) and FullyShardedDataParallel (FSDP) with HeavyBall optimizers by comparing sharded, multi-gpu parameter states against those of a single-node execution.\n\n- Runs reference tests via `_ref_worker` to store single-device parameter states (`ref.pt`).\n- Executes worker tasks via `_ddp_worker` and `_fsdp_worker` which iterate over local shards to reproduce training state.\n- Uses `FSDP.summon_full_params` to collect all sharded parameters for comparison on the first rank.\n- Validates parameter equivalence using tolerance-based checks (`torch.allclose` or 1 ULP) to ensure no splitting artifacts occurred.\n- Handles specific exceptions like `FSDP2` segfaults and unsupported shader options via parametrized skips.",
+          "error_traces": [],
+          "hash": "dfad923c03a386c8d140d0329cff2157",
+          "is_file": true,
+          "name": "test_distributed.py",
+          "rel_path": "test/test_distributed.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_ecc.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/chainable.py",
+            "heavyball/utils.py"
+          ],
+          "description": "```markdown\n`test/test_ecc.py` validates Float16/BF16+8 state-level correction behavior in HeavyBall optimizers (AdamW, ADOPT, NAdam, LaProp, etc.) by testing memory steering, convergence, parameter restoration, and residual flows.\n```",
+          "error_traces": [],
+          "hash": "882791e1575cb73024319fb9a6204648",
+          "is_file": true,
+          "name": "test_ecc.py",
+          "rel_path": "test/test_ecc.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_ema.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Test suite for EMA and slow-gradient policies**\n*   Verifies that `ema_update()` and `copy_emas_to_params()` do not alter actual parameter weights, accurately computing differences between EMA and non-EMA convergences.\n*   Out-of-the-box testing of various optimizers (AdamW, NAdam, RMSprop, Muon) to confirm state persistence and correctness under accelerated compression regimes (quadprecision).\n*   Validates the stability of HeavyBall's quadratic stability property and ensures efficient partial support for second-order methods (PEGD, Muon) by default.\n*   Achieves theoretical speedups (up to 3x slower due to extra reads/writes) and relies on `torch.compile(fullgraph=True)` for optimized graph fusion.\n*   Utilizes a mixed-batch-load strategy at the start of training to prevent excessive memory pressure while testing efficiency.",
+          "error_traces": [],
+          "hash": "3581eaf6f6a15073017f20bcd3d314e5",
+          "is_file": true,
+          "name": "test_ema.py",
+          "rel_path": "test/test_ema.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_foreach.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Test suite that validates the scalability, memory depth, and parameter decay of LightBB's FOR-END feature on its BY-END optimizers.**\n\n*   Runs FORTD preconditions (like LRA and deep Schur) against BYTD optimizers using `LightBench`'s `get_optim`.\n*   Checks if peaks in allocated memory stay below a radiant peak (normalized 1.0 baseline).\n*   Validates ensemble convergence accuracy, allowing a relative tolerance (`rtol=0.01`) for PSGD due to mixing of RNGs.",
+          "error_traces": [],
+          "hash": "97779560dc40f62b905ef995491dede0",
+          "is_file": true,
+          "name": "test_foreach.py",
+          "rel_path": "test/test_foreach.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_helpers_cpu.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/helpers.py"
+          ],
+          "description": "**Heavily-ballistic test suite for PyTorch optimizer helpers**\n\n*   Validates numerically stable data transfer using `bound_to_torch` functions.\n*   Ensures `nextafter` float operations align with NumPy's expectations.\n*   Preserves numeric precision through automatic logging-transformation chains.\n*   Validates optimizer sampler configurations across diverse search space types.\n*   Checks constraint enforcement in hybrid evolutionary optimizer samplers.\n*   Verifies evolutionary health reporters satisfy basic observe-suggest roundtrip protocols.\n*   Monitors heuristic exploration limits across discrete, pow, and integer design spaces.",
+          "error_traces": [],
+          "hash": "7542f3fad1ff291b4fd54d397b16fbe8",
+          "is_file": true,
+          "name": "test_helpers_cpu.py",
+          "rel_path": "test/test_helpers_cpu.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_hook.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Tests the integration of composable opt-in hooks into PyTorch step() workflows.**\n\n*   Validates that user-defined hook functions defined in `util_hooks.py` are correctly registered and callable during optimizer steps.\n*   Employs `torch.compile` to inline and optimize the hooked optimizer's graph regardless of the hook implementation type.\n*   Ensures memory and backward compatibility by handling state persistence and gradient clearing after delegate calls.\n*   Supports flexible step() boundary control through `step_boundary` and `step_before_grad` parameters.\n*   Confirms concurrent execution semantics where hooks modify only final loss reports rather than intermediate gradients.",
+          "error_traces": [],
+          "hash": "959162346fe9d0509a393377e5b47fcd",
+          "is_file": true,
+          "name": "test_hook.py",
+          "rel_path": "test/test_hook.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_mars.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Test file verifying MARS gradient correction via forward pass during step operations.**\n\n*   Run forward passes and subsequent `step()`/`zero_grad()` calls for optimizers incorporating MARS.\n*   Assert that backward pass losses from forward/skipMars configurations remain logarithmically ordered.\n*   Inject method names and M mars settings into utils to proxy resulting checks.",
+          "error_traces": [],
+          "hash": "b95f544f95672345c75b5ed18357f969",
+          "is_file": true,
+          "name": "test_mars.py",
+          "rel_path": "test/test_mars.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_memory.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**Tests the memory usage of HeavyBall optimizers across different configuration sizes, depths, and manual optimizations.**\n\n*   Verifies peak memory consumption of core optimizers (AdamW) with both compiled and uncompiled modes.\n*   Performs stress testing using 2-30 layers and multiple SGD/AdamW steps to detect leaks and increase memory.\n*   Confirms that custom optomizer states (like prefetch counts and parameter orientation) do not leak memory.\n*   Rigorously validates that memory usage diff.redicts the expected constant values for each optimizer type.",
+          "error_traces": [],
+          "hash": "7f7e2a77dac3848c92b58ff082e43576",
+          "is_file": true,
+          "name": "test_memory.py",
+          "rel_path": "test/test_memory.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_memory_leak.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**test_memory_leak.py** checks the memory growth rate of HeavyBall optimizers during a training step to detect and fix non-heap-allocated memory leaks.\n\n* Runs a custom training loop with a specific optimizer configuration and tracks peak memory usage.\n* Asserts that the peak memory does not exceed `max_growth` times the measured peak after the first warmup phase.\n* Runs only on CUDA with optional finite difference capability checks and supports custom get_optim selections.",
+          "error_traces": [],
+          "hash": "61040de4a405369acc141a3ef0e96574",
+          "is_file": true,
+          "name": "test_memory_leak.py",
+          "rel_path": "test/test_memory_leak.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_merge.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "** Tests SPIFFE Matrices and elementwise gradients for `HeavyBall` to ensure correctness under different merge strategies.\n\n*   Validates `PSGDKron` optimizer during nested merges with varying dataset sizes and depths.\n*   Explicitly prints state sizes to confirm gradient-buffering behavior.\n*   Estimates frozen parameter counts across nested graph expansions.\n*   Runs loops to verify optimizer stability without crashing.\n*   Excludes all other heavy ball kernels to isolate specific tensor decomposition logic.",
+          "error_traces": [],
+          "hash": "9e83a0a19a5e60030fabaa8fb72f40b2",
+          "is_file": true,
+          "name": "test_merge.py",
+          "rel_path": "test/test_merge.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_migrate_cli.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "# **test/test_migrate_cli.py** unit tests for Heavyball's CLI state migration between old (v1) and new (v2/v3) optimization implementations.\n\n- Runs end-to-end CLI migrations for both V1 state dumps (flat/folded groupings) and V2/V3 state dumps (nested/multi-group/SHREDDED metadata).\n- Validates that class name resolution handles rename transitions (e.g., `ForeachAdamW` → `AdamW`) and that unsupported/class-like names fail gracefully.\n- Ensures `heavyball` module compatibility tests verify that imports of both old and new API classes resolve correctly without breaking internal signatures.\n- Performs automated verification of `.torch.load` and `.torch.save` hooks to confirm state roundtrip consistency after migration.\n- Cascades through hardcoded V1/V2 checkpoint templates and randomized `pytest`/CI infrastructure to prevent future migration logic gaps.",
+          "error_traces": [],
+          "hash": "7def991fb0a70c1d2e34fd9fa7e6340b",
+          "is_file": true,
+          "name": "test_migrate_cli.py",
+          "rel_path": "test/test_migrate_cli.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_nd_param.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Tests for `repr`-like parameter handling across different optimizer combinations**\n\n- Validates that optimizer steps produce finite, valid tensors regardless of internal representation choices\n- Ensures proper compilation by defining representative opti**zer**s for various parameter counts and shapes\n- Checks gradient and computational graph health by asserting parameter finiteness across multiple iterations",
+          "error_traces": [],
+          "hash": "11e486eaa9823c418d7a2fc63cbfed53",
+          "is_file": true,
+          "name": "test_nd_param.py",
+          "rel_path": "test/test_nd_param.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_no_grad.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "```markdown\n**Test for No-Gradient Mode Behavior**\n\n* Ensures optimizers correctly clear state tensors without accumulating values after `step()`\n* Validates loss tracking assertions when `consume_grad=False` is disabled\n* Covers parameter groups, checkpoint restoration, and external optimization utilities\n* Checks edge cases including minimal model depth and no-grad execution paths\n```",
+          "error_traces": [],
+          "hash": "b8382b97c48b0e5a43e67ef8c995fcb1",
+          "is_file": true,
+          "name": "test_no_grad.py",
+          "rel_path": "test/test_no_grad.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_optimizer_cpu_smoke.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "```markdown\n### HeavyBall smoke tests verify optimizer initialization, stability, and correctness across backends.\n\n* Tests coverage and stability of compiled first-order optimizers (AdamW, RMSprop) on CPU.\n* Validates derived features (SCION, Multitenant) and parameter-specific optimizations (bf16, ECC).\n* Ensures subclass parameter overrides properly collide with stacked functional bases.\n* Confirms distributed training interactions for FSDP backends and checkpointing consistency.\n* Checks dependency class compatibility warnings (e.g., deprecated `foreach` parameter).\n```",
+          "error_traces": [],
+          "hash": "475905bea043c0ca97d81d539027d96f",
+          "is_file": true,
+          "name": "test_optimizer_cpu_smoke.py",
+          "rel_path": "test/test_optimizer_cpu_smoke.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_param_ecc_compile.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**`test/test_param_ecc_compile.py`**\n\nVerifies that parameter state compression (ECC) functions correctly under PyTorch's `torch.compile`, including masking failure cases via stochastic rounding.\n\n-   Contributes efficiency savings by reducing memory traffic for second-order optimizers like Muon and SOAP.\n-   Tests both RNE and RNE-stochastic compile modes to ensure Inductor correctly folds f32->bf16->f32 roundtrips or masks them.\n-   Validates that ECC corrections persist in compiled versions of optimizers and elements, even when lazy parameter updates occur.\n-   Confirms that accumulated ECC updates result in valid states without hidden corruption errors.\n-   Ensures backward compatibility by validating that eager and compiled optimization paths yield identical loss ratios.",
+          "error_traces": [],
+          "hash": "6ff990800cd2950a8c14108070c65ba0",
+          "is_file": true,
+          "name": "test_param_ecc_compile.py",
+          "rel_path": "test/test_param_ecc_compile.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_psgd_precond_init_stability.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**File: `test/test_psgd_precond_init_stability.py` tests numerical stability and gradient compatibility of package-level Preconditioning (SOAP/PSGD) for PyTorch DDP.**\n\n*   Validates `LSE_mean` and `mean_root` functions for edge cases (nan handling, exponent clamping, mixed dtypes).\n*   Verifies `divided_root` and `np_mean_pow_root` consistency across fixture sizes, all-press, and 128-bit precision.\n*   Ensures compiled kernels maintain invariant relationships from stable kernels in `utils.py` under CPU and mixed-precision environments.",
+          "error_traces": [],
+          "hash": "2df550383d18f3e9081509169acd7e8b",
+          "is_file": true,
+          "name": "test_psgd_precond_init_stability.py",
+          "rel_path": "test/test_psgd_precond_init_stability.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_save_restore.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "> **Tight Electro-Composable State Restore Protocol for HeavyBall Optimizers**\n* Rewrites optimizer states using deep copied serialization/deserialization loops to verify stability, memory leaks, and parameter integrity across engine updates.\n* Runs performance-sensitive saves/removes/hooks during the 4x outer iteration flow while maintaining strict computation integrity.\n* Validates memory and tensor consistency for all lightbench representative optimizers using Depth/Scale splitting.\n* Excludes heavy merges/splits from incompatible configs via runtime signature inspection.\n* Secrets tokens are stripped by `set_torch` and Python generators are replaced with standard tensors to break cycles.",
+          "error_traces": [],
+          "hash": "7cd96d04a67c3288c03afce15281bd77",
+          "is_file": true,
+          "name": "test_save_restore.py",
+          "rel_path": "test/test_save_restore.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_singular_values.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "**test for HeavyBall's `max_singular_value` implementation using pytest**\n\n*   Validates that the core `max_singular_value` and helper functions accurately compute numerically stable singular values of random matrices.\n*   Performs dense smoke tests across float64, bf16, and float32 contexts to verify correct handling of the `power_iter` parameter and various matrix dimensions.\n*   Ensures correctness for rank-deficient, ill-conditioned (Hilbert matrix), and zero-pad scenarios critical to preconditioner stability.\n*   Integrates `test_compile_step.py` features (Dynamo tracing, careful gradients) to ensure the compiled kernels produce zero gradients and zero is populated.\n*   Tests by checking that computed approximated singular values pass strict within-tolerance checks against exact library rvalues.",
+          "error_traces": [],
+          "hash": "464d0c25a7ad9e4c1766dcd527a81218",
+          "is_file": true,
+          "name": "test_singular_values.py",
+          "rel_path": "test/test_singular_values.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_soap.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/chainable.py"
+          ],
+          "description": "# test/test_soap.py\nOptimizes and validates the SOAP (Shampoo-Adapter) optimizer, verifying that the composable transform `scale_by_soap` applies correct projective updates and that it matches reference implementations for single-parameter operations while correctly handling multi-parameter cases like AdamW.",
+          "error_traces": [],
+          "hash": "8e033dac464192044dde9b5cbf18b506",
+          "is_file": true,
+          "name": "test_soap.py",
+          "rel_path": "test/test_soap.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_stochastic_utils_cpu.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "heavyball/utils.py"
+          ],
+          "description": "# **File: `test/test_stochastic_utils_cpu.py`**\n```markdown\n**Authorizes unit tests for stochastic gradient utilities on CPU only.**\n\n- Validates composition of `stochastic_` functions across broadcast-like operations.\n- Ensures `at-2` backend consistency and correct zero-gradient handling.\n- Tests memory safety and device independence for shape conversion ops.\n```",
+          "error_traces": [],
+          "hash": "29b3dc65dc28678820763f009f94d23c",
+          "is_file": true,
+          "name": "test_stochastic_utils_cpu.py",
+          "rel_path": "test/test_stochastic_utils_cpu.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_toy_training.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [],
+          "description": "# `test/test_toy_training.py` description\n\n```markdown\n**Briefly** this file inspects heavyball optimization behaviors via a PyTorch toy model that runs explicit training loops. It validates that optimizers produce correct weight updates and gradient changes across multiple steps by checking if tensor accumulators diverge from the new state.\n```\n\n### Key Responsibilities\n\n*   **Fixture Management**: Defines setup functions (`toy_training_results`) constructing specific `optimizer_cls` instances (including `SAMWrapper`) with manual seeds.\n*   **State Validation**: Performs three core assertions (`test_toy_updates`, `test_toy_gradients`, `test_toy_parameters`) to verify divergence in weight changes, gradient accumulation, and final parameter restoration.\n*   **Algorithmic Coverage**: Covers first-order baselines (`AdamW`, `Muon`, `RMSprop`) and advanced/nested optimizers (`LAProp`, `SPSGD`, `SOAP`, `SplitOpt`).\n*   **Edge Cases**: Includes special handling for `SAMWrapper` (wrapped with inner `AdamW`) and `EOA` (`SplitOpt`) to isolate inner coreback-breaking logic.",
+          "error_traces": [],
+          "hash": "5b23f5a7abdd133235e89f44e0561bda",
+          "is_file": true,
+          "name": "test_toy_training.py",
+          "rel_path": "test/test_toy_training.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_utils_cpu.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "**Test suite for compiler- and memory-efficient utilities in HeavyBall**\n\n- Validates composable transforms like caution scaling, manifold-preserving MARS corrections, and gradient masking passes through full-graph compilation.\n- Ensures fused hooks integrate correctly into model parameters, preserving gradient state with a `step()` call.\n- Confirms specializations such as SAM (step-only) and Pareto/LaProp (parameter state flipping) work as expected across batches.\n- Tests global/l2 and rmsnorm clipping functions to verify bounds handling without exhausting local caching behavior.\n- Checks that orthogonalization of gradients aligns mathematically with data movement patterns.",
+          "error_traces": [],
+          "hash": "9a71e3e77712a405151286e0a98668ff",
+          "is_file": true,
+          "name": "test_utils_cpu.py",
+          "rel_path": "test/test_utils_cpu.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/test_utils_property.py",
+          "children": [],
+          "depended_by": [],
+          "depends_on": [
+            "test/utils.py",
+            "heavyball/utils.py"
+          ],
+          "description": "# **Test Attribute Inspector for HeavyBall**\n\n*   Verifies and tests the correctness of auxiliary functions like `caution` mask disagreeing gradients and global/L2 norms\n*   Validates stability and proper composition of optimizer flags during `step()` calls\n*   Ensures custom optimizer methods correctly chain internal `FunctionTransform`s\n*   Tests distributed training compatibility with FSDP and sharded parameter layouts\n*   Validates error tolerance and uniformity across different floating-point types on CPU",
+          "error_traces": [],
+          "hash": "152dd0c7543c76ec9e8e4b4dca83331d",
+          "is_file": true,
+          "name": "test_utils_property.py",
+          "rel_path": "test/test_utils_property.py",
+          "version": 0
+        },
+        {
+          "abs_path": "/home/pradheep/Desktop/HeavyBall/./test/utils.py",
+          "children": [],
+          "depended_by": [
+            "test/test_utils_property.py",
+            "test/test_bf16_params.py",
+            "test/test_bf16_storage.py",
+            "test/test_channels_last.py",
+            "test/test_clip.py",
+            "test/test_bf16_q.py",
+            "test/test_nd_param.py",
+            "test/test_utils_cpu.py",
+            "test/test_foreach.py",
+            "test/test_caution.py",
+            "test/test_hook.py",
+            "test/test_closure.py",
+            "test/test_ema.py",
+            "test/test_distributed.py",
+            "test/test_mars.py",
+            "test/test_no_grad.py",
+            "test/test_save_restore.py"
+          ],
+          "depends_on": [
+            "heavyball/chainable.py"
+          ],
+          "description": "# Resolution of `test/utils.py`\n\n**`test/utils.py`** provides utility functions and helper modules specifically designed for the `heavyball` optimizer library, supporting distributed training, memory optimization, and advanced optimization techniques.\n\n**Key responsibilities:**\n\n- **First-pass Gradient Management**: Simplifies gradient calculation and handling of model parameters without PyTorch's no-op checks.\n- **Type Promotion**: Automatically upcasts critical data types (complex, float, int) to ensure consistent memory layout and half-precision accuracy during kernel execution.\n- **Memory Optimization**: Implements device-specific escaping logic and integer-to-float conversions to aid in memory management and cache utilization.\n- **Benchmarking Infrastructure**: Defines orchestration tools for measuring optimizer latency, singular value stability, and efficiency relative to reference kernels.\n- **Distributed & Preconditioning Support**: Provides pre-conditioning fitting utilities and benchmark suites essential for testing second-order methods (SVI, SOAP, Muon) under non-linear loss landscapes.",
+          "error_traces": [],
+          "hash": "832d342eb657342b47b75ab0b0f86814",
+          "is_file": true,
+          "name": "utils.py",
+          "rel_path": "test/utils.py",
+          "version": 0
+        }
+      ],
+      "depended_by": [],
+      "depends_on": [],
+      "description": "",
+      "error_traces": [],
+      "hash": "00000000000000000000000000000000",
+      "is_file": false,
+      "name": "test",
+      "rel_path": "test",
+      "version": 0
+    }
+  ],
+  "depended_by": [],
+  "depends_on": [],
+  "description": "",
+  "error_traces": [],
+  "hash": "646f635b79702e2a0000000000000009",
+  "is_file": false,
+  "name": ".",
+  "rel_path": ".",
+  "version": 0
+}

@@ -970,7 +970,242 @@ DepGraph build_dep_graph(TreeNode* root) {
   return graph;
 }
 
-void populate_dependency_descriptions(DepGraph& graph) {
+// ─── provider / llm abstraction ──────────────────────────────────────
+// supports vllm (default), openai, anthropic, google, openrouter, and
+// any custom openai-compatible endpoint. cloud providers need an api key,
+// local models always go through vllm.
+
+struct ProviderConfig {
+  string provider;       // "vllm", "openai", "anthropic", "google", "openrouter", "custom"
+  string model;
+  string api_key;
+  string base_url;       // full url for custom, otherwise derived
+  string api_path;       // e.g. /v1/chat/completions
+  string host;           // extracted for httplib client
+  int port;
+  bool use_https;
+  int max_tokens;        // 0 = provider default
+  float temperature;     // < 0 = provider default
+  int timeout_sec;       // 120 default
+  int max_retries;       // 0 default
+};
+
+// helper: read env var or return default
+static string getenv_or(const char* key, const string& def) {
+  const char* val = getenv(key);
+  return (val && val[0]) ? string(val) : def;
+}
+
+// helper: parse a url into host, port, path
+static void parse_url(const string& url, string& host, int& port, string& path) {
+  string s = url;
+  bool https = false;
+  if (s.rfind("https://", 0) == 0) { https = true; s = s.substr(8); }
+  else if (s.rfind("http://", 0) == 0) { s = s.substr(7); }
+
+  size_t slash = s.find('/');
+  string host_port = (slash != string::npos) ? s.substr(0, slash) : s;
+  path = (slash != string::npos) ? s.substr(slash) : "/";
+
+  size_t colon = host_port.find(':');
+  if (colon != string::npos) {
+    host = host_port.substr(0, colon);
+    try { port = stoi(host_port.substr(colon + 1)); } catch (...) { port = https ? 443 : 80; }
+  } else {
+    host = host_port;
+    port = https ? 443 : 80;
+  }
+}
+
+// build provider config from env vars + cli overrides
+static ProviderConfig load_provider_config(const string& cli_provider,
+                                            const string& cli_model,
+                                            const string& cli_api_key,
+                                            const string& cli_base_url) {
+  ProviderConfig cfg;
+  cfg.provider = getenv_or("DGAT_PROVIDER", "vllm");
+  cfg.model = getenv_or("DGAT_MODEL", "Qwen/Qwen3.5-2B");
+  cfg.api_key = getenv_or("DGAT_API_KEY", "");
+  cfg.base_url = getenv_or("DGAT_BASE_URL", "");
+  cfg.max_tokens = 0;
+  cfg.temperature = -1.0f;
+  cfg.timeout_sec = 120;
+  cfg.max_retries = 0;
+
+  const char* mt = getenv("DGAT_MAX_TOKENS");
+  if (mt && mt[0]) { try { cfg.max_tokens = atoi(mt); } catch (...) {} }
+  const char* temp = getenv("DGAT_TEMPERATURE");
+  if (temp && temp[0]) { try { cfg.temperature = atof(temp); } catch (...) {} }
+  const char* to = getenv("DGAT_TIMEOUT_SEC");
+  if (to && to[0]) { try { cfg.timeout_sec = atoi(to); } catch (...) {} }
+  const char* mr = getenv("DGAT_MAX_RETRIES");
+  if (mr && mr[0]) { try { cfg.max_retries = atoi(mr); } catch (...) {} }
+
+  // cli overrides
+  if (!cli_provider.empty()) cfg.provider = cli_provider;
+  if (!cli_model.empty()) cfg.model = cli_model;
+  if (!cli_api_key.empty()) cfg.api_key = cli_api_key;
+  if (!cli_base_url.empty()) cfg.base_url = cli_base_url;
+
+  // set provider-specific defaults
+  if (cfg.provider == "vllm") {
+    cfg.host = "localhost"; cfg.port = 8000;
+    cfg.api_path = "/v1/chat/completions";
+    cfg.use_https = false;
+  } else if (cfg.provider == "openai") {
+    cfg.host = "api.openai.com"; cfg.port = 443;
+    cfg.api_path = "/v1/chat/completions";
+    cfg.use_https = true;
+  } else if (cfg.provider == "anthropic") {
+    cfg.host = "api.anthropic.com"; cfg.port = 443;
+    cfg.api_path = "/v1/messages";
+    cfg.use_https = true;
+  } else if (cfg.provider == "google") {
+    cfg.host = "generativelanguage.googleapis.com"; cfg.port = 443;
+    cfg.api_path = "/v1beta/models/" + cfg.model + ":generateContent";
+    cfg.use_https = true;
+  } else if (cfg.provider == "openrouter") {
+    cfg.host = "openrouter.ai"; cfg.port = 443;
+    cfg.api_path = "/api/v1/chat/completions";
+    cfg.use_https = true;
+  } else if (cfg.provider == "custom") {
+    if (cfg.base_url.empty()) {
+      cerr << "[DGAT] error: --base-url or DGAT_BASE_URL required for custom provider" << endl;
+      exit(1);
+    }
+    parse_url(cfg.base_url, cfg.host, cfg.port, cfg.api_path);
+    cfg.use_https = cfg.base_url.rfind("https", 0) == 0;
+  } else {
+    cerr << "[DGAT] error: unknown provider '" << cfg.provider << "' (use vllm, openai, anthropic, google, openrouter, or custom)" << endl;
+    exit(1);
+  }
+
+  return cfg;
+}
+
+// build the http request body based on provider format
+static json build_request_payload(const ProviderConfig& cfg, const string& prompt) {
+  if (cfg.provider == "anthropic") {
+    json payload = json::object();
+    payload["model"] = cfg.model;
+    payload["max_tokens"] = cfg.max_tokens > 0 ? cfg.max_tokens : 4096;
+    payload["messages"] = json::array({
+      {{"role", "user"}, {"content", prompt}}
+    });
+    if (cfg.temperature >= 0) payload["temperature"] = cfg.temperature;
+    return payload;
+  }
+
+  if (cfg.provider == "google") {
+    json payload = json::object();
+    payload["contents"] = json::array({
+      {{"role", "user"}, {"parts", json::array({{{"text", prompt}}})}}
+    });
+    if (cfg.temperature >= 0 || cfg.max_tokens > 0) {
+      json gen = json::object();
+      if (cfg.temperature >= 0) gen["temperature"] = cfg.temperature;
+      if (cfg.max_tokens > 0) gen["maxOutputTokens"] = cfg.max_tokens;
+      payload["generationConfig"] = gen;
+    }
+    return payload;
+  }
+
+  // openai-compatible: vllm, openai, openrouter, custom
+  json payload = json::object();
+  payload["model"] = cfg.model;
+  payload["messages"] = json::array({
+    {{"role", "user"}, {"content", prompt}}
+  });
+  if (cfg.max_tokens > 0) payload["max_tokens"] = cfg.max_tokens;
+  if (cfg.temperature >= 0) payload["temperature"] = cfg.temperature;
+  return payload;
+}
+
+// normalize responses from all providers into a plain text string
+static string parse_llm_response(const ProviderConfig& cfg, const string& body) {
+  try {
+    json response = json::parse(body);
+
+    if (cfg.provider == "anthropic") {
+      if (response.contains("content") && response["content"].is_array()
+          && !response["content"].empty()) {
+        auto& first = response["content"][0];
+        if (first.contains("text")) return trim_copy(first["text"].get<string>());
+      }
+    } else if (cfg.provider == "google") {
+      if (response.contains("candidates") && response["candidates"].is_array()
+          && !response["candidates"].empty()) {
+        auto& candidate = response["candidates"][0];
+        if (candidate.contains("content") && candidate["content"].contains("parts")
+            && candidate["content"]["parts"].is_array()
+            && !candidate["content"]["parts"].empty()) {
+          auto& part = candidate["content"]["parts"][0];
+          if (part.contains("text")) return trim_copy(part["text"].get<string>());
+        }
+      }
+    } else {
+      // openai-compatible — reuse existing parser
+      return extract_assistant_text(response);
+    }
+  } catch (const exception& e) {
+    cerr << "[DGAT] response parse error: " << e.what() << endl;
+  }
+  return "";
+}
+
+// unified llm call — handles auth, retries, timeouts, all providers
+static string call_llm(const ProviderConfig& cfg, const string& prompt) {
+  json payload = build_request_payload(cfg, prompt);
+
+  for (int attempt = 0; attempt <= cfg.max_retries; attempt++) {
+    httplib::Result res;
+
+    if (cfg.use_https) {
+      httplib::SSLClient cli(cfg.host, cfg.port);
+      cli.set_connection_timeout(cfg.timeout_sec, 0);
+      cli.set_read_timeout(cfg.timeout_sec, 0);
+
+      // auth headers per provider
+      if (cfg.provider == "openai" || cfg.provider == "openrouter" || cfg.provider == "custom") {
+        if (!cfg.api_key.empty()) cli.set_bearer_token_auth(cfg.api_key);
+      } else if (cfg.provider == "anthropic") {
+        if (!cfg.api_key.empty()) {
+          httplib::Headers headers = {
+            {"x-api-key", cfg.api_key},
+            {"anthropic-version", "2023-06-01"}
+          };
+          cli.set_default_headers(headers);
+        }
+      }
+
+      string api_path = cfg.api_path;
+      if (cfg.provider == "google" && !cfg.api_key.empty()) {
+        api_path += "?key=" + cfg.api_key;
+      }
+
+      res = cli.Post(api_path.c_str(), payload.dump(), "application/json");
+    } else {
+      httplib::Client cli(cfg.host, cfg.port);
+      cli.set_connection_timeout(cfg.timeout_sec, 0);
+      cli.set_read_timeout(cfg.timeout_sec, 0);
+      res = cli.Post(cfg.api_path.c_str(), payload.dump(), "application/json");
+    }
+
+    if (res && res->status >= 200 && res->status < 300) {
+      return parse_llm_response(cfg, res->body);
+    }
+
+    if (attempt < cfg.max_retries) {
+      this_thread::sleep_for(chrono::seconds(1 << attempt));
+    }
+  }
+
+  return "";
+}
+
+// ─── end provider / llm abstraction ──────────────────────────────────
+
+void populate_dependency_descriptions(DepGraph& graph, const ProviderConfig& cfg) {
   if (graph.nodes.empty()) return;
 
   unordered_map<string, vector<string>> importers;
@@ -1022,31 +1257,12 @@ void populate_dependency_descriptions(DepGraph& graph) {
       inja::Environment env;
       string rendered_prompt = env.render(dep_desc_prompt, prompt_data);
 
-      json request_payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
-        {"messages", {
-          {
-            {"role", "user"},
-            {"content", rendered_prompt}
-          }
-        }}
-      };
-
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+      string result = call_llm(cfg, rendered_prompt);
 
       {
         lock_guard<mutex> lock(graph_mutex);
-        if (res && res->status == 200) {
-          try {
-            json response_json = json::parse(res->body);
-            string assistant_text = extract_assistant_text(response_json);
-            if (!assistant_text.empty()) {
-              graph.nodes[i].description = trim_copy(assistant_text);
-            }
-          } catch (const std::exception& e) {
-            cerr << "Failed to parse dependency description for " << dep_name << ": " << e.what() << endl;
-          }
+        if (!result.empty()) {
+          graph.nodes[i].description = trim_copy(result);
         } else {
           cerr << "Failed to get description for dependency: " << dep_name << endl;
         }
@@ -1069,7 +1285,7 @@ void populate_dependency_descriptions(DepGraph& graph) {
 }
 
 // one-sentence relationship desc per edge — what does A use from B and why
-void populate_edge_descriptions(DepGraph& graph) {
+void populate_edge_descriptions(DepGraph& graph, const ProviderConfig& cfg) {
   if (graph.edges.empty()) return;
 
   // build a quick lookup: rel_path -> description
@@ -1129,26 +1345,12 @@ return only the sentence, no preamble.)J2";
       inja::Environment env;
       string rendered = env.render(edge_prompt, prompt_data);
 
-      json payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
-        {"messages", {{{"role", "user"}, {"content", rendered}}}}
-      };
-
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", payload.dump(), "application/json");
+      string result = call_llm(cfg, rendered);
 
       {
         lock_guard<mutex> lock(edge_mutex);
-        if (res && res->status == 200) {
-          try {
-            json rj = json::parse(res->body);
-            string txt = extract_assistant_text(rj);
-            if (!txt.empty()) {
-              graph.edges[i].description = trim_copy(txt);
-            }
-          } catch (const std::exception& ex) {
-            cerr << "edge desc parse error: " << ex.what() << endl;
-          }
+        if (!result.empty()) {
+          graph.edges[i].description = trim_copy(result);
         }
         int count = ++processed;
         if (count % 5 == 0 || count == total) {
@@ -2889,7 +3091,7 @@ static const size_t PROMPT_TOKEN_ESTIMATE = 2000;
 static const size_t RESPONSE_TOKEN_BUFFER = 3000;
 
 // same as populate_descriptions but operates on a pre-selected list instead of walking the whole tree
-void populate_descriptions_selective(vector<TreeNode*>& nodes) {
+void populate_descriptions_selective(vector<TreeNode*>& nodes, const ProviderConfig& cfg) {
   if (nodes.empty()) return;
 
   string rc = read_readme_content();
@@ -3001,44 +3203,23 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
       inja::Environment env;
       string rendered_prompt = env.render(file_descriptor_prompt_template, prompt_data);
 
-      json request_payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
-        {"messages", {
-          {
-            {"role", "user"},
-            {"content", rendered_prompt}
-          }
-        }}
-      };
-
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+      string result = call_llm(cfg, rendered_prompt);
 
       lock_guard<mutex> lock(tree_mutex);
 
       node->hash = hash;
 
-      if (res && res->status == 200) {
+      if (!result.empty()) {
+        string json_candidate = extract_fenced_block_or_raw(result);
         try {
-          json response_json = json::parse(res->body);
-          string assistant_text = extract_assistant_text(response_json);
-          if (assistant_text.empty()) {
-            node->description = "Model returned no usable text payload.";
-          } else {
-            string json_candidate = extract_fenced_block_or_raw(assistant_text);
-            try {
-              json descriptor_json = json::parse(json_candidate);
-              node->description = descriptor_json.value("file_description", assistant_text);
-            } catch (...) {
-              node->description = assistant_text;
-            }
-          }
-        } catch (const std::exception& e) {
-          cerr << "failed to parse response for file: " << node->rel_path << ". error: " << e.what() << endl;
+          json descriptor_json = json::parse(json_candidate);
+          node->description = descriptor_json.value("file_description", result);
+        } catch (...) {
+          node->description = result;
         }
       } else {
-        cerr << "response from vllm failed for file: " << node->rel_path << endl;
-        if (res) cerr << "status code: " << res->status << endl;
+        node->description = "Model returned no usable text payload.";
+        cerr << "response from llm failed for file: " << node->rel_path << endl;
       }
 
       int count = ++processed;
@@ -3574,7 +3755,7 @@ void collect_file_nodes(TreeNode* node, vector<TreeNode*>& files) {
   }
 }
 
-void populate_descriptions(TreeNode* root) {
+void populate_descriptions(TreeNode* root, const ProviderConfig& cfg) {
   string rc = read_readme_content();
   string folder_structure = extract_folder_structure();
 
@@ -3693,46 +3874,23 @@ void populate_descriptions(TreeNode* root) {
       inja::Environment env;
       string rendered_prompt = env.render(file_descriptor_prompt_template, prompt_data);
 
-      json request_payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
-        {"messages", {
-          {
-            {"role", "user"},
-            {"content", rendered_prompt}
-          }
-        }}
-      };
-
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+      string result = call_llm(cfg, rendered_prompt);
 
       lock_guard<mutex> lock(tree_mutex);
 
       node->hash = hash;
 
-      if (res && res->status == 200) {
+      if (!result.empty()) {
+        string json_candidate = extract_fenced_block_or_raw(result);
         try {
-          json response_json = json::parse(res->body);
-          string assistant_text = extract_assistant_text(response_json);
-          if (assistant_text.empty()) {
-            node->description = "Model returned no usable text payload.";
-          } else {
-            string json_candidate = extract_fenced_block_or_raw(assistant_text);
-            try {
-              json descriptor_json = json::parse(json_candidate);
-              node->description = descriptor_json.value("file_description", assistant_text);
-            } catch (...) {
-              node->description = assistant_text;
-            }
-          }
-        } catch (const std::exception& e) {
-          cerr << "Failed to parse response for file: " << node->rel_path << ". Error: " << e.what() << endl;
+          json descriptor_json = json::parse(json_candidate);
+          node->description = descriptor_json.value("file_description", result);
+        } catch (...) {
+          node->description = result;
         }
       } else {
-        cerr << "response from vllm failed for file: " << node->rel_path << endl;
-        if (res) {
-          cerr << "status code: " << res->status << endl;
-        }
+        node->description = "Model returned no usable text payload.";
+        cerr << "response from llm failed for file: " << node->rel_path << endl;
       }
 
       int count = ++processed;
@@ -3751,7 +3909,7 @@ void populate_descriptions(TreeNode* root) {
   cout << "\r[DGAT] File descriptions complete!                " << endl;
 }
 
-void create_dgat_blueprint(TreeNode* root){
+void create_dgat_blueprint(TreeNode* root, const ProviderConfig& cfg){
   string root_path = root->abs_path;
 
   // except the readme.md, i just wanna collect all file descriptions and populate the blueprint of the full project, not relying on incomplete readme files
@@ -3817,34 +3975,14 @@ void create_dgat_blueprint(TreeNode* root){
   inja::Environment env;
   string rendered_prompt = env.render(blueprint_prompt_template, prompt_data);
 
-  // now we'll make request to vllm with this rendered prompt and get the response
-  json request_payload = {
-    {"model", "Qwen/Qwen3.5-2B"},
-    {"messages", {
-      {
-        {"role", "user"},
-        {"content", rendered_prompt}
-      }
-    }
-  }};
+  string result = call_llm(cfg, rendered_prompt);
 
-  httplib::Client cli("localhost", 8000);
-  auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
-
-  if(res && res->status == 200){
-    cout<<"response from vllm successful for blueprint generation"<<endl;
-    cout<<"response body: "<<res->body<<endl;
-  }else{
-    cerr<<"response from vllm failed for blueprint generation"<<endl;
-    if(res){
-      cerr<<"status code: "<<res->status<<endl;
-      cerr<<"response body: "<<res->body<<endl;
-    }else{
-      cerr<<"error code: "<<res.error()<<endl;
-    }
+  if (result.empty()) {
+    cerr << "[DGAT] response from llm failed for blueprint generation" << endl;
+    return;
   }
 
-  if (!(res && res->status == 200)) return;
+  cout << "[DGAT] blueprint generation successful" << endl;
 
   string file_name = "dgat_blueprint.md";
   ofstream outfile(file_name);
@@ -3855,13 +3993,7 @@ void create_dgat_blueprint(TreeNode* root){
 
   string markdown_output;
   try {
-    json response_json = json::parse(res->body);
-    string assistant_text = extract_assistant_text(response_json);
-    if (assistant_text.empty()) {
-      markdown_output = "# DGAT Software Blueprint\n\nModel returned no usable text payload.";
-    } else {
-      markdown_output = extract_fenced_block_or_raw(assistant_text);
-    }
+    markdown_output = extract_fenced_block_or_raw(result);
   } catch (const std::exception& e) {
     cerr << "Failed to parse blueprint response: " << e.what() << endl;
     markdown_output = "# DGAT Software Blueprint\n\nFailed to parse model response.";
@@ -3893,7 +4025,7 @@ void run_backend_mode(int port) {
 }
 
 // incremental update — re-describe only changed files, copy everything else from saved state
-void run_update_mode(const fs::path& root_path) {
+void run_update_mode(const fs::path& root_path, const ProviderConfig& cfg) {
   load_gitignore(root_path);
   load_dgatignore(root_path);
 
@@ -3965,7 +4097,7 @@ void run_update_mode(const fs::path& root_path) {
     if (it != file_map.end()) changed_nodes.push_back(it->second);
   }
 
-  populate_descriptions_selective(changed_nodes);
+  populate_descriptions_selective(changed_nodes, cfg);
 
   // rebuild dep graph — fast, no llm
   cout << "[DGAT] rebuilding dep graph..." << endl;
@@ -3985,7 +4117,7 @@ void run_update_mode(const fs::path& root_path) {
 
   // re-describe only dep nodes that are external/gitignored AND were not already described above
   // (populate_dependency_descriptions already skips non-placeholder descs)
-  populate_dependency_descriptions(dep_graph);
+  populate_dependency_descriptions(dep_graph, cfg);
 
   // for edges: re-describe only where from or to is in changed set, copy old otherwise
   unordered_map<string, string> old_edge_desc;
@@ -4003,7 +4135,7 @@ void run_update_mode(const fs::path& root_path) {
   }
   // now only re-describe edges touching changed files (we temporarily set a marker so the function skips the rest)
   // easiest approach: call populate_edge_descriptions which skips edges with placeholder node descs anyway
-  populate_edge_descriptions(dep_graph);
+  populate_edge_descriptions(dep_graph, cfg);
 
   // sync dep info back to tree nodes
   for (const auto& node : dep_graph.nodes) {
@@ -4029,6 +4161,7 @@ int main(int argc, char** argv){
   bool deps_only    = false;
   bool show_help    = false;
   int  port = 8090;
+  string cli_provider, cli_model, cli_api_key, cli_base_url;
 
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
@@ -4041,6 +4174,14 @@ int main(int argc, char** argv){
       update_mode = true;
     } else if (arg == "--help" || arg == "-h") {
       show_help = true;
+    } else if (arg == "--provider" && i + 1 < argc) {
+      cli_provider = argv[++i];
+    } else if (arg == "--model" && i + 1 < argc) {
+      cli_model = argv[++i];
+    } else if (arg == "--api-key" && i + 1 < argc) {
+      cli_api_key = argv[++i];
+    } else if (arg == "--base-url" && i + 1 < argc) {
+      cli_base_url = argv[++i];
     } else if (arg == "--port" && i + 1 < argc) {
       try {
         port = stoi(argv[++i]);
@@ -4061,6 +4202,21 @@ int main(int argc, char** argv){
     }
   }
 
+  // load provider config from env vars + cli overrides
+  ProviderConfig provider_cfg = load_provider_config(cli_provider, cli_model, cli_api_key, cli_base_url);
+
+  // validate cloud provider requirements
+  if (provider_cfg.provider != "vllm") {
+    if (provider_cfg.model.empty() || provider_cfg.model == "Qwen/Qwen3.5-2B") {
+      cerr << "[DGAT] error: --model required for " << provider_cfg.provider << " provider" << endl;
+      return 1;
+    }
+    if (provider_cfg.api_key.empty() && provider_cfg.provider != "custom") {
+      cerr << "[DGAT] error: --api-key required for " << provider_cfg.provider << " provider" << endl;
+      return 1;
+    }
+  }
+
   if (show_help) {
     cout << "dgat — dependency graph as a tool\n\n";
     cout << "usage:\n";
@@ -4069,6 +4225,20 @@ int main(int argc, char** argv){
     cout << "  dgat update              incremental re-scan (changed files only)\n";
     cout << "  dgat --deps-only [path]  scan without llm descriptions\n";
     cout << "  dgat --help              show this help\n\n";
+    cout << "provider options:\n";
+    cout << "  --provider <name>        vllm (default), openai, anthropic, google, openrouter, custom\n";
+    cout << "  --model <name>           model to use (required for cloud providers)\n";
+    cout << "  --api-key <key>          api key for cloud providers\n";
+    cout << "  --base-url <url>         custom api base url (for custom provider)\n\n";
+    cout << "environment variables (cli flags override these):\n";
+    cout << "  DGAT_PROVIDER            provider name (default: vllm)\n";
+    cout << "  DGAT_MODEL               model name\n";
+    cout << "  DGAT_API_KEY             api key\n";
+    cout << "  DGAT_BASE_URL            api base url\n";
+    cout << "  DGAT_MAX_TOKENS          max tokens per response\n";
+    cout << "  DGAT_TEMPERATURE         sampling temperature\n";
+    cout << "  DGAT_TIMEOUT_SEC         http timeout in seconds (default: 120)\n";
+    cout << "  DGAT_MAX_RETRIES         retry count on failure (default: 0)\n\n";
     cout << "api endpoints (when running --backend):\n";
     cout << "  get  /api/tree              full file tree\n";
     cout << "  get  /api/dep-graph         dependency graph\n";
@@ -4100,7 +4270,7 @@ int main(int argc, char** argv){
 
   if (update_mode) {
     cout << "[DGAT] update mode" << endl;
-    run_update_mode(root_path);
+    run_update_mode(root_path, provider_cfg);
     return 0;
   }
 
@@ -4119,9 +4289,9 @@ int main(int argc, char** argv){
   cout << "[DGAT] file tree built successfully." << endl;
 
   if (!deps_only) {
-    cout << "[DGAT] populating file descriptions via vllm..." << endl;
-    populate_descriptions(root.get());
-    create_dgat_blueprint(root.get());
+    cout << "[DGAT] populating file descriptions via " << provider_cfg.provider << " (" << provider_cfg.model << ")..." << endl;
+    populate_descriptions(root.get(), provider_cfg);
+    create_dgat_blueprint(root.get(), provider_cfg);
     cout << "[DGAT] file descriptions populated." << endl;
   } else {
     cout << "[DGAT] skipping file descriptions (--deps-only mode)" << endl;
@@ -4135,11 +4305,11 @@ int main(int argc, char** argv){
   cout << "[DGAT] dependency graph built: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
 
   if (!deps_only) {
-    cout << "[DGAT] populating dependency descriptions via vllm..." << endl;
-    populate_dependency_descriptions(dep_graph);
+    cout << "[DGAT] populating dependency descriptions via " << provider_cfg.provider << "..." << endl;
+    populate_dependency_descriptions(dep_graph, provider_cfg);
 
-    cout << "[DGAT] populating edge descriptions via vllm..." << endl;
-    populate_edge_descriptions(dep_graph);
+    cout << "[DGAT] populating edge descriptions via " << provider_cfg.provider << "..." << endl;
+    populate_edge_descriptions(dep_graph, provider_cfg);
   }
 
   for (const auto& node : dep_graph.nodes) {

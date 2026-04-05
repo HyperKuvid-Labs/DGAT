@@ -37,6 +37,9 @@ include_directories(
     ${OPENSSL_INCLUDE_DIR}
 )
 
+# enable ssl support in cpp-httplib
+add_definitions(-DCPPHTTPLIB_OPENSSL_SUPPORT)
+
 set(DGAT_SOURCES
     dgat.cpp
 )

@@ -1199,6 +1199,556 @@ json build_dep_graph_json(const DepGraph& graph) {
   return result;
 }
 
+// ─── agent api helpers ───────────────────────────────────────────────
+// everything below this line is for the extended http api that agents
+// (mcp servers, opencode, claude code, etc.) will query against.
+// no llm calls here — pure graph lookups and traversals.
+
+// build an index map so we can go from rel_path → node index in O(1)
+// the dep graph already has path_to_node but this one works on the json
+// representation too, which is what the backend mode server has access to
+unordered_map<string, int> build_path_index(const json& dep_graph_json) {
+  unordered_map<string, int> index;
+  const auto& nodes = dep_graph_json.at("nodes");
+  for (int i = 0; i < (int)nodes.size(); i++) {
+    index[nodes[i].at("rel_path").get<string>()] = i;
+  }
+  return index;
+}
+
+// same thing but for the live DepGraph struct (used in interactive mode)
+unordered_map<string, int> build_path_index_from_graph(const DepGraph& graph) {
+  return graph.path_to_node;
+}
+
+// get the edge between two files if it exists
+static const DepEdge* find_edge(const DepGraph& graph, const string& from, const string& to) {
+  for (const auto& edge : graph.edges) {
+    if (edge.from_path == from && edge.to_path == to) return &edge;
+  }
+  return nullptr;
+}
+
+// get edge info from json representation
+static json find_edge_json(const json& dep_graph_json, const string& from, const string& to) {
+  for (const auto& edge : dep_graph_json.at("edges")) {
+    if (edge.at("from").get<string>() == from && edge.at("to").get<string>() == to) {
+      return edge;
+    }
+  }
+  return json::object();
+}
+
+// bfs from a starting node through "depended_by" relationships
+// returns {file → distance} map, distance 1 = direct dependent
+unordered_map<string, int> bfs_transitive_dependents(const json& dep_graph_json, const unordered_map<string, int>& index, const string& start_path) {
+  unordered_map<string, int> visited;
+  queue<pair<string, int>> q;
+
+  auto it = index.find(start_path);
+  if (it == index.end()) return visited;
+
+  q.push({start_path, 0});
+  visited[start_path] = 0;
+
+  while (!q.empty()) {
+    auto [path, dist] = q.front();
+    q.pop();
+
+    int node_idx = index.at(path);
+    const auto& node = dep_graph_json.at("nodes").at(node_idx);
+    if (!node.contains("depended_by")) continue;
+
+    for (const auto& dependent : node.at("depended_by")) {
+      string dep_path = dependent.get<string>();
+      if (!visited.count(dep_path)) {
+        visited[dep_path] = dist + 1;
+        q.push({dep_path, dist + 1});
+      }
+    }
+  }
+
+  return visited;
+}
+
+// same bfs but on the live DepGraph struct
+unordered_map<string, int> bfs_transitive_dependents_graph(const DepGraph& graph, const string& start_path) {
+  unordered_map<string, int> visited;
+  queue<pair<string, int>> q;
+
+  auto it = graph.path_to_node.find(start_path);
+  if (it == graph.path_to_node.end()) return visited;
+
+  q.push({start_path, 0});
+  visited[start_path] = 0;
+
+  while (!q.empty()) {
+    auto [path, dist] = q.front();
+    q.pop();
+
+    int node_idx = graph.path_to_node.at(path);
+    const auto& node = graph.nodes[node_idx];
+
+    for (const auto& dependent : node.depended_by) {
+      if (!visited.count(dependent)) {
+        visited[dependent] = dist + 1;
+        q.push({dependent, dist + 1});
+      }
+    }
+  }
+
+  return visited;
+}
+
+// dfs-based cycle detection — returns list of cycles as path arrays
+vector<vector<string>> find_circular_deps_json(const json& dep_graph_json, const unordered_map<string, int>& index) {
+  vector<vector<string>> cycles;
+  unordered_set<string> white, gray, black;
+  unordered_map<string, string> parent;
+
+  // init all nodes as white (unvisited)
+  for (const auto& [path, _] : index) white.insert(path);
+
+  function<void(const string&)> dfs = [&](const string& u) {
+    white.erase(u);
+    gray.insert(u);
+
+    int node_idx = index.at(u);
+    const auto& node = dep_graph_json.at("nodes").at(node_idx);
+    if (node.contains("depends_on")) {
+      for (const auto& dep : node.at("depends_on")) {
+        string v = dep.get<string>();
+        if (!index.count(v)) continue; // skip external deps
+
+        if (gray.count(v)) {
+          // found a cycle — reconstruct it
+          vector<string> cycle;
+          cycle.push_back(v);
+          cycle.push_back(u);
+          // walk back through parents to find the full cycle
+          string cur = u;
+          while (cur != v && parent.count(cur)) {
+            cur = parent.at(cur);
+            if (cur == v) break;
+            cycle.push_back(cur);
+          }
+          reverse(cycle.begin(), cycle.end());
+          cycles.push_back(cycle);
+        } else if (white.count(v)) {
+          parent[v] = u;
+          dfs(v);
+        }
+      }
+    }
+
+    gray.erase(u);
+    black.insert(u);
+  };
+
+  // run dfs from every unvisited node
+  while (!white.empty()) {
+    string start = *white.begin();
+    dfs(start);
+  }
+
+  return cycles;
+}
+
+// same cycle detection on the live DepGraph struct
+vector<vector<string>> find_circular_deps_graph(const DepGraph& graph) {
+  vector<vector<string>> cycles;
+  unordered_set<string> white, gray;
+  unordered_map<string, string> parent;
+
+  for (const auto& node : graph.nodes) white.insert(node.rel_path);
+
+  function<void(const string&)> dfs = [&](const string& u) {
+    white.erase(u);
+    gray.insert(u);
+
+    auto it = graph.path_to_node.find(u);
+    if (it == graph.path_to_node.end()) return;
+    const auto& node = graph.nodes[it->second];
+
+    for (const auto& dep : node.depends_on) {
+      if (!graph.path_to_node.count(dep)) continue;
+
+      if (gray.count(dep)) {
+        vector<string> cycle;
+        cycle.push_back(dep);
+        cycle.push_back(u);
+        string cur = u;
+        while (cur != dep && parent.count(cur)) {
+          cur = parent.at(cur);
+          if (cur == dep) break;
+          cycle.push_back(cur);
+        }
+        reverse(cycle.begin(), cycle.end());
+        cycles.push_back(cycle);
+      } else if (white.count(dep)) {
+        parent[dep] = u;
+        dfs(dep);
+      }
+    }
+
+    gray.erase(u);
+  };
+
+  while (!white.empty()) {
+    string start = *white.begin();
+    dfs(start);
+  }
+
+  return cycles;
+}
+
+// find entry points — files depended on by many but depend on few externally
+// these are usually the "roots" of the codebase
+json find_entry_points_json(const json& dep_graph_json, const unordered_map<string, int>& index) {
+  json result = json::array();
+
+  for (const auto& node : dep_graph_json.at("nodes")) {
+    if (!node.at("is_file").get<bool>()) continue;
+
+    int incoming = node.at("depended_by").size();
+    int outgoing = node.at("depends_on").size();
+
+    // entry points: high incoming, low outgoing — they're used a lot but don't pull in much
+    if (incoming >= 3 && outgoing <= 2) {
+      json entry = {
+        {"file", node.at("rel_path")},
+        {"name", node.at("name")},
+        {"depended_by_count", incoming},
+        {"depends_on_count", outgoing},
+        {"description", node.value("description", "")}
+      };
+      result.push_back(entry);
+    }
+  }
+
+  // sort by depended_by_count descending
+  sort(result.begin(), result.end(), [](const json& a, const json& b) {
+    return a.at("depended_by_count").get<int>() > b.at("depended_by_count").get<int>();
+  });
+
+  return result;
+}
+
+// same entry point analysis on the live DepGraph struct
+json find_entry_points_graph(const DepGraph& graph) {
+  json result = json::array();
+
+  for (const auto& node : graph.nodes) {
+    if (!node.is_file) continue;
+
+    int incoming = (int)node.depended_by.size();
+    int outgoing = (int)node.depends_on.size();
+
+    if (incoming >= 3 && outgoing <= 2) {
+      json entry = {
+        {"file", node.rel_path},
+        {"name", node.name},
+        {"depended_by_count", incoming},
+        {"depends_on_count", outgoing},
+        {"description", node.description}
+      };
+      result.push_back(entry);
+    }
+  }
+
+  sort(result.begin(), result.end(), [](const json& a, const json& b) {
+    return a.at("depended_by_count").get<int>() > b.at("depended_by_count").get<int>();
+  });
+
+  return result;
+}
+
+// find orphan files — no dependencies and no dependents, probably dead code
+json find_orphans_json(const json& dep_graph_json) {
+  json result = json::array();
+
+  for (const auto& node : dep_graph_json.at("nodes")) {
+    if (!node.at("is_file").get<bool>()) continue;
+    if (node.at("is_gitignored").get<bool>()) continue;
+
+    bool has_deps = !node.at("depends_on").empty();
+    bool has_dependents = !node.at("depended_by").empty();
+
+    if (!has_deps && !has_dependents) {
+      json orphan = {
+        {"file", node.at("rel_path")},
+        {"name", node.at("name")},
+        {"description", node.value("description", "")}
+      };
+      result.push_back(orphan);
+    }
+  }
+
+  return result;
+}
+
+// same orphan detection on the live DepGraph struct
+json find_orphans_graph(const DepGraph& graph) {
+  json result = json::array();
+
+  for (const auto& node : graph.nodes) {
+    if (!node.is_file || node.is_gitignored) continue;
+    if (!node.depends_on.empty() || !node.depended_by.empty()) continue;
+
+    json orphan = {
+      {"file", node.rel_path},
+      {"name", node.name},
+      {"description", node.description}
+    };
+    result.push_back(orphan);
+  }
+
+  return result;
+}
+
+// search files by name or description — simple substring match
+json search_files_json(const json& dep_graph_json, const string& query, const string& scope) {
+  json results = json::array();
+  string q = query;
+  // case-insensitive search
+  transform(q.begin(), q.end(), q.begin(), ::tolower);
+
+  for (const auto& node : dep_graph_json.at("nodes")) {
+    if (!node.at("is_file").get<bool>()) continue;
+
+    string name = node.at("name").get<string>();
+    string rel_path = node.at("rel_path").get<string>();
+    string desc = node.value("description", "");
+    string name_lower = name, path_lower = rel_path, desc_lower = desc;
+    transform(name_lower.begin(), name_lower.end(), name_lower.begin(), ::tolower);
+    transform(path_lower.begin(), path_lower.end(), path_lower.begin(), ::tolower);
+    transform(desc_lower.begin(), desc_lower.end(), desc_lower.begin(), ::tolower);
+
+    bool name_match = (scope == "name" || scope == "both") && (name_lower.find(q) != string::npos || path_lower.find(q) != string::npos);
+    bool desc_match = (scope == "description" || scope == "both") && desc_lower.find(q) != string::npos;
+
+    if (name_match || desc_match) {
+      json r = {
+        {"file", rel_path},
+        {"name", name},
+        {"description", desc},
+        {"match_type", (name_match && desc_match) ? "name+description" : (name_match ? "name" : "description")}
+      };
+      // name matches rank higher than description matches
+      r["score"] = name_match ? 10 : 1;
+      results.push_back(r);
+    }
+  }
+
+  // sort by score descending
+  sort(results.begin(), results.end(), [](const json& a, const json& b) {
+    return a.at("score").get<int>() > b.at("score").get<int>();
+  });
+
+  return results;
+}
+
+// same search on the tree json (for name-only search when dep graph isn't enough)
+json search_files_tree_json(const json& tree_json, const string& query) {
+  json results = json::array();
+  string q = query;
+  transform(q.begin(), q.end(), q.begin(), ::tolower);
+
+  // recursive traversal of the tree
+  function<void(const json&)> walk = [&](const json& node) {
+    if (node.at("is_file").get<bool>()) {
+      string name = node.at("name").get<string>();
+      string rel_path = node.at("rel_path").get<string>();
+      string name_lower = name, path_lower = rel_path;
+      transform(name_lower.begin(), name_lower.end(), name_lower.begin(), ::tolower);
+      transform(path_lower.begin(), path_lower.end(), path_lower.begin(), ::tolower);
+
+      if (name_lower.find(q) != string::npos || path_lower.find(q) != string::npos) {
+        json r = {
+          {"file", rel_path},
+          {"name", name},
+          {"description", node.value("description", "")},
+          {"match_type", "name"}
+        };
+        results.push_back(r);
+      }
+    }
+    if (node.contains("children")) {
+      for (const auto& child : node.at("children")) {
+        walk(child);
+      }
+    }
+  };
+
+  walk(tree_json);
+  return results;
+}
+
+// get summary for a directory/module — aggregate all files under it
+json get_module_summary_json(const json& dep_graph_json, const json& tree_json, const string& dir_path) {
+  json result = json::object();
+  result["directory"] = dir_path;
+  result["files"] = json::array();
+  result["internal_deps"] = json::array();
+  result["external_deps"] = json::array();
+  result["depended_by_external"] = json::array();
+
+  string dir = dir_path;
+  if (!dir.empty() && dir.back() != '/') dir += '/';
+
+  // collect all files under this directory
+  unordered_set<string> module_files;
+  for (const auto& node : dep_graph_json.at("nodes")) {
+    if (!node.at("is_file").get<bool>()) continue;
+    string rel = node.at("rel_path").get<string>();
+    if (rel == dir_path || (dir.size() > 0 && rel.rfind(dir, 0) == 0)) {
+      module_files.insert(rel);
+      json f = {
+        {"file", rel},
+        {"name", node.at("name")},
+        {"description", node.value("description", "")},
+        {"depends_on_count", node.at("depends_on").size()},
+        {"depended_by_count", node.at("depended_by").size()}
+      };
+      result["files"].push_back(f);
+    }
+  }
+
+  if (module_files.empty()) {
+    result["error"] = "directory not found or contains no tracked files";
+    return result;
+  }
+
+  // classify edges as internal (within module) or external (outside module)
+  for (const auto& node : dep_graph_json.at("nodes")) {
+    if (!node.at("is_file").get<bool>()) continue;
+    string rel = node.at("rel_path").get<string>();
+    if (!module_files.count(rel)) continue;
+
+    for (const auto& dep : node.at("depends_on")) {
+      string dep_path = dep.get<string>();
+      if (module_files.count(dep_path)) {
+        // internal dependency — find edge description
+        json edge = find_edge_json(dep_graph_json, rel, dep_path);
+        json int_dep = {
+          {"from", rel},
+          {"to", dep_path},
+          {"description", edge.value("description", "")},
+          {"import_stmt", edge.value("import_stmt", "")}
+        };
+        result["internal_deps"].push_back(int_dep);
+      } else {
+        // external dependency
+        json ext_dep = {
+          {"from", rel},
+          {"to", dep_path}
+        };
+        json edge = find_edge_json(dep_graph_json, rel, dep_path);
+        if (!edge.empty()) {
+          ext_dep["description"] = edge.value("description", "");
+        }
+        result["external_deps"].push_back(ext_dep);
+      }
+    }
+
+    for (const auto& dependent : node.at("depended_by")) {
+      string dep_path = dependent.get<string>();
+      if (!module_files.count(dep_path)) {
+        json ext_dependent = {
+          {"from", dep_path},
+          {"to", rel}
+        };
+        json edge = find_edge_json(dep_graph_json, dep_path, rel);
+        if (!edge.empty()) {
+          ext_dependent["description"] = edge.value("description", "");
+        }
+        result["depended_by_external"].push_back(ext_dependent);
+      }
+    }
+  }
+
+  result["file_count"] = (int)module_files.size();
+  result["internal_dep_count"] = result["internal_deps"].size();
+  result["external_dep_count"] = result["external_deps"].size();
+  result["depended_by_external_count"] = result["depended_by_external"].size();
+
+  return result;
+}
+
+// compute codebase stats
+json compute_stats_json(const json& dep_graph_json) {
+  json stats = json::object();
+  int total_files = 0, total_folders = 0;
+  int files_with_desc = 0, files_with_edges = 0;
+  int max_deps = 0, max_dependents = 0;
+  int total_dep_count = 0;
+
+  for (const auto& node : dep_graph_json.at("nodes")) {
+    if (node.at("is_file").get<bool>()) {
+      total_files++;
+      string desc = node.value("description", "");
+      if (!desc.empty()) files_with_desc++;
+
+      int deps = node.at("depends_on").size();
+      int dependents = node.at("depended_by").size();
+      total_dep_count += deps;
+      if (deps > 0) files_with_edges++;
+      if (deps > max_deps) max_deps = deps;
+      if (dependents > max_dependents) max_dependents = dependents;
+    } else {
+      total_folders++;
+    }
+  }
+
+  stats["total_files"] = total_files;
+  stats["total_folders"] = total_folders;
+  stats["total_edges"] = dep_graph_json.at("edges").size();
+  stats["files_with_descriptions"] = files_with_desc;
+  stats["files_with_dependencies"] = files_with_edges;
+  stats["avg_deps_per_file"] = total_files > 0 ? (float)total_dep_count / total_files : 0.0f;
+  stats["max_deps"] = max_deps;
+  stats["max_dependents"] = max_dependents;
+
+  return stats;
+}
+
+// same stats computation on the live DepGraph struct
+json compute_stats_graph(const DepGraph& graph) {
+  json stats = json::object();
+  int total_files = 0, total_folders = 0;
+  int files_with_desc = 0, files_with_edges = 0;
+  int max_deps = 0, max_dependents = 0;
+  int total_dep_count = 0;
+
+  for (const auto& node : graph.nodes) {
+    if (node.is_file) {
+      total_files++;
+      if (!node.description.empty()) files_with_desc++;
+      int deps = (int)node.depends_on.size();
+      int dependents = (int)node.depended_by.size();
+      total_dep_count += deps;
+      if (deps > 0) files_with_edges++;
+      if (deps > max_deps) max_deps = deps;
+      if (dependents > max_dependents) max_dependents = dependents;
+    } else {
+      total_folders++;
+    }
+  }
+
+  stats["total_files"] = total_files;
+  stats["total_folders"] = total_folders;
+  stats["total_edges"] = (int)graph.edges.size();
+  stats["files_with_descriptions"] = files_with_desc;
+  stats["files_with_dependencies"] = files_with_edges;
+  stats["avg_deps_per_file"] = total_files > 0 ? (float)total_dep_count / total_files : 0.0f;
+  stats["max_deps"] = max_deps;
+  stats["max_dependents"] = max_dependents;
+
+  return stats;
+}
+
+// ─── end agent api helpers ───────────────────────────────────────────
+
 string escape_dot_label(const string& input) {
   string escaped;
   escaped.reserve(input.size());
@@ -2504,13 +3054,21 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
   cout << "\r[DGAT] File descriptions complete!                " << endl;
 }
 
-void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
-  httplib::Server server;
-  const string html = load_tree_gui_html();
-  const json tree_json = tree_to_json(root);
+// helper to send json error responses in a consistent format agents can parse
+static void send_error(httplib::Response& response, int status, const string& message, const string& code) {
+  json err = {{"error", message}, {"code", code}};
+  response.status = status;
+  response.set_content(err.dump(), "application/json; charset=UTF-8");
+}
 
-  const json dep_graph_json = build_dep_graph_json(dep_graph);
+// helper to send a successful json response
+static void send_json(httplib::Response& response, const json& data) {
+  response.set_content(data.dump(), "application/json; charset=UTF-8");
+}
 
+// register all api routes on a server — used by both interactive and backend mode
+// this is the single source of truth for every endpoint, no duplication
+static void register_api_routes(httplib::Server& server, const json& tree_json, const json& dep_graph_json) {
   auto set_cors_headers = [](httplib::Response& response) {
     response.set_header("Access-Control-Allow-Origin", "*");
     response.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -2524,19 +3082,21 @@ void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
     response.status = 200;
   });
 
-  server.Get("/", [html, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+  // ─── existing endpoints ───────────────────────────────────────────
+  server.Get("/", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
+    const string html = load_tree_gui_html();
     response.set_content(html, "text/html; charset=UTF-8");
   });
 
   server.Get("/api/tree", [tree_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
-    response.set_content(tree_json.dump(), "application/json; charset=UTF-8");
+    send_json(response, tree_json);
   });
 
   server.Get("/api/dep-graph", [dep_graph_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
-    response.set_content(dep_graph_json.dump(), "application/json; charset=UTF-8");
+    send_json(response, dep_graph_json);
   });
 
   server.Get("/health", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
@@ -2544,7 +3104,6 @@ void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
     response.set_content("ok", "text/plain; charset=UTF-8");
   });
 
-  // serve the blueprint markdown — frontend can render it in a panel
   server.Get("/api/blueprint", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
     ifstream f("dgat_blueprint.md");
@@ -2557,6 +3116,352 @@ void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
     buf << f.rdbuf();
     response.set_content(buf.str(), "text/plain; charset=UTF-8");
   });
+
+  // ─── agent api endpoints (p0 — core lookups) ──────────────────────
+
+  // get full context for a single file — the main endpoint agents will use
+  // returns description, dependencies, dependents, edge descriptions, and complexity metrics
+  server.Get("/api/context", [dep_graph_json, set_cors_headers](const httplib::Request& req, httplib::Response& response) {
+    set_cors_headers(response);
+    string file = req.get_param_value("file");
+    if (file.empty()) {
+      send_error(response, 400, "missing 'file' query parameter", "MISSING_PARAM");
+      return;
+    }
+
+    auto index = build_path_index(dep_graph_json);
+    auto it = index.find(file);
+    if (it == index.end()) {
+      send_error(response, 404, "file not found in dependency graph: " + file, "FILE_NOT_FOUND");
+      return;
+    }
+
+    int node_idx = it->second;
+    const auto& node = dep_graph_json.at("nodes").at(node_idx);
+
+    // build dependency list with edge descriptions
+    json dependencies = json::array();
+    if (node.contains("depends_on")) {
+      for (const auto& dep : node.at("depends_on")) {
+        string dep_path = dep.get<string>();
+        json edge = find_edge_json(dep_graph_json, file, dep_path);
+        json d = {{"file", dep_path}};
+        if (!edge.empty()) {
+          d["import_stmt"] = edge.value("import_stmt", "");
+          d["description"] = edge.value("description", "");
+        }
+        dependencies.push_back(d);
+      }
+    }
+
+    // build dependent list with edge descriptions
+    json dependents = json::array();
+    if (node.contains("depended_by")) {
+      for (const auto& dependent : node.at("depended_by")) {
+        string dep_path = dependent.get<string>();
+        json edge = find_edge_json(dep_graph_json, dep_path, file);
+        json d = {{"file", dep_path}};
+        if (!edge.empty()) {
+          d["import_stmt"] = edge.value("import_stmt", "");
+          d["description"] = edge.value("description", "");
+        }
+        dependents.push_back(d);
+      }
+    }
+
+    // compute transitive dependent count for complexity metric
+    auto transitive = bfs_transitive_dependents(dep_graph_json, index, file);
+    int transitive_count = (int)transitive.size() - 1; // exclude self
+
+    json result = {
+      {"file", file},
+      {"name", node.at("name")},
+      {"description", node.value("description", "")},
+      {"dependencies", dependencies},
+      {"dependents", dependents},
+      {"complexity", {
+        {"incoming_deps", (int)node.at("depended_by").size()},
+        {"outgoing_deps", (int)node.at("depends_on").size()},
+        {"transitive_dependents", transitive_count}
+      }}
+    };
+
+    send_json(response, result);
+  });
+
+  // get files that a given file depends on (imports)
+  server.Get("/api/dependencies", [dep_graph_json, set_cors_headers](const httplib::Request& req, httplib::Response& response) {
+    set_cors_headers(response);
+    string file = req.get_param_value("file");
+    if (file.empty()) {
+      send_error(response, 400, "missing 'file' query parameter", "MISSING_PARAM");
+      return;
+    }
+
+    auto index = build_path_index(dep_graph_json);
+    auto it = index.find(file);
+    if (it == index.end()) {
+      send_error(response, 404, "file not found in dependency graph: " + file, "FILE_NOT_FOUND");
+      return;
+    }
+
+    int node_idx = it->second;
+    const auto& node = dep_graph_json.at("nodes").at(node_idx);
+
+    json result = json::array();
+    if (node.contains("depends_on")) {
+      for (const auto& dep : node.at("depends_on")) {
+        string dep_path = dep.get<string>();
+        json edge = find_edge_json(dep_graph_json, file, dep_path);
+        json d = {
+          {"file", dep_path},
+          {"import_stmt", edge.value("import_stmt", "")},
+          {"description", edge.value("description", "")}
+        };
+        result.push_back(d);
+      }
+    }
+
+    send_json(response, result);
+  });
+
+  // get files that depend on a given file — impact analysis before edits
+  server.Get("/api/dependents", [dep_graph_json, set_cors_headers](const httplib::Request& req, httplib::Response& response) {
+    set_cors_headers(response);
+    string file = req.get_param_value("file");
+    if (file.empty()) {
+      send_error(response, 400, "missing 'file' query parameter", "MISSING_PARAM");
+      return;
+    }
+
+    auto index = build_path_index(dep_graph_json);
+    auto it = index.find(file);
+    if (it == index.end()) {
+      send_error(response, 404, "file not found in dependency graph: " + file, "FILE_NOT_FOUND");
+      return;
+    }
+
+    int node_idx = it->second;
+    const auto& node = dep_graph_json.at("nodes").at(node_idx);
+
+    json result = json::array();
+    if (node.contains("depended_by")) {
+      for (const auto& dependent : node.at("depended_by")) {
+        string dep_path = dependent.get<string>();
+        json edge = find_edge_json(dep_graph_json, dep_path, file);
+        json d = {
+          {"file", dep_path},
+          {"import_stmt", edge.value("import_stmt", "")},
+          {"description", edge.value("description", "")}
+        };
+        result.push_back(d);
+      }
+    }
+
+    send_json(response, result);
+  });
+
+  // get the edge between two specific files — how exactly does A use B?
+  server.Get("/api/edge", [dep_graph_json, set_cors_headers](const httplib::Request& req, httplib::Response& response) {
+    set_cors_headers(response);
+    string from = req.get_param_value("from");
+    string to = req.get_param_value("to");
+    if (from.empty() || to.empty()) {
+      send_error(response, 400, "missing 'from' and/or 'to' query parameters", "MISSING_PARAM");
+      return;
+    }
+
+    json edge = find_edge_json(dep_graph_json, from, to);
+    if (edge.empty()) {
+      send_error(response, 404, "no edge found between " + from + " and " + to, "EDGE_NOT_FOUND");
+      return;
+    }
+
+    send_json(response, edge);
+  });
+
+  // ─── agent api endpoints (p1 — search, impact, modules) ───────────
+
+  // search files by name or description
+  server.Get("/api/search", [dep_graph_json, tree_json, set_cors_headers](const httplib::Request& req, httplib::Response& response) {
+    set_cors_headers(response);
+    string q = req.get_param_value("q");
+    if (q.empty()) {
+      send_error(response, 400, "missing 'q' query parameter", "MISSING_PARAM");
+      return;
+    }
+
+    string scope = req.get_param_value("scope");
+    if (scope.empty()) scope = "both";
+
+    json results = search_files_json(dep_graph_json, q, scope);
+    send_json(response, results);
+  });
+
+  // blast radius analysis — what files are affected if I change this one?
+  server.Get("/api/impact", [dep_graph_json, set_cors_headers](const httplib::Request& req, httplib::Response& response) {
+    set_cors_headers(response);
+    string file = req.get_param_value("file");
+    if (file.empty()) {
+      send_error(response, 400, "missing 'file' query parameter", "MISSING_PARAM");
+      return;
+    }
+
+    string change_type = req.get_param_value("change_type");
+    if (change_type.empty()) change_type = "modify";
+
+    auto index = build_path_index(dep_graph_json);
+    auto it = index.find(file);
+    if (it == index.end()) {
+      send_error(response, 404, "file not found in dependency graph: " + file, "FILE_NOT_FOUND");
+      return;
+    }
+
+    auto transitive = bfs_transitive_dependents(dep_graph_json, index, file);
+
+    json direct = json::array();
+    json transitive_list = json::array();
+
+    for (const auto& [path, dist] : transitive) {
+      if (path == file) continue; // skip self
+
+      // find edge description for context
+      json edge = find_edge_json(dep_graph_json, path, file);
+      string edge_desc = "";
+      if (!edge.empty()) edge_desc = edge.value("description", "");
+
+      json entry = {
+        {"file", path},
+        {"distance", dist}
+      };
+      if (!edge_desc.empty()) entry["reason"] = edge_desc;
+
+      if (dist == 1) {
+        entry["risk"] = "high";
+        direct.push_back(entry);
+      } else if (dist == 2) {
+        entry["risk"] = "medium";
+        transitive_list.push_back(entry);
+      } else {
+        entry["risk"] = "low";
+        transitive_list.push_back(entry);
+      }
+    }
+
+    // sort direct dependents by risk (all high, but sort alphabetically for consistency)
+    sort(direct.begin(), direct.end(), [](const json& a, const json& b) {
+      return a.at("file").get<string>() < b.at("file").get<string>();
+    });
+    sort(transitive_list.begin(), transitive_list.end(), [](const json& a, const json& b) {
+      int da = a.at("distance").get<int>();
+      int db = b.at("distance").get<int>();
+      if (da != db) return da < db;
+      return a.at("file").get<string>() < b.at("file").get<string>();
+    });
+
+    int total = (int)direct.size() + (int)transitive_list.size();
+    string summary = "changing " + file + " will affect " + to_string(total) + " file";
+    if (total != 1) summary += "s";
+    if (!direct.empty()) summary += ". highest risk: " + direct[0].at("file").get<string>();
+
+    json result = {
+      {"file", file},
+      {"change_type", change_type},
+      {"direct_dependents", direct},
+      {"transitive_dependents", transitive_list},
+      {"total_affected_files", total},
+      {"summary", summary}
+    };
+
+    send_json(response, result);
+  });
+
+  // get a summary for a directory/module
+  server.Get("/api/module-summary", [dep_graph_json, tree_json, set_cors_headers](const httplib::Request& req, httplib::Response& response) {
+    set_cors_headers(response);
+    string dir = req.get_param_value("dir");
+    if (dir.empty()) {
+      send_error(response, 400, "missing 'dir' query parameter", "MISSING_PARAM");
+      return;
+    }
+
+    json result = get_module_summary_json(dep_graph_json, tree_json, dir);
+    send_json(response, result);
+  });
+
+  // ─── agent api endpoints (p2 — graph analysis) ────────────────────
+
+  // find circular dependency cycles
+  server.Get("/api/circular-deps", [dep_graph_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    auto index = build_path_index(dep_graph_json);
+    auto cycles = find_circular_deps_json(dep_graph_json, index);
+
+    json result = json::array();
+    for (const auto& cycle : cycles) {
+      json c = json::array();
+      for (const auto& path : cycle) c.push_back(path);
+      result.push_back(c);
+    }
+
+    json resp = {
+      {"cycles", result},
+      {"count", (int)result.size()}
+    };
+    send_json(response, resp);
+  });
+
+  // find entry point files — high usage, low dependencies
+  server.Get("/api/entry-points", [dep_graph_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    auto index = build_path_index(dep_graph_json);
+    json result = find_entry_points_json(dep_graph_json, index);
+    send_json(response, result);
+  });
+
+  // find orphan files — no deps and no dependents, potential dead code
+  server.Get("/api/orphans", [dep_graph_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    json result = find_orphans_json(dep_graph_json);
+    send_json(response, result);
+  });
+
+  // codebase stats summary
+  server.Get("/api/stats", [dep_graph_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    json stats = compute_stats_json(dep_graph_json);
+
+    // add circular dep count and orphan count
+    auto index = build_path_index(dep_graph_json);
+    auto cycles = find_circular_deps_json(dep_graph_json, index);
+    auto orphans = find_orphans_json(dep_graph_json);
+    stats["circular_dependency_count"] = (int)cycles.size();
+    stats["orphan_file_count"] = (int)orphans.size();
+
+    send_json(response, stats);
+  });
+
+  // reload state from disk — useful when dgat update has been run externally
+  server.Post("/api/reload", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    // note: in backend mode the json is captured by value at startup,
+    // so this endpoint just confirms the files exist on disk.
+    // for a full reload the server needs to be restarted.
+    // this endpoint is here as a placeholder for future live-reload support.
+    json result = {
+      {"status", "reload requires server restart"},
+      {"message", "restart dgat --backend to pick up updated state files"}
+    };
+    send_json(response, result);
+  });
+}
+
+void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
+  httplib::Server server;
+  const json tree_json = tree_to_json(root);
+  const json dep_graph_json = build_dep_graph_json(dep_graph);
+
+  register_api_routes(server, tree_json, dep_graph_json);
 
   cout << "Interactive GUI running at: http://localhost:" << port << endl;
   cout << "Press Ctrl+C to stop." << endl;
@@ -2976,64 +3881,14 @@ void run_backend_mode(int port) {
   json tree_json, dep_graph_json;
   if (!load_state(tree_json, dep_graph_json)) return;
 
-  // build minimal in-memory tree and dep graph from json so we can reuse run_tree_gui_server
-  // we pass nullptr for root since the server only needs the serialized json blobs
-  // instead of threading through a full TreeNode tree, we use a json-only server path
-
   httplib::Server server;
-  const string html = load_tree_gui_html();
+  register_api_routes(server, tree_json, dep_graph_json);
 
-  auto set_cors_headers = [](httplib::Response& response) {
-    response.set_header("Access-Control-Allow-Origin", "*");
-    response.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response.set_header("Access-Control-Allow-Headers", "Content-Type");
-  };
-
-  server.Options("/(.*)", [](const httplib::Request&, httplib::Response& response) {
-    response.set_header("Access-Control-Allow-Origin", "*");
-    response.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response.set_header("Access-Control-Allow-Headers", "Content-Type");
-    response.status = 200;
-  });
-
-  server.Get("/", [html, set_cors_headers](const httplib::Request&, httplib::Response& response) {
-    set_cors_headers(response);
-    response.set_content(html, "text/html; charset=UTF-8");
-  });
-
-  server.Get("/api/tree", [tree_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
-    set_cors_headers(response);
-    response.set_content(tree_json.dump(), "application/json; charset=UTF-8");
-  });
-
-  server.Get("/api/dep-graph", [dep_graph_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
-    set_cors_headers(response);
-    response.set_content(dep_graph_json.dump(), "application/json; charset=UTF-8");
-  });
-
-  server.Get("/health", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
-    set_cors_headers(response);
-    response.set_content("ok", "text/plain; charset=UTF-8");
-  });
-
-  server.Get("/api/blueprint", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
-    set_cors_headers(response);
-    ifstream f("dgat_blueprint.md");
-    if (!f.is_open()) {
-      response.status = 404;
-      response.set_content("blueprint not found", "text/plain; charset=UTF-8");
-      return;
-    }
-    stringstream buf;
-    buf << f.rdbuf();
-    response.set_content(buf.str(), "text/plain; charset=UTF-8");
-  });
-
-  cout << "Interactive GUI running at: http://localhost:" << port << endl;
+  cout << "Backend server running at: http://localhost:" << port << endl;
   cout << "Press Ctrl+C to stop." << endl;
 
   if (!server.listen("0.0.0.0", port)) {
-    cerr << "Failed to start GUI server on port " << port << endl;
+    cerr << "Failed to start backend server on port " << port << endl;
   }
 }
 
@@ -3172,6 +4027,7 @@ int main(int argc, char** argv){
   bool backend_mode = false;
   bool update_mode  = false;
   bool deps_only    = false;
+  bool show_help    = false;
   int  port = 8090;
 
   for (int i = 1; i < argc; i++) {
@@ -3183,6 +4039,8 @@ int main(int argc, char** argv){
       deps_only = true;
     } else if (arg == "update") {
       update_mode = true;
+    } else if (arg == "--help" || arg == "-h") {
+      show_help = true;
     } else if (arg == "--port" && i + 1 < argc) {
       try {
         port = stoi(argv[++i]);
@@ -3201,6 +4059,33 @@ int main(int argc, char** argv){
       // non-flag, non-keyword arg is the root path
       root_path = arg;
     }
+  }
+
+  if (show_help) {
+    cout << "dgat — dependency graph as a tool\n\n";
+    cout << "usage:\n";
+    cout << "  dgat [path]              scan a codebase and build the dependency graph\n";
+    cout << "  dgat --backend [-p N]    start the api server (loads saved state)\n";
+    cout << "  dgat update              incremental re-scan (changed files only)\n";
+    cout << "  dgat --deps-only [path]  scan without llm descriptions\n";
+    cout << "  dgat --help              show this help\n\n";
+    cout << "api endpoints (when running --backend):\n";
+    cout << "  get  /api/tree              full file tree\n";
+    cout << "  get  /api/dep-graph         dependency graph\n";
+    cout << "  get  /api/blueprint         project architecture doc\n";
+    cout << "  get  /api/context?file=X    full context for a file (agent-ready)\n";
+    cout << "  get  /api/dependencies?file=X  what a file imports\n";
+    cout << "  get  /api/dependents?file=X    what depends on a file\n";
+    cout << "  get  /api/edge?from=X&to=Y     how two files relate\n";
+    cout << "  get  /api/search?q=Q           search files by name or description\n";
+    cout << "  get  /api/impact?file=X        blast radius analysis\n";
+    cout << "  get  /api/module-summary?dir=X directory-level overview\n";
+    cout << "  get  /api/circular-deps        find circular imports\n";
+    cout << "  get  /api/entry-points         find root/entry files\n";
+    cout << "  get  /api/orphans              find dead code\n";
+    cout << "  get  /api/stats                codebase metrics\n";
+    cout << "  post /api/reload               (placeholder for future live-reload)\n";
+    return 0;
   }
 
   cout << "========================================" << endl;

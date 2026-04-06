@@ -1,7 +1,7 @@
 # DGAT Software Blueprint
 
 ## Project Overview
-DGAT (DNA-agnostic Large Prompt Framework) is a lightweight, parameter-constrained training and inference library for GPT language models. Built on a simplified PyTorch Transformer architecture, DGAT excels in computing-heavy environments like mobile devices (TPUs/Small GPUs) and CPUs. It provides a modular framework for small-data fine-tuning, character-level generation, and benchmarking across GPT-2 variants (M, Small, XL) using datasets like Shakespeare and OpenWebText.
+nanoGPT is a lightweight, parameter-constrained training and inference library for GPT language models. Built on a simplified PyTorch Transformer architecture, nanoGPT excels in computing-heavy environments like mobile devices (TPUs/Small GPUs) and CPUs. It provides a modular framework for small-data fine-tuning, character-level generation, and benchmarking across GPT-2 variants (M, Small, XL) using datasets like Shakespeare and OpenWebText.
 
 ## Architecture
 The system follows a modular, event-driven design centered around a `model.py` core and a `config/` directory for orchestration.

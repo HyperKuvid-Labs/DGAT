@@ -193,7 +193,7 @@
       }
     },
     {
-      "id": "nanoGPT",
+      "id": "nanogpt",
       "name": "karpathy/nanoGPT",
       "description": "The simplest, fastest repository for training/finetuning medium-sized GPTs.",
       "github": "https://github.com/karpathy/nanoGPT",

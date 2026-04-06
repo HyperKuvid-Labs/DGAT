@@ -14,7 +14,7 @@ let backendProcess: ReturnType<typeof spawn> | null = null;
 // try to reach the dgat backend, return true if healthy
 async function checkBackend(url: string): Promise<boolean> {
   try {
-    const res = await fetch(`${url}/health`);
+    const res = await fetch(`${url}/api/tree`); // Changed from /health to /api/tree
     return res.ok;
   } catch {
     return false;

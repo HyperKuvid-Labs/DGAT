@@ -1,0 +1,69 @@
+DGAT vs Opencode Native Tools Benchmark Summary
+============================================================
+
+Configuration:
+  Runs per Task: 20
+  Test File: 
+  Test Concept: 
+  Test Directory: 
+
+Overall Statistics:
+  Total Tasks Evaluated: 7
+  Tasks Where DGAT Was Faster: 3 (42.9%)
+  Tasks Where Opencode Was Faster: 4 (57.1%)
+  Average Speedup: 39.04x
+  Median Speedup: 0.61x
+  Maximum Speedup: 247.17x
+  Minimum Speedup: 0.18x
+
+Task-by-Task Results:
+------------------------------------------------------------
+
+File Purpose Identification:
+  DGAT Avg Time: 0.012681s
+  Opencode Avg Time: 0.007771s
+  Speedup: 0.61x (Opencode faster)
+  DGAT Raw Times: 0.0136, 0.0137, 0.0133, 0.0143, 0.0135...
+  Opencode Raw Times: 0.0076, 0.0078, 0.0083, 0.0073, 0.0081...
+
+Project Architecture Overview:
+  DGAT Avg Time: 0.007824s
+  Opencode Avg Time: 0.065084s
+  Speedup: 8.32x (DGAT faster)
+  DGAT Raw Times: 0.0129, 0.0064, 0.0075, 0.0078, 0.0093...
+  Opencode Raw Times: 0.0668, 0.0626, 0.0584, 0.0693, 0.0570...
+
+Concept-Based File Search:
+  DGAT Avg Time: 0.006649s
+  Opencode Avg Time: 0.107065s
+  Speedup: 16.10x (DGAT faster)
+  DGAT Raw Times: 0.0114, 0.0055, 0.0058, 0.0058, 0.0055...
+  Opencode Raw Times: 0.1160, 0.0997, 0.1096, 0.1029, 0.1035...
+
+Dependency Tracing:
+  DGAT Avg Time: 0.012685s
+  Opencode Avg Time: 0.005456s
+  Speedup: 0.43x (Opencode faster)
+  DGAT Raw Times: 0.0136, 0.0127, 0.0136, 0.0131, 0.0129...
+  Opencode Raw Times: 0.0057, 0.0058, 0.0058, 0.0054, 0.0057...
+
+Reverse Dependency Analysis:
+  DGAT Avg Time: 0.013185s
+  Opencode Avg Time: 3.258954s
+  Speedup: 247.17x (DGAT faster)
+  DGAT Raw Times: 0.0127, 0.0163, 0.0107, 0.0133, 0.0127...
+  Opencode Raw Times: 3.3654, 3.3237, 3.3109, 3.2037, 3.3308...
+
+Blast Radius Analysis:
+  DGAT Avg Time: 0.011968s
+  Opencode Avg Time: 0.002143s
+  Speedup: 0.18x (Opencode faster)
+  DGAT Raw Times: 0.0114, 0.0123, 0.0139, 0.0126, 0.0137...
+  Opencode Raw Times: 0.0022, 0.0022, 0.0028, 0.0022, 0.0026...
+
+Entry Point Identification:
+  DGAT Avg Time: 0.012671s
+  Opencode Avg Time: 0.005486s
+  Speedup: 0.43x (Opencode faster)
+  DGAT Raw Times: 0.0128, 0.0123, 0.0138, 0.0139, 0.0138...
+  Opencode Raw Times: 0.0058, 0.0063, 0.0049, 0.0050, 0.0052...

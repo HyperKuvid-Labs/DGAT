@@ -1,0 +1,29 @@
+DGAT vs Opencode Native Tools Performance Comparison
+==================================================
+
+Speedup Factor (Opencode Time / DGAT Time)
+Higher values indicate DGAT is faster
+Lower values indicate Opencode is faster
+
+Task                                 Speedup  Visual Comparison
+------------------------------------------------------------------------------
+Reverse Dependency Analysis        272.83x  DGAT: ███████████████████████████ Opencode: ▓
+Project Architecture Overview       9.51x  DGAT: ██████████ Opencode: ░
+Concept-Based File Search           1.07x  DGAT: ███ Opencode: ██
+File Purpose Identification         0.67x  DGAT: ██ Opencode: ██████
+Entry Point Identification          0.42x  DGAT: █ Opencode: ██████
+Dependency Tracing                  0.40x  DGAT: █ Opencode: ██████
+Blast Radius Analysis               0.21x  DGAT: █ Opencode: █████████
+
+Legend: Each █ represents approximately 10x speedup advantage for DGAT
+        Each ░ represents approximately 1x speedup (parity)
+        Each ▓ represents Opencode being faster
+
+Performance Summary:
+- DGAT excels at reverse dependency analysis (272x faster) and architectural overview (9.5x faster)
+- Opencode native tools are faster for simple text-based searches and basic file operations
+- For dependency graph specific queries, DGAT provides substantial performance benefits
+- Overall average speedup: 40.73x (heavily weighted by reverse dependency analysis)
+- DGAT wins in 3 out of 7 tasks (42.9% win rate)
+
+Key Insight: DGAT's value is most pronounced for tasks requiring understanding of code relationships and structure, while Opencode's native tools excel at simple text pattern matching.

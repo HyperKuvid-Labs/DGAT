@@ -1,0 +1,171 @@
+{
+  "timestamp": "2026-04-06T11:37:58+05:30",
+  "config": {
+    "num_runs": 20,
+    "test_file": "/home/pradheep/DGAT/dgat.cpp",
+    "test_concept": "dependency graph",
+    "test_dir": "/home/pradheep/DGAT"
+  },
+  "results": [[1;33mRunning: File Purpose Identification[0m
+  Run 1/20: DGAT: 0.0136s, Opencode: 0.0076s
+  Run 2/20: DGAT: 0.0137s, Opencode: 0.0078s
+  Run 3/20: DGAT: 0.0133s, Opencode: 0.0083s
+  Run 4/20: DGAT: 0.0143s, Opencode: 0.0073s
+  Run 5/20: DGAT: 0.0135s, Opencode: 0.0081s
+  Run 6/20: DGAT: 0.0131s, Opencode: 0.0076s
+  Run 7/20: DGAT: 0.0122s, Opencode: 0.0074s
+  Run 8/20: DGAT: 0.0125s, Opencode: 0.0076s
+  Run 9/20: DGAT: 0.0144s, Opencode: 0.0094s
+  Run 10/20: DGAT: 0.0113s, Opencode: 0.0089s
+  Run 11/20: DGAT: 0.0119s, Opencode: 0.0078s
+  Run 12/20: DGAT: 0.0122s, Opencode: 0.0075s
+  Run 13/20: DGAT: 0.0109s, Opencode: 0.0078s
+  Run 14/20: DGAT: 0.0131s, Opencode: 0.0081s
+  Run 15/20: DGAT: 0.0121s, Opencode: 0.0069s
+  Run 16/20: DGAT: 0.0118s, Opencode: 0.0071s
+  Run 17/20: DGAT: 0.0130s, Opencode: 0.0076s
+  Run 18/20: DGAT: 0.0140s, Opencode: 0.0070s
+  Run 19/20: DGAT: 0.0111s, Opencode: 0.0069s
+  Run 20/20: DGAT: 0.0118s, Opencode: 0.0087s
+  [0;32mAverage - DGAT: .012681s, Opencode: .007771s, Speedup: .612806x[0m
+
+{"name":"File Purpose Identification","dgat_avg":.012681,"opencode_avg":.007771,"speedup":.612806,"dgat_times":[.013569152,.013663806,.013253941,.014256442,.013546678,.013095135,.012203202,.012451901,.014427560,.011267035,.011863635,.012173538,.010948853,.013132205,.012084844,.011819190,.012991917,.013994512,.011115240,.011775368],"opencode_times":[.007634274,.007832781,.008256911,.007305116,.008119021,.007586807,.007445061,.007604234,.009369380,.008889925,.007798456,.007536704,.007774364,.008071922,.006863509,.007118214,.007639512,.006996220,.006927946,.008656107]},[1;33mRunning: Project Architecture Overview[0m
+  Run 1/20: DGAT: 0.0129s, Opencode: 0.0668s
+  Run 2/20: DGAT: 0.0064s, Opencode: 0.0626s
+  Run 3/20: DGAT: 0.0075s, Opencode: 0.0584s
+  Run 4/20: DGAT: 0.0078s, Opencode: 0.0693s
+  Run 5/20: DGAT: 0.0093s, Opencode: 0.0570s
+  Run 6/20: DGAT: 0.0067s, Opencode: 0.0663s
+  Run 7/20: DGAT: 0.0071s, Opencode: 0.0813s
+  Run 8/20: DGAT: 0.0112s, Opencode: 0.0704s
+  Run 9/20: DGAT: 0.0065s, Opencode: 0.0676s
+  Run 10/20: DGAT: 0.0078s, Opencode: 0.0676s
+  Run 11/20: DGAT: 0.0104s, Opencode: 0.0662s
+  Run 12/20: DGAT: 0.0065s, Opencode: 0.0792s
+  Run 13/20: DGAT: 0.0066s, Opencode: 0.0604s
+  Run 14/20: DGAT: 0.0076s, Opencode: 0.0550s
+  Run 15/20: DGAT: 0.0062s, Opencode: 0.0584s
+  Run 16/20: DGAT: 0.0064s, Opencode: 0.0617s
+  Run 17/20: DGAT: 0.0075s, Opencode: 0.0545s
+  Run 18/20: DGAT: 0.0077s, Opencode: 0.0660s
+  Run 19/20: DGAT: 0.0077s, Opencode: 0.0690s
+  Run 20/20: DGAT: 0.0068s, Opencode: 0.0642s
+  [0;32mAverage - DGAT: .007824s, Opencode: .065084s, Speedup: 8.318507x[0m
+
+{"name":"Project Architecture Overview","dgat_avg":.007824,"opencode_avg":.065084,"speedup":8.318507,"dgat_times":[.012850872,.006447694,.007541692,.007802489,.009275111,.006679774,.007095295,.011151137,.006502409,.007788033,.010390508,.006549997,.006551721,.007599989,.006176719,.006419791,.007498613,.007714696,.007650370,.006810575],"opencode_times":[.066751639,.062638859,.058382846,.069261537,.056997763,.066287050,.081314909,.070367879,.067640041,.067612703,.066170894,.079168347,.060382305,.055007753,.058385538,.061651294,.054471195,.065998723,.068978667,.064229457]},[1;33mRunning: Concept-Based File Search[0m
+  Run 1/20: DGAT: 0.0114s, Opencode: 0.1160s
+  Run 2/20: DGAT: 0.0055s, Opencode: 0.0997s
+  Run 3/20: DGAT: 0.0058s, Opencode: 0.1096s
+  Run 4/20: DGAT: 0.0058s, Opencode: 0.1029s
+  Run 5/20: DGAT: 0.0055s, Opencode: 0.1035s
+  Run 6/20: DGAT: 0.0055s, Opencode: 0.1031s
+  Run 7/20: DGAT: 0.0068s, Opencode: 0.1111s
+  Run 8/20: DGAT: 0.0064s, Opencode: 0.1108s
+  Run 9/20: DGAT: 0.0081s, Opencode: 0.1133s
+  Run 10/20: DGAT: 0.0064s, Opencode: 0.1050s
+  Run 11/20: DGAT: 0.0063s, Opencode: 0.1037s
+  Run 12/20: DGAT: 0.0069s, Opencode: 0.1052s
+  Run 13/20: DGAT: 0.0073s, Opencode: 0.1088s
+  Run 14/20: DGAT: 0.0068s, Opencode: 0.1173s
+  Run 15/20: DGAT: 0.0063s, Opencode: 0.1073s
+  Run 16/20: DGAT: 0.0056s, Opencode: 0.1086s
+  Run 17/20: DGAT: 0.0067s, Opencode: 0.1052s
+  Run 18/20: DGAT: 0.0072s, Opencode: 0.1046s
+  Run 19/20: DGAT: 0.0069s, Opencode: 0.1024s
+  Run 20/20: DGAT: 0.0060s, Opencode: 0.1030s
+  [0;32mAverage - DGAT: .006649s, Opencode: .107065s, Speedup: 16.102421x[0m
+
+{"name":"Concept-Based File Search","dgat_avg":.006649,"opencode_avg":.107065,"speedup":16.102421,"dgat_times":[.011373483,.005481515,.005817600,.005796115,.005456875,.005500656,.006798095,.006417344,.008072799,.006369069,.006282032,.006868945,.007334917,.006830368,.006266443,.005577934,.006690177,.007216551,.006896589,.005950823],"opencode_times":[.116038555,.099675434,.109616502,.102942267,.103529190,.103114280,.111142594,.110802387,.113265189,.105025173,.103684609,.105227021,.108776214,.117336379,.107300534,.108646476,.105199089,.104582942,.102374300,.103022094]},[1;33mRunning: Dependency Tracing[0m
+  Run 1/20: DGAT: 0.0136s, Opencode: 0.0057s
+  Run 2/20: DGAT: 0.0127s, Opencode: 0.0058s
+  Run 3/20: DGAT: 0.0136s, Opencode: 0.0058s
+  Run 4/20: DGAT: 0.0131s, Opencode: 0.0054s
+  Run 5/20: DGAT: 0.0129s, Opencode: 0.0057s
+  Run 6/20: DGAT: 0.0132s, Opencode: 0.0056s
+  Run 7/20: DGAT: 0.0130s, Opencode: 0.0058s
+  Run 8/20: DGAT: 0.0124s, Opencode: 0.0052s
+  Run 9/20: DGAT: 0.0124s, Opencode: 0.0052s
+  Run 10/20: DGAT: 0.0131s, Opencode: 0.0052s
+  Run 11/20: DGAT: 0.0136s, Opencode: 0.0060s
+  Run 12/20: DGAT: 0.0135s, Opencode: 0.0053s
+  Run 13/20: DGAT: 0.0122s, Opencode: 0.0047s
+  Run 14/20: DGAT: 0.0133s, Opencode: 0.0055s
+  Run 15/20: DGAT: 0.0134s, Opencode: 0.0054s
+  Run 16/20: DGAT: 0.0123s, Opencode: 0.0053s
+  Run 17/20: DGAT: 0.0124s, Opencode: 0.0057s
+  Run 18/20: DGAT: 0.0117s, Opencode: 0.0056s
+  Run 19/20: DGAT: 0.0114s, Opencode: 0.0052s
+  Run 20/20: DGAT: 0.0100s, Opencode: 0.0049s
+  [0;32mAverage - DGAT: .012685s, Opencode: .005456s, Speedup: .430114x[0m
+
+{"name":"Dependency Tracing","dgat_avg":.012685,"opencode_avg":.005456,"speedup":.430114,"dgat_times":[.013611432,.012688800,.013586875,.013083976,.012868288,.013205154,.013011546,.012424951,.012374367,.013078141,.013641491,.013476222,.012229267,.013341648,.013383746,.012267489,.012358374,.011717634,.011397792,.009967200],"opencode_times":[.005713535,.005792887,.005819724,.005444971,.005701537,.005585510,.005784763,.005236677,.005238021,.005187682,.006021980,.005341500,.004670952,.005455513,.005425360,.005319146,.005658467,.005618310,.005162527,.004944822]},[1;33mRunning: Reverse Dependency Analysis[0m
+  Run 1/20: DGAT: 0.0127s, Opencode: 3.3654s
+  Run 2/20: DGAT: 0.0163s, Opencode: 3.3237s
+  Run 3/20: DGAT: 0.0107s, Opencode: 3.3109s
+  Run 4/20: DGAT: 0.0133s, Opencode: 3.2037s
+  Run 5/20: DGAT: 0.0127s, Opencode: 3.3308s
+  Run 6/20: DGAT: 0.0130s, Opencode: 3.1018s
+  Run 7/20: DGAT: 0.0110s, Opencode: 3.2167s
+  Run 8/20: DGAT: 0.0143s, Opencode: 3.2396s
+  Run 9/20: DGAT: 0.0115s, Opencode: 3.3529s
+  Run 10/20: DGAT: 0.0134s, Opencode: 3.2638s
+  Run 11/20: DGAT: 0.0131s, Opencode: 3.2885s
+  Run 12/20: DGAT: 0.0130s, Opencode: 3.2051s
+  Run 13/20: DGAT: 0.0139s, Opencode: 3.2259s
+  Run 14/20: DGAT: 0.0145s, Opencode: 3.0270s
+  Run 15/20: DGAT: 0.0130s, Opencode: 3.3144s
+  Run 16/20: DGAT: 0.0135s, Opencode: 3.4080s
+  Run 17/20: DGAT: 0.0139s, Opencode: 3.3281s
+  Run 18/20: DGAT: 0.0134s, Opencode: 3.2991s
+  Run 19/20: DGAT: 0.0126s, Opencode: 3.1771s
+  Run 20/20: DGAT: 0.0139s, Opencode: 3.1967s
+  [0;32mAverage - DGAT: .013185s, Opencode: 3.258954s, Speedup: 247.171331x[0m
+
+{"name":"Reverse Dependency Analysis","dgat_avg":.013185,"opencode_avg":3.258954,"speedup":247.171331,"dgat_times":[.012687446,.016297988,.010710532,.013321549,.012724327,.013006524,.011021694,.014312944,.011512894,.013350864,.013106666,.013049844,.013870528,.014484004,.012977747,.013483152,.013884829,.013378421,.012649317,.013881548],"opencode_times":[3.365414630,3.323679872,3.310860056,3.203673603,3.330788896,3.101825910,3.216725064,3.239583787,3.352874345,3.263785676,3.288503135,3.205128892,3.225892823,3.026979387,3.314361107,3.408028247,3.328104484,3.299136614,3.177092151,3.196653200]},[1;33mRunning: Blast Radius Analysis[0m
+  Run 1/20: DGAT: 0.0114s, Opencode: 0.0022s
+  Run 2/20: DGAT: 0.0123s, Opencode: 0.0022s
+  Run 3/20: DGAT: 0.0139s, Opencode: 0.0028s
+  Run 4/20: DGAT: 0.0126s, Opencode: 0.0022s
+  Run 5/20: DGAT: 0.0137s, Opencode: 0.0026s
+  Run 6/20: DGAT: 0.0128s, Opencode: 0.0022s
+  Run 7/20: DGAT: 0.0116s, Opencode: 0.0022s
+  Run 8/20: DGAT: 0.0120s, Opencode: 0.0022s
+  Run 9/20: DGAT: 0.0133s, Opencode: 0.0020s
+  Run 10/20: DGAT: 0.0122s, Opencode: 0.0023s
+  Run 11/20: DGAT: 0.0139s, Opencode: 0.0021s
+  Run 12/20: DGAT: 0.0119s, Opencode: 0.0026s
+  Run 13/20: DGAT: 0.0130s, Opencode: 0.0028s
+  Run 14/20: DGAT: 0.0118s, Opencode: 0.0020s
+  Run 15/20: DGAT: 0.0110s, Opencode: 0.0020s
+  Run 16/20: DGAT: 0.0093s, Opencode: 0.0012s
+  Run 17/20: DGAT: 0.0078s, Opencode: 0.0021s
+  Run 18/20: DGAT: 0.0116s, Opencode: 0.0019s
+  Run 19/20: DGAT: 0.0135s, Opencode: 0.0020s
+  Run 20/20: DGAT: 0.0100s, Opencode: 0.0012s
+  [0;32mAverage - DGAT: .011968s, Opencode: .002143s, Speedup: .179060x[0m
+
+{"name":"Blast Radius Analysis","dgat_avg":.011968,"opencode_avg":.002143,"speedup":.179060,"dgat_times":[.011359199,.012259505,.013902912,.012621067,.013733936,.012787189,.011567572,.012002580,.013258416,.012193034,.013924367,.011868236,.012974148,.011831019,.010955052,.009279960,.007798505,.011606320,.013480817,.009965524],"opencode_times":[.002238240,.002230854,.002796358,.002236594,.002616400,.002195608,.002194771,.002228998,.001959596,.002273636,.002134578,.002595933,.002762515,.001951232,.002009992,.001238540,.002121627,.001857292,.002016762,.001211721]},[1;33mRunning: Entry Point Identification[0m
+  Run 1/20: DGAT: 0.0128s, Opencode: 0.0058s
+  Run 2/20: DGAT: 0.0123s, Opencode: 0.0063s
+  Run 3/20: DGAT: 0.0138s, Opencode: 0.0049s
+  Run 4/20: DGAT: 0.0139s, Opencode: 0.0050s
+  Run 5/20: DGAT: 0.0138s, Opencode: 0.0052s
+  Run 6/20: DGAT: 0.0109s, Opencode: 0.0054s
+  Run 7/20: DGAT: 0.0125s, Opencode: 0.0055s
+  Run 8/20: DGAT: 0.0137s, Opencode: 0.0057s
+  Run 9/20: DGAT: 0.0124s, Opencode: 0.0063s
+  Run 10/20: DGAT: 0.0125s, Opencode: 0.0048s
+  Run 11/20: DGAT: 0.0132s, Opencode: 0.0056s
+  Run 12/20: DGAT: 0.0126s, Opencode: 0.0062s
+  Run 13/20: DGAT: 0.0129s, Opencode: 0.0050s
+  Run 14/20: DGAT: 0.0144s, Opencode: 0.0062s
+  Run 15/20: DGAT: 0.0115s, Opencode: 0.0060s
+  Run 16/20: DGAT: 0.0113s, Opencode: 0.0057s
+  Run 17/20: DGAT: 0.0139s, Opencode: 0.0049s
+  Run 18/20: DGAT: 0.0106s, Opencode: 0.0047s
+  Run 19/20: DGAT: 0.0106s, Opencode: 0.0047s
+  Run 20/20: DGAT: 0.0139s, Opencode: 0.0058s
+  [0;32mAverage - DGAT: .012671s, Opencode: .005486s, Speedup: .432957x[0m
+
+{"name":"Entry Point Identification","dgat_avg":.012671,"opencode_avg":.005486,"speedup":.432957,"dgat_times":[.012838118,.012288043,.013808446,.013859798,.013843949,.010883250,.012451677,.013745367,.012392311,.012505111,.013230378,.012566961,.012856624,.014371038,.011481135,.011306990,.013948920,.010610268,.010576147,.013874878],"opencode_times":[.005778468,.006317174,.004922210,.005038432,.005160248,.005351838,.005478926,.005656662,.006263745,.004753031,.005594677,.006247877,.004972331,.006236840,.006043444,.005731760,.004919230,.004695228,.004749659,.005820783]}]
+}

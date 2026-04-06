@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-04-06T11:01:09.918889",
+  "config": {
+    "num_runs": 5,
+    "test_file": "/home/pradheep/DGAT/dgat.cpp",
+    "test_concept": "dependency graph",
+    "test_dir": "/home/pradheep/DGAT"
+  },
+  "tasks": {
+    "1.1_file_purpose_identification": {
+      "description": "Determine what a specific file does",
+      "dgat_approach": "dgat_context <file>",
+      "opencode_approach": "Combination of read, grep for function/class definitions, manual analysis",
+      "metrics": {
+        "dgat": {
+          "avg_time_seconds": 0.013438606262207031,
+          "raw_times": [
+            0.014854192733764648,
+            0.01313161849975586,
+            0.01284933090209961,
+            0.013493776321411133,
+            0.012864112854003906
+          ],
+          "success_rate": 0.0,
+          "sample_output": ""
+        },
+        "opencode": {
+          "avg_time_seconds": 0.022338485717773436,
+          "raw_times": [
+            0.021197795867919922,
+            0.023929595947265625,
+            0.02192854881286621,
+            0.022432327270507812,
+            0.022204160690307617
+          ],
+          "success_rate": 1.0,
+          "sample_output": "[head -20 /home/pradheep/DGAT/dgat.cpp]\\n#include <bits/stdc++.h>\n#include <filesystem>\n#include <thread>\n#include <mutex>\n#include <atomic>\n#include <functional>\n#include <future>\n#include <queue>\n#include \"inja.hpp\"\n#include \"json.hpp\"\n#include \"httplib.h\"\n#include \"xxhash.h\"\n\nusing namespace std;\nusing json = nlohmann::json;\nnamespace fs = std::filesystem;\n\nclass ThreadPool {\nprivate:\n    vector<thread> workers;\n\\n\\n[grep -n 'class\\|function\\|def\\|struct' /home/pradheep/DGAT/dgat.cpp | head -"
+        }
+      },
+      "speedup": 1.6622620889336759
+    },
+    "1.2_project_architecture_overview": {
+      "description": "Get a high-level understanding of project structure",
+      "dgat_approach": "dgat_blueprint",
+      "opencode_approach": "Directory traversal with glob, reading key files like README, manual synthesis",
+      "metrics": {
+        "dgat": {
+          "avg_time_seconds": 0.01264047622680664,
+          "raw_times": [
+            0.012450933456420898,
+            0.011981487274169922,
+            0.013185262680053711,
+            0.013695001602172852,
+            0.01188969612121582
+          ],
+          "success_rate": 0.0,
+          "sample_output": ""
+        },
+        "opencode": {
+          "avg_time_seconds": 0.11130671501159668,
+          "raw_times": [
+            0.11474275588989258,
+            0.10791754722595215,
+            0.11115527153015137,
+            0.10860729217529297,
+            0.11411070823669434
+          ],
+          "success_rate": 1.0,
+          "sample_output": "[find /home/pradheep/DGAT -type f -name '*.md' | head -5]\\n/home/pradheep/DGAT/benchmark/BENCHMARK_PLAN.md\n/home/pradheep/DGAT/setup/06-setup-mcp.md\n/home/pradheep/DGAT/setup/01-prerequisites.md\n/home/pradheep/DGAT/setup/07-quick-start.md\n/home/pradheep/DGAT/setup/04-setup-frontend.md\n\\n\\n[find /home/pradheep/DGAT -type f -name '*.cpp' -o -name '*.h' | head -10]\\n/home/pradheep/DGAT/httplib.h\n/home/pradheep/DGAT/xxhash.h\n/home/pradheep/DGAT/dgat.cpp\n/home/pradheep/DGAT/grammars/node_modules/tree"
+        }
+      },
+      "speedup": 8.805579237240183
+    },
+    "2.1_concept_based_file_search": {
+      "description": "Find all files related to a specific concept ('dependency graph')",
+      "dgat_approach": "dgat_search \"dependency graph\"",
+      "opencode_approach": "grep -r for keywords, filename pattern matching",
+      "metrics": {
+        "dgat": {
+          "avg_time_seconds": 0.011498069763183594,
+          "raw_times": [
+            0.0095367431640625,
+            0.011542320251464844,
+            0.01163172721862793,
+            0.012486696243286133,
+            0.012292861938476562
+          ],
+          "success_rate": 0.0,
+          "sample_output": ""
+        },
+        "opencode": {
+          "avg_time_seconds": 0.011510658264160156,
+          "raw_times": [
+            0.010850667953491211,
+            0.012104034423828125,
+            0.010871171951293945,
+            0.013041257858276367,
+            0.010686159133911133
+          ],
+          "success_rate": 1.0,
+          "sample_output": "/home/pradheep/DGAT/benchmark/BENCHMARK_PLAN.md:This document outlines a comprehensive benchmarking plan to compare DGAT's specialized dependency graph analysis tools against Opencode's native general-purpose tools (grep, glob, read/write/edit, task agents, etc.).\n/home/pradheep/DGAT/setup/06-setup-mcp.md:The DGAT MCP (Model Context Protocol) server gives AI coding agents programmatic access to the dependency graph through a standardized interface.\n/home/pradheep/DGAT/setup/07-quick-start.md:5. "
+        }
+      },
+      "speedup": 1.0010948360234229
+    }
+  },
+  "summary": {
+    "total_tasks": 3,
+    "dgat_wins": 3,
+    "dgat_win_rate": 1.0,
+    "average_speedup": 3.8229787207324275,
+    "fastest_speedup": 8.805579237240183,
+    "slowest_speedup": 1.0010948360234229
+  }
+}

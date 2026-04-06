@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-04-06T11:18:55+05:30",
+  "config": {
+    "num_runs": 5,
+    "test_file": "/home/pradheep/DGAT/dgat.cpp",
+    "test_concept": "dependency graph",
+    "test_dir": "/home/pradheep/DGAT"
+  },
+  "results": [
+    {
+      "name": "File Purpose Identification",
+      "dgat_avg": 0.011966,
+      "opencode_avg": 0.007982,
+      "speedup": 0.667056,
+      "dgat_times": [0.010247706, 0.012805973, 0.012574868, 0.012166779, 0.012036589],
+      "opencode_times": [0.008762618, 0.007058647, 0.007821467, 0.008128116, 0.008139407]
+    },
+    {
+      "name": "Project Architecture Overview",
+      "dgat_avg": 0.009607,
+      "opencode_avg": 0.091333,
+      "speedup": 9.506922,
+      "dgat_times": [0.012472351, 0.011690101, 0.008330259, 0.007724208, 0.007822130],
+      "opencode_times": [0.199623073, 0.066187387, 0.065025234, 0.059244110, 0.066588406]
+    },
+    {
+      "name": "Concept-Based File Search",
+      "dgat_avg": 0.011878,
+      "opencode_avg": 0.012739,
+      "speedup": 1.072486,
+      "dgat_times": [0.011823505, 0.012004380, 0.013515666, 0.011143417, 0.010903770],
+      "opencode_times": [0.023165238, 0.007626544, 0.010838521, 0.011464453, 0.010601175]
+    },
+    {
+      "name": "Dependency Tracing",
+      "dgat_avg": 0.013290,
+      "opencode_avg": 0.005301,
+      "speedup": 0.398871,
+      "dgat_times": [0.013922748, 0.013677315, 0.012798721, 0.013049743, 0.013004409],
+      "opencode_times": [0.005067893, 0.005644553, 0.005034291, 0.005136919, 0.005624325]
+    },
+    {
+      "name": "Reverse Dependency Analysis",
+      "dgat_avg": 0.014293,
+      "opencode_avg": 3.899516,
+      "speedup": 272.826978,
+      "dgat_times": [0.011901947, 0.021648452, 0.008808528, 0.016158910, 0.012950669],
+      "opencode_times": [4.477685349, 3.828260894, 3.741271461, 3.784483358, 3.665882075]
+    },
+    {
+      "name": "Blast Radius Analysis",
+      "dgat_avg": 0.011404,
+      "opencode_avg": 0.002339,
+      "speedup": 0.205103,
+      "dgat_times": [0.011995819, 0.010521062, 0.010672259, 0.011790580, 0.012042926],
+      "opencode_times": [0.002562736, 0.002247770, 0.002653507, 0.002170699, 0.002060390]
+    },
+    {
+      "name": "Entry Point Identification",
+      "dgat_avg": 0.011985,
+      "opencode_avg": 0.004987,
+      "speedup": 0.416103,
+      "dgat_times": [0.010975954, 0.013423380, 0.011515348, 0.011410574, 0.012603312],
+      "opencode_times": [0.003268199, 0.004819995, 0.005921268, 0.006078663, 0.004847494]
+    }
+  ]
+}

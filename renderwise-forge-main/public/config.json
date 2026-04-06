@@ -2,12 +2,17 @@
   "examples": [
     {
       "id": "dgat-self",
-      "name": "dgat — self-analysis",
-      "description": "DGAT analysing its own source tree. Backend engine, frontend components, library headers — every dependency mapped and described.",
+      "name": "dgat \u2014 self-analysis",
+      "description": "DGAT analysing its own source tree. Backend engine, frontend components, library headers \u2014 every dependency mapped and described.",
       "github": "https://github.com/HyperKuvid-Labs/dgat",
       "website": null,
-      "langs": ["C++"],
-      "stats": { "nodes": 26, "edges": 42 },
+      "langs": [
+        "C++"
+      ],
+      "stats": {
+        "nodes": 26,
+        "edges": 42
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/dgat-self/dgat.jpg",
       "files": {
@@ -23,8 +28,15 @@
       "description": "The agent that grows with you.",
       "github": "https://github.com/NousResearch/hermes-agent",
       "website": null,
-      "langs": ["Python", "LaTeX", "Shell"],
-      "stats": { "nodes": 464, "edges": 1069 },
+      "langs": [
+        "Python",
+        "LaTeX",
+        "Shell"
+      ],
+      "stats": {
+        "nodes": 464,
+        "edges": 1069
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/hermes-agent/hermes-agent.png",
       "files": {
@@ -33,14 +45,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
-    }, {
+    },
+    {
       "id": "thunder-kittens",
       "name": "HazyResearch/ThunderKittens",
       "description": "Tile primitives for speedy kernels",
       "github": "https://github.com/HazyResearch/ThunderKittens",
       "website": null,
-      "langs": ["CUDA", "Python", "Makefile"],
-      "stats": { "nodes": 280, "edges": 740 },
+      "langs": [
+        "CUDA",
+        "Python",
+        "Makefile"
+      ],
+      "stats": {
+        "nodes": 280,
+        "edges": 740
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/thunder-kittens/thunderkittens.png",
       "files": {
@@ -49,14 +69,23 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
-    }, {
+    },
+    {
       "id": "gstack",
       "name": "garrytan/gstack",
       "description": "Use Garry Tan's exact Claude Code setup: 23 opinionated tools that serve as CEO, Designer, Eng Manager, Release Manager, Doc Engineer, and QA",
       "github": "https://github.com/garrytan/gstack",
       "website": null,
-      "langs": ["Typescript", "Go", "Shell", "Javascript"],
-      "stats": { "nodes": 16, "edges": 27 },
+      "langs": [
+        "Typescript",
+        "Go",
+        "Shell",
+        "Javascript"
+      ],
+      "stats": {
+        "nodes": 16,
+        "edges": 27
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/gstack/gstack.jpg",
       "files": {
@@ -65,14 +94,23 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
-    }, {
+    },
+    {
       "id": "turboquant_cutile",
       "name": "DevTechJr/turboquant_cutile",
       "description": "turboquant-based compression engine for LLM KV cache",
       "github": "https://github.com/DevTechJr/turboquant_cutile",
       "website": "https://devtechjr.github.io/turboquant_cutile/index.html",
-      "langs": ["Python", "Jupyter", "HTML", "CSS"],
-      "stats": { "nodes": 8, "edges": 6 },
+      "langs": [
+        "Python",
+        "Jupyter",
+        "HTML",
+        "CSS"
+      ],
+      "stats": {
+        "nodes": 8,
+        "edges": 6
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/turboquant_cutile/turboquant_cutile.jpg",
       "files": {
@@ -81,14 +119,23 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
-    }, {
+    },
+    {
       "id": "pufferlib",
       "name": "PufferAI/PufferLib",
       "description": "Puffing up reinforcement learning",
       "github": "https://github.com/PufferAI/PufferLib",
       "website": "https://puffer.ai/",
-      "langs": ["C", "Python", "C++", "CUDA"],
-      "stats": { "nodes": 305, "edges": 567 },
+      "langs": [
+        "C",
+        "Python",
+        "C++",
+        "CUDA"
+      ],
+      "stats": {
+        "nodes": 305,
+        "edges": 567
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/pufferlib/pufferlib.png",
       "files": {
@@ -97,14 +144,20 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
-    }, {
+    },
+    {
       "id": "heavyball",
       "name": "HomebrewML/HeavyBall",
       "description": "Efficient optimizers",
       "github": "https://github.com/HomebrewML/HeavyBall",
       "website": null,
-      "langs": ["Python"],
-      "stats": { "nodes": 38, "edges": 54 },
+      "langs": [
+        "Python"
+      ],
+      "stats": {
+        "nodes": 38,
+        "edges": 54
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/heavyball/heavyball.jpeg",
       "files": {
@@ -113,18 +166,49 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
-    }, {
+    },
+    {
       "id": "fff_nvim",
       "name": "dmtrKovalenko/fff.nvim",
       "description": "The fastest and the most accurate file search toolkit for AI agents, Neovim, Rust, C, and NodeJS",
       "github": "https://github.com/dmtrKovalenko/fff.nvim",
       "website": "https://fff.dmtrkovalenko.dev/",
-      "langs": ["Rust", "Lua", "Typescript", "C"],
-      "stats": { "nodes": 11, "edges": 13 },
+      "langs": [
+        "Rust",
+        "Lua",
+        "Typescript",
+        "C"
+      ],
+      "stats": {
+        "nodes": 11,
+        "edges": 13
+      },
       "model": "Qwen3.5-2B",
       "image": "examples/fff_nvim/fff_nvim.webp",
       "files": {
         "basePath": "examples/fff_nvim",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
+    },
+    {
+      "id": "nanoGPT",
+      "name": "karpathy/nanoGPT",
+      "description": "The simplest, fastest repository for training/finetuning medium-sized GPTs.",
+      "github": "https://github.com/karpathy/nanoGPT",
+      "website": null,
+      "langs": [
+        "Python"
+      ],
+      "stats": {
+        "nodes": 4,
+        "edges": 3
+      },
+      "model": "Qwen3.5-2B",
+      "image": "examples/nanoGPT/nanogpt.jpg",
+      "files": {
+        "basePath": "examples/nanoGPT",
         "blueprint": "dgat_blueprint.md",
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"

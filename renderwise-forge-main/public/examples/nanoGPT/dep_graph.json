@@ -1,0 +1,82 @@
+{
+  "edges": [
+    {
+      "description": "train.py directly imports from model.py to instantiate and apply the specific GPT-2 backbone architecture derived in model.py within the DDP training loop.",
+      "from": "train.py",
+      "import_stmt": "model",
+      "to": "model.py"
+    },
+    {
+      "description": "File A imports the model architecture and data processing logic defined in file B to execute the full training loop required for benchmarking and performance evaluation.",
+      "from": "bench.py",
+      "import_stmt": "model",
+      "to": "model.py"
+    },
+    {
+      "description": "File A uses `model` from `model.py` to provide the external architecture and perform the forward pass during sampling.",
+      "from": "sample.py",
+      "import_stmt": "model",
+      "to": "model.py"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "train.py",
+        "bench.py",
+        "sample.py"
+      ],
+      "depends_on": [],
+      "description": "Model.py provides the external model architecture and data processing logic that is required by train.py, bench.py, and sample.py to perform training, evaluation, and sampling tasks in this software development project.",
+      "hash": "",
+      "id": "model.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "model.py",
+      "rel_path": "model.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/nanoGPT/./train.py",
+      "depended_by": [],
+      "depends_on": [
+        "model.py"
+      ],
+      "description": "**`train.py`: The PyTorch 2.0 backbone script for training and fine-tuning GPT models (GPT-2 variants)**, integrating Distributed Data Parallel (DDP) support and adaptive learning rate schedulers.\n\n*   **Core Training Loop**: Iteratively processes batches of token sequences using **DistributedDataParallel** for multi-GPU scaling, handling gradient accumulation to simulate larger batch sizes.\n*   **Optimisation & Efficiency**: Implements **PyTorch 2.0 `torch.compile()`** for fast compilation, mixed precision training (FP16/BF16 via `autocast`), and gradient clipping.\n*   **Scalability**: Supports command-line flags to run on CPU, single GPU, multi-node clusters with InfiniBand/NCCL, and sample from pre-trained checkpoints (e.g., GPT-2, HumanEval).\n*   **Datetime Adaptation**: Contains legacy configuration defaults optimized for **GPT-124M on OpenWebText** (4-day training per prior comment), highlighting technical debt regarding PyTorch's rapid version shifts.",
+      "hash": "9b777eb9a0ce7a675bd60f679fe43859",
+      "id": "train.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "train.py",
+      "rel_path": "train.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/nanoGPT/./bench.py",
+      "depended_by": [],
+      "depends_on": [
+        "model.py"
+      ],
+      "description": "### `bench.py`\n\nA dedicated benchmarking module that mirrors the full training loop of `train.py` to evaluate model performance under runtime conditions.\n\n*   Uses deterministic seed values and checks GPU availability to choose `torch.compile` (PyTorch 2.0) for speed.\n*   Handles both computation profiling and simple timing comparisons between sequential and DDP-parallel executions.\n*   Generates runtime metrics such as per-iteration latency and memory usage (MFU) during execution.",
+      "hash": "143ebf6eeb4503c7be1d2004cd54b374",
+      "id": "bench.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "bench.py",
+      "rel_path": "bench.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/nanoGPT/./sample.py",
+      "depended_by": [],
+      "depends_on": [
+        "model.py"
+      ],
+      "description": "**Loops through sampled triggers from a trained model or checkpoint to generate varied character-level text.**\n\n* Analyzes user prompts (strings) using GPT-2 tokenizer.\n* Loads a pretrained model along with optional meta-pickled tokenizer mappings.\n* Initializes the model with `eval` mode and optional PyTorch compilation.\n* Iteratively generates samples by inserting the prompt, zeroing gradients, and running the forward pass.\n* Outputs decoded character sequences for all generated tokens.",
+      "hash": "67748a88da2f84906a94f6055a2b3a72",
+      "id": "sample.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "sample.py",
+      "rel_path": "sample.py"
+    }
+  ]
+}

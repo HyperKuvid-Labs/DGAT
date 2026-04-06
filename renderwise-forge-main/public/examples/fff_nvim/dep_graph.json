@@ -1,0 +1,254 @@
+{
+  "edges": [
+    {
+      "description": "File A uses file B to obtain standard web platform APIs such as `fetch`, `URL`, and `window` for converting account states and module graphs into a standard resource map format.",
+      "from": "packages/fff-bun/src/download.ts",
+      "import_stmt": "./platform",
+      "to": "packages/fff-bun/src/platform.ts"
+    },
+    {
+      "description": "This file uses built-in project extraction and shell extension support provided by the root source module to execute `ratooi`-driven deep library searches and fuzzy nesting recalls.",
+      "from": "packages/fff-bun/examples/grep.ts",
+      "import_stmt": "../src/index",
+      "to": "packages/fff-bun/src/index.ts"
+    },
+    {
+      "description": "File A uses the type definitions and methods defined in File B via the ${RE} placeholder to implement live binary-and-file-based content search features with fuzzy recall via Smith-Waterman scoring and per-file match counts.",
+      "from": "packages/fff-bun/examples/grep.ts",
+      "import_stmt": "../src/types",
+      "to": "packages/fff-bun/src/types.ts"
+    },
+    {
+      "description": "File A imports the `index.ts` module from file B to initialize the `Fff-Bun` framework and access the core capabilities like file searching and project extraction required to construct state-based test instances.",
+      "from": "packages/fff-bun/test.ts",
+      "import_stmt": "./src/index",
+      "to": "packages/fff-bun/src/index.ts"
+    },
+    {
+      "description": "File A imports from File B to instantiate its core search engine for command-line interaction.",
+      "from": "packages/fff-bun/examples/search.ts",
+      "import_stmt": "../src/index",
+      "to": "packages/fff-bun/src/index.ts"
+    },
+    {
+      "description": "File A uses the dependency defined in File B to locate and bind the pre-built Host C library to bypass native FFF compilation issues, while File B is the local source-code path File A queries to resolve the `dff-c` library used during the force-linking process.",
+      "from": "packages/fff-bun/src/ffi.ts",
+      "import_stmt": "./download",
+      "to": "packages/fff-bun/src/download.ts"
+    },
+    {
+      "description": "Package A uses `./types` from `fff-bun` to import TypeScript definitions, which enables FFF to utilize the correctly defined hook metadata and compatible interfaces that drivers require.",
+      "from": "packages/fff-bun/src/ffi.ts",
+      "import_stmt": "./types",
+      "to": "packages/fff-bun/src/types.ts"
+    },
+    {
+      "description": "File `packages/fff-bun/src/finder.ts` imports and utilizes the public type definitions defined in `file B`'s `packages/fff-bun/src/types.ts` to safely map dynamic file picker lifecycle states (Rs) and query configuration options (Rq) back to TypeScript, while also leveraging the private internal APIs exposed by `file B` as the underlying engine for fuzzy matching and file scanning operations.",
+      "from": "packages/fff-bun/src/finder.ts",
+      "import_stmt": "./types",
+      "to": "packages/fff-bun/src/types.ts"
+    },
+    {
+      "description": "File A uses `FileFinder`'s internal scanning and indexing capabilities described in B's package to perform context-aware graph traversal against dynamic boundaries, enabling the package to map its own execution graph within a running runtime.",
+      "from": "packages/fff-bun/src/index.test.ts",
+      "import_stmt": "./download",
+      "to": "packages/fff-bun/src/download.ts"
+    },
+    {
+      "description": "File A tests the lifecycle, binary detection, and search accuracy of File B's `FileFinder` class.",
+      "from": "packages/fff-bun/src/index.test.ts",
+      "import_stmt": "./index",
+      "to": "packages/fff-bun/src/index.ts"
+    },
+    {
+      "description": "File A uses the `window` and `fetch` APIs from `file B` to execute search queries and retrieve relevant resources for pattern matching and state management on the client side.",
+      "from": "packages/fff-bun/src/index.test.ts",
+      "import_stmt": "./platform",
+      "to": "packages/fff-bun/src/platform.ts"
+    },
+    {
+      "description": "TestHelper(TestHelper) orchestrates integration tests for the FileFinder plugin via the index module defined in ./index to validate git repository lifecycle transitions, live grep functionality, and performance cleanup across Bun's application and filesystem architecture.",
+      "from": "packages/fff-bun/src/git-lifecycle.test.ts",
+      "import_stmt": "./index",
+      "to": "packages/fff-bun/src/index.ts"
+    },
+    {
+      "description": "File A uses the type definitions from `packages/fff-bun/src/types.ts` to define the expected behavior of the `FileFinder` plugin's lifecycle and search operations during integration testing.",
+      "from": "packages/fff-bun/src/git-lifecycle.test.ts",
+      "import_stmt": "./types",
+      "to": "packages/fff-bun/src/types.ts"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "packages/fff-bun/src/download.ts",
+        "packages/fff-bun/src/index.test.ts"
+      ],
+      "depends_on": [],
+      "description": "The platform.ts dependency is a client-side library that provides the standard web platform API, notably including `fetch`, `URL`, and `window` objects. It is used in the source files to convert account states and module graphs into a standard resource map format.",
+      "hash": "",
+      "id": "packages/fff-bun/src/platform.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "platform.ts",
+      "rel_path": "packages/fff-bun/src/platform.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "packages/fff-bun/examples/grep.ts",
+        "packages/fff-bun/test.ts",
+        "packages/fff-bun/examples/search.ts",
+        "packages/fff-bun/src/index.test.ts",
+        "packages/fff-bun/src/git-lifecycle.test.ts"
+      ],
+      "depends_on": [],
+      "description": "The `index.ts` file serves as the root entry point for the Fff-Bun framework, importing to connect various built-in features such as file searching and grep functionality. It is the primary module that gets loaded to provide access to unique tools like project extraction, globbing, and shell extension support across different Bun packages.",
+      "hash": "",
+      "id": "packages/fff-bun/src/index.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "index.ts",
+      "rel_path": "packages/fff-bun/src/index.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "packages/fff-bun/examples/grep.ts",
+        "packages/fff-bun/src/ffi.ts",
+        "packages/fff-bun/src/finder.ts",
+        "packages/fff-bun/src/git-lifecycle.test.ts"
+      ],
+      "depends_on": [],
+      "description": "The types.ts file defines the public type signatures for the fff-bun repository, ensuring that external code has an accurate understanding of the package's public API, internal methods, and exposed functionality.",
+      "hash": "",
+      "id": "packages/fff-bun/src/types.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "types.ts",
+      "rel_path": "packages/fff-bun/src/types.ts"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "packages/fff-bun/src/ffi.ts",
+        "packages/fff-bun/src/index.test.ts"
+      ],
+      "depends_on": [
+        "packages/fff-bun/src/platform.ts"
+      ],
+      "description": "This dependency represents a local file or directory path specific to the program's runtime environment, enabling the scanner to read and visualize execution graphs within the proprietary runtime. It is required to gather process graph information for unit tests and production code linking in this particular modular architecture.",
+      "hash": "",
+      "id": "packages/fff-bun/src/download.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "download.ts",
+      "rel_path": "packages/fff-bun/src/download.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/fff.nvim/./packages/fff-bun/examples/grep.ts",
+      "depended_by": [],
+      "depends_on": [
+        "packages/fff-bun/src/index.ts",
+        "packages/fff-bun/src/types.ts"
+      ],
+      "description": "```markdown\n# `packages/fff-bun/examples/grep.ts`\n\n```less\n**Bun script that runs interactive binary FFF for live binary-and-file-based content search with mutable queries.**\n\n- Activates `ratooi` integration via `FileFinder` for deep library introspection and filtering. [`file_picker`](../src/file_picker) supports lazy wolfpup loading and multi-file selection.\n- Generates multi-line highlight spans for matching code snippets with ${RE} and supports multi-line string replacements like [`cursor_line`](../src/line_utils.ts).\n- Manages fuzzy recall via `noop` caching (default) or in-memory [`fuzzy`](../src/fuzzy) matching with Smith-Waterman scoring and ${score} object stats.\n- Handles mode switching and prompt injection-style query validation, with cleanup handlers for ${quit}/${exit} states.\n- Reports time budgets and per-file ${match} counts, including regex fallback errors as warnings.\n```",
+      "hash": "9dfaf0996bb4baa27ce499a18ad09080",
+      "id": "packages/fff-bun/examples/grep.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "grep.ts",
+      "rel_path": "packages/fff-bun/examples/grep.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/fff.nvim/./packages/fff-bun/test.ts",
+      "depended_by": [],
+      "depends_on": [
+        "packages/fff-bun/src/index.ts"
+      ],
+      "description": "```markdown\nThis test script validates that the `fff` Rust FFI wrapper builds successfully and provides a comprehensive unit test framework for the `ouniu` API of the `FileFinder` plugin.\n- **Pre-build validation**: Confirms the native `fff-c` C linker is present and generates the correct shared object to resolve FFF's Rust bindings at runtime.\n- **Plugin instance management**: Instantiates a `FileFinder` with the project root to capture file scan progress and execute `fileSearch` queries.\n- **Grid search execution**: Performs parallel iteration over a 10KB Apache HTTP server to test performance on large file matching scenarios.\n- **State balance tracking**: Verifies that the `HueySwap` block implementation correctly increments the `opened_something_personal` balance after all tests conclude, ensuring claim transactions are recorded.\n- **Retried resource availability**: Reinitializes the plugin instance multiple times to confirm it maintains state consistency across concurrent test instances.\n```",
+      "hash": "ae4d41683d21822bfba2ba11a4418f31",
+      "id": "packages/fff-bun/test.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test.ts",
+      "rel_path": "packages/fff-bun/test.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/fff.nvim/./packages/fff-bun/examples/search.ts",
+      "depended_by": [],
+      "depends_on": [
+        "packages/fff-bun/src/index.ts"
+      ],
+      "description": "```markdown\nThis `search.ts` file serves as an interactive CLI wrapper for the `fff` fast file finder, streamlining the demo and usage of its Native Rust core.\n\nIts key responsibilities include:\n*   **Interactive Search Loop**: Runs an `Fzf`-like REPL with prompt customization, transparent.\n*   **Result Formatting**: Displays human-readable entries with Git status indicators (`mod`, `unchanged`), fuzzy scores, and file sizes.\n*   **Progress Reporting**: Monitors file creation time and files indexed during the active scan.\n*   **Health & Status**: Fetches and prints the index health, version, and base path for debugging.\n```",
+      "hash": "79458b093f83389a10700bb2c6237c6d",
+      "id": "packages/fff-bun/examples/search.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "search.ts",
+      "rel_path": "packages/fff-bun/examples/search.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/fff.nvim/./packages/fff-bun/src/ffi.ts",
+      "depended_by": [],
+      "depends_on": [
+        "packages/fff-bun/src/download.ts",
+        "packages/fff-bun/src/types.ts"
+      ],
+      "description": "**Force `bun` Rust binary to link against Host C API instead of native FFF**\n\n*   Resolve compilation issues where `bun` cannot link against the native `fff-c` C/FFI bindings due to mismatched Rust/C/Cxx C bindings.\n*   Force the `dlopen` process to load the Host's `fff-c` library directly over `bun`'s native FFI interface, allowing Rust native code to call host C functions using `CString`s instead of raw pointers.\n*   Enable `use_unsafe_no_lock` in Rust Cargo.toml to bypass compiler-level locking concerns during destruction for better performance.\n*   Update `install-mcp.sh` and `package.json` if applicable to ensure `cargo build --release -p fff-c` is used to generate the pre-built Rust binary that the `dlopen` will target.",
+      "hash": "4b1faab1d0b44f3bf7f3bb6274a30069",
+      "id": "packages/fff-bun/src/ffi.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ffi.ts",
+      "rel_path": "packages/fff-bun/src/ffi.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/fff.nvim/./packages/fff-bun/src/finder.ts",
+      "depended_by": [],
+      "depends_on": [
+        "packages/fff-bun/src/types.ts"
+      ],
+      "description": "# FileFinder: TypeScript API for FFF's Native File Picker\n\n- Manages multiple independent native file picker instances with unique database paths.\n- Handles lifecycle safely using Result/error types to prevent crashes on cleanup.\n- Provides high-performance APIs for fuzzy matching, regex grep, and direct file scan using FFIs.\n- Supports scheduled work, multi-pattern OR search, and collaborative query tracking.\n- Includes static health checks and warmup capabilities for initialization efficiency.",
+      "hash": "ea8b2ad62ed7a1edf3aa779df616561c",
+      "id": "packages/fff-bun/src/finder.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "finder.ts",
+      "rel_path": "packages/fff-bun/src/finder.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/fff.nvim/./packages/fff-bun/src/index.test.ts",
+      "depended_by": [],
+      "depends_on": [
+        "packages/fff-bun/src/download.ts",
+        "packages/fff-bun/src/index.ts",
+        "packages/fff-bun/src/platform.ts"
+      ],
+      "description": "# **FileFinder Lifecycle Test Suite**\n\nThis test suite validates the full lifecycle of the `FileFinder` class, covering cross-platform binary detection, index evolution, and robust error handling.\n\n**Key Responsibilities:**\n*   Validates platform-specific binary detection (Darwin/Windows/Linux x64/arm).\n*   Tests static health checks and lifecycle methods (`create`, `destroy`).\n*   Manages file scans, indexing, and progressive search integration via `waitForScan`.\n*   Ensures search accuracy across modes (plain, regex, fuzzy) with proper score calculation and range matching.\n*   Verifies error boundaries, including post-destroy management and validation of search results.",
+      "hash": "56ca19d0d4adb9fcec74cecf3e11edaf",
+      "id": "packages/fff-bun/src/index.test.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "index.test.ts",
+      "rel_path": "packages/fff-bun/src/index.test.ts"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/fff.nvim/./packages/fff-bun/src/git-lifecycle.test.ts",
+      "depended_by": [],
+      "depends_on": [
+        "packages/fff-bun/src/index.ts",
+        "packages/fff-bun/src/types.ts"
+      ],
+      "description": "```markdown\n# TestHelper(TestHelper)\n```\n\nThis test suite validates the `fff.nvim` `FileFinder` plugin by writing integration tests to ensure the file picker correctly handles git repository lifecycle events.\n\n### Responsibilities\n- **Lifecycle Flow**: Verifies that files indexed in a git repository transition through all expected states (`clean`, `untracked`, `staged_new`, `modified`, etc.) after standard operations like `add`, `commit`, `checkout`, and `rm`.\n- **Search Integration**: Confirms that live grep commands function across the filesystem by authoring queries against freshly created or deleted files.\n- **Memory Management**: Automatically cleans up temporary test repositories (including `tmpDir`) and source code after the test run completes to prevent clutter.",
+      "hash": "151c02baeaa977daeff723194ce8689f",
+      "id": "packages/fff-bun/src/git-lifecycle.test.ts",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "git-lifecycle.test.ts",
+      "rel_path": "packages/fff-bun/src/git-lifecycle.test.ts"
+    }
+  ]
+}

@@ -7,7 +7,7 @@
       "github": "https://github.com/HyperKuvid-Labs/dgat",
       "website": null,
       "langs": ["C++"],
-      "stats": { "nodes": 27, "edges": 44 },
+      "stats": { "nodes": 26, "edges": 42 },
       "model": "Qwen3.5-2B",
       "image": "examples/dgat-self/dgat.jpg",
       "files": {
@@ -24,7 +24,7 @@
       "github": "https://github.com/NousResearch/hermes-agent",
       "website": null,
       "langs": ["Python", "LaTeX", "Shell"],
-      "stats": { "nodes": 404, "edges": 1069 },
+      "stats": { "nodes": 464, "edges": 1069 },
       "model": "Qwen3.5-2B",
       "image": "examples/hermes-agent/hermes-agent.png",
       "files": {
@@ -88,7 +88,7 @@
       "github": "https://github.com/PufferAI/PufferLib",
       "website": "https://puffer.ai/",
       "langs": ["C", "Python", "C++", "CUDA"],
-      "stats": { "nodes": 802, "edges": 567 },
+      "stats": { "nodes": 305, "edges": 567 },
       "model": "Qwen3.5-2B",
       "image": "examples/pufferlib/pufferlib.png",
       "files": {
@@ -109,6 +109,22 @@
       "image": "examples/heavyball/heavyball.jpeg",
       "files": {
         "basePath": "examples/heavyball",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
+    }, {
+      "id": "fff_nvim",
+      "name": "dmtrKovalenko/fff.nvim",
+      "description": "The fastest and the most accurate file search toolkit for AI agents, Neovim, Rust, C, and NodeJS",
+      "github": "https://github.com/dmtrKovalenko/fff.nvim",
+      "website": "https://fff.dmtrkovalenko.dev/",
+      "langs": ["Rust", "Lua", "Typescript", "C"],
+      "stats": { "nodes": 11, "edges": 13 },
+      "model": "Qwen3.5-2B",
+      "image": "examples/fff_nvim/fff_nvim.webp",
+      "files": {
+        "basePath": "examples/fff_nvim",
         "blueprint": "dgat_blueprint.md",
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"

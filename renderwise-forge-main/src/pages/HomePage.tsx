@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CodeBlock, CodeComment } from "@/components/CodeBlock";
+import { ImageViewer } from "@/components/ImageViewer";
 
 const GitHubIcon = () => (
   <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
@@ -87,6 +88,7 @@ function HeroGraph() {
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<keyof typeof TABS>("overview");
   const [copied, setCopied] = useState(false);
+  const [benchmarkOpen, setBenchmarkOpen] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText("git clone https://github.com/HyperKuvid-Labs/dgat");
@@ -300,9 +302,30 @@ export default function HomePage() {
                   ))}
                 </div>
               </div>
-              <div className="p-4 bg-raised border border-dgat-border rounded-lg">
-                <div className="font-mono text-[11px] font-bold tracking-[0.08em] uppercase text-dgat-text mb-1.5">Coming soon</div>
-                <p className="text-[13px] text-dgat-muted leading-[1.6]">Support for OpenAI, Anthropic, Ollama, and any OpenAI-compatible endpoint — configurable via a single flag.</p>
+              <div className="p-7 bg-raised border border-dgat-border rounded-lg">
+                <div className="font-mono text-[11px] font-bold tracking-[0.08em] uppercase text-dgat-text mb-3">Building a tool around this</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                  <div>
+                    <p className="text-[13px] text-dgat-muted leading-[1.6] mb-4">Building the MCP and native integration with opencode — still in progress. These are some early benchmarks:</p>
+                    <p className="text-[13px] text-dgat-muted leading-[1.6]">
+                      Interested in contributing? Check out the <a href="https://github.com/HyperKuvid-Labs/DGAT/tree/feat/dgat-agent-integration" target="_blank" rel="noopener" className="text-dgat-text underline underline-offset-2 hover:opacity-80">feat/dgat-agent-integration</a> branch for the latest work.
+                    </p>
+                  </div>
+                  <div>
+                    <img 
+                      src="/benchmark_opencode.png" 
+                      alt="DGAT benchmarks" 
+                      className="w-full h-auto rounded-lg border border-dgat-border cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setBenchmarkOpen(true)}
+                    />
+                    <ImageViewer 
+                      src="/benchmark_opencode.png" 
+                      alt="DGAT benchmarks" 
+                      isOpen={benchmarkOpen} 
+                      onClose={() => setBenchmarkOpen(false)} 
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

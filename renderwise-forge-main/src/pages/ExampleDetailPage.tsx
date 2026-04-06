@@ -53,7 +53,7 @@ export default function ExampleDetailPage() {
         <div className="bg-surface border border-dgat-border rounded-2xl p-7 mb-6">
           <div className="flex justify-between items-start gap-5 mb-4 max-md:flex-col">
             <h1 className="font-heading text-[28px] font-extrabold text-dgat-text leading-tight">{example.name}</h1>
-            {(example.github || example.website) && (
+            {(example.github || example.website || example.files) && (
               <div className="flex gap-2 flex-shrink-0 max-md:w-full">
                 {example.github && (
                   <a href={example.github} className="flex items-center gap-1.5 py-2 px-3.5 bg-raised border border-dgat-border rounded-lg text-dgat-muted text-[13px] font-medium no-underline transition-all hover:text-dgat-text hover:border-dgat-border2 max-md:flex-1 max-md:justify-center" target="_blank" rel="noopener">
@@ -70,6 +70,33 @@ export default function ExampleDetailPage() {
                     </svg>
                     Website
                   </a>
+                )}
+                {example.files && (
+                  <div className="relative group">
+                    <button className="flex items-center gap-1.5 py-2 px-3.5 bg-raised border border-dgat-border rounded-lg text-dgat-muted text-[13px] font-medium no-underline transition-all hover:text-dgat-text hover:border-dgat-border2 max-md:flex-1 max-md:justify-center">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                        <path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 6l-3 3-3-3M8 9V2" />
+                      </svg>
+                      Download
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="ml-0.5">
+                        <path d="M4 6l4 4 4-4" />
+                      </svg>
+                    </button>
+                    <div className="absolute right-0 top-full mt-1 bg-surface border border-dgat-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[160px]">
+                      <a href={`${import.meta.env.BASE_URL}${example.files.basePath}/${example.files.tree}`} download className="flex items-center gap-2 py-2 px-3 text-[12px] text-dgat-muted hover:bg-raised hover:text-dgat-text no-underline">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 6l-3 3-3-3M8 9V2" /></svg>
+                        file_tree.json
+                      </a>
+                      <a href={`${import.meta.env.BASE_URL}${example.files.basePath}/${example.files.depGraph}`} download className="flex items-center gap-2 py-2 px-3 text-[12px] text-dgat-muted hover:bg-raised hover:text-dgat-text no-underline">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 6l-3 3-3-3M8 9V2" /></svg>
+                        dep_graph.json
+                      </a>
+                      <a href={`${import.meta.env.BASE_URL}${example.files.basePath}/${example.files.blueprint}`} download className="flex items-center gap-2 py-2 px-3 text-[12px] text-dgat-muted hover:bg-raised hover:text-dgat-text no-underline">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 6l-3 3-3-3M8 9V2" /></svg>
+                        blueprint.md
+                      </a>
+                    </div>
+                  </div>
                 )}
               </div>
             )}

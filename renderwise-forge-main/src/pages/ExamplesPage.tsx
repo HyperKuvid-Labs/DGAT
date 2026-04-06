@@ -64,7 +64,7 @@ export default function ExamplesPage() {
                   </div>
 
                   <p className="text-[13.5px] text-dgat-muted leading-[1.55] flex-1">{repo.description}</p>
-                  <div className="flex items-center justify-between pt-2.5 border-t border-dgat-border gap-2">
+                    <div className="flex items-center justify-between pt-2.5 border-t border-dgat-border gap-2">
                     <div className="flex gap-3.5 flex-shrink-0">
                       <div className="text-[12px] text-dgat-subtle flex items-baseline gap-1">
                         <span className="font-mono text-[13px] text-dgat-text font-medium">{repo.stats.nodes}</span> nodes
@@ -93,6 +93,38 @@ export default function ExamplesPage() {
                     </svg>
                   </div>
                 </div>
+
+                {/* Downloads */}
+                {repo.files && (
+                  <div className="px-[18px] pb-[18px] pt-0">
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`${import.meta.env.BASE_URL}${repo.files.basePath}/${repo.files.tree}`}
+                        download
+                        className="flex-1 text-center text-[11px] text-dgat-muted bg-raised border border-dgat-border rounded py-1.5 px-2 no-underline transition-all hover:bg-dgat-tag hover:text-dgat-text"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        file_tree.json
+                      </a>
+                      <a
+                        href={`${import.meta.env.BASE_URL}${repo.files.basePath}/${repo.files.depGraph}`}
+                        download
+                        className="flex-1 text-center text-[11px] text-dgat-muted bg-raised border border-dgat-border rounded py-1.5 px-2 no-underline transition-all hover:bg-dgat-tag hover:text-dgat-text"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        dep_graph.json
+                      </a>
+                      <a
+                        href={`${import.meta.env.BASE_URL}${repo.files.basePath}/${repo.files.blueprint}`}
+                        download
+                        className="flex-1 text-center text-[11px] text-dgat-muted bg-raised border border-dgat-border rounded py-1.5 px-2 no-underline transition-all hover:bg-dgat-tag hover:text-dgat-text"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        blueprint.md
+                      </a>
+                    </div>
+                  </div>
+                )}
               </Link>
             ))}
 

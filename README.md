@@ -119,6 +119,45 @@ Switch to the **Graph tab** for an interactive WebGL view of all import relation
 
 ---
 
+## Benchmarks
+
+DGAT was benchmarked against Opencode's native general-purpose tools (grep, glob, read/write/edit, task agents) across 7 common codebase analysis tasks. Each task was run 20 times against the DGAT codebase itself.
+
+### Performance Comparison
+
+![DGAT vs Opencode performance benchmark chart](benchmark/performance_chart.png)
+
+| Task | DGAT (avg) | Opencode (avg) | Speedup | Winner |
+|------|------------|----------------|---------|--------|
+| Reverse Dependency Analysis | 13.2 ms | 3.26 s | **247.2x** | DGAT |
+| Concept-Based File Search | 6.6 ms | 107.1 ms | **16.1x** | DGAT |
+| Project Architecture Overview | 7.8 ms | 65.1 ms | **8.3x** | DGAT |
+| File Purpose Identification | 12.7 ms | 7.8 ms | 0.6x | Opencode |
+| Entry Point Identification | 12.7 ms | 5.5 ms | 0.4x | Opencode |
+| Dependency Tracing | 12.7 ms | 5.5 ms | 0.4x | Opencode |
+| Blast Radius Analysis | 12.0 ms | 2.1 ms | 0.2x | Opencode |
+
+### Key Findings
+
+**DGAT dominates** for tasks requiring understanding of code relationships and structure:
+- **Reverse dependency analysis** (finding what files depend on a specific file): **247x faster** — grep-based approaches must scan every file in the codebase
+- **Concept-based search**: **16x faster** — semantic search vs keyword matching
+- **Architecture overview**: **8x faster** — pre-computed blueprint vs manual directory traversal
+
+**Opencode native tools** are faster for simple text-based operations where the overhead of loading/querying the dependency graph isn't justified:
+- File purpose identification, entry point detection, dependency tracing, and blast radius analysis are all simple grep/text operations where native tools win
+
+### When to Use What
+
+| Use DGAT when... | Use native tools when... |
+|---|---|
+| You need to understand code architecture | You need to find a specific string |
+| You want to know what depends on a file | You're looking at a single file |
+| You're planning a refactor or deletion | You need quick, one-off lookups |
+| You want semantic/conceptual search | You know the exact filename or keyword |
+
+---
+
 ## Getting started
 
 ### Prerequisites

@@ -59,10 +59,12 @@ target_link_libraries(dgat
     PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
-    pthread
-    dl
-    $<IF:$<BOOL:${XXHASH_LIBRARY}>,${XXHASH_LIBRARY},>
+    ${XXHASH_LIBRARY}
 )
+
+if(NOT WIN32)
+    target_link_libraries(dgat PRIVATE pthread dl)
+endif()
 
 if(ENABLE_TREE_SITTER)
     find_program(TREE_SITTER_EXE tree-sitter)

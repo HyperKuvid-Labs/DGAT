@@ -3,6 +3,12 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstdio>
+
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
 #include <map>
 #include <set>
 #include <unordered_map>

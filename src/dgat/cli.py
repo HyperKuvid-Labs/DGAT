@@ -158,6 +158,13 @@ def config_set(key, value):
                 cfg.providers[provider_name].endpoint = value
             else:
                 cfg.providers[provider_name].model = value
+        elif len(parts) == 3 and parts[2] in ("endpoint", "model", "api_key"):
+            provider_name = parts[1]
+            if provider_name not in cfg.providers:
+                from dgat.config import ProviderConfig
+
+                cfg.providers[provider_name] = ProviderConfig()
+            setattr(cfg.providers[provider_name], parts[2], value)
     elif key == "api_key":
         provider = cfg.default_provider
         if provider not in cfg.providers:
@@ -177,6 +184,54 @@ def config_set(key, value):
 def config_path():
     """Show configuration file path"""
     console.print(f"[cyan]{get_config_dir() / 'config.json'}[/cyan]")
+
+
+@config.command("init")
+def config_init():
+    """Interactively set up DGAT configuration"""
+    from dgat.providers import PROVIDERS
+
+    console.print("[bold]DGAT Provider Setup[/bold]")
+    console.print("\nAvailable providers:")
+    for name in PROVIDERS.keys():
+        console.print(f"  • {name}")
+
+    console.print("\n[dim]Select default provider:[/dim]")
+    for i, name in enumerate(PROVIDERS.keys(), 1):
+        console.print(f"  {i}. {name}")
+
+    # For now, just show the config path
+    console.print(
+        f"\n[bold]Configuration file:[/bold] {get_config_dir() / 'config.json'}"
+    )
+    console.print("\nTo configure a provider, use:")
+    console.print("  dgat config set api_key <your-api-key>  # For default provider")
+    console.print("  dgat config set providers.openai.endpoint <url>")
+    console.print("\nThen test with:")
+    console.print("  dgat config test")
+
+
+@config.command("test")
+@click.option("--provider", "-p", help="Provider to test (default: default_provider)")
+def config_test(provider):
+    """Test if the provider API is working"""
+    from dgat.providers import get_provider
+
+    cfg = load_config()
+    provider = provider or cfg.default_provider
+
+    console.print(f"[bold]Testing provider:[/bold] {provider}")
+
+    p = get_provider(provider)
+    available = p.is_available()
+
+    if available:
+        console.print(f"[green]✓[/green] {provider} is available and working!")
+    else:
+        console.print(f"[red]✗[/red] {provider} is not available.")
+        if not p.api_key:
+            console.print(f"[yellow]  → Missing API key. Set with:[/yellow]")
+            console.print(f"     dgat config set api_key <your-key>")
 
 
 @app.command()

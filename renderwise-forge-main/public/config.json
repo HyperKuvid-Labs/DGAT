@@ -246,6 +246,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "claw-code",
+      "name": "ultraworkers/claw-code",
+      "description": "The repo is finally unlocked. enjoy the party! The fastest repo in history to surpass 100K stars ⭐. Join Discord: https://discord.gg/5TUQKqFWd Built in Rust using oh-my-codex.",
+      "github": "https://github.com/ultraworkers/claw-code",
+      "website": null,
+      "langs": ["Rust", "Python"],
+      "stats": {"nodes": 87, "edges": 124},
+      "model": "Qwen3.5-2B",
+      "image": "examples/claw-code/claw-code.jpg",
+      "files": {
+        "basePath": "examples/claw-code",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

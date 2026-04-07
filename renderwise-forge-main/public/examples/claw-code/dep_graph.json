@@ -1,0 +1,1452 @@
+{
+  "edges": [
+    {
+      "description": "File A imports `src._archive_helper` to provide built-in utilities for compressing and decompressing files present in the project's development workflow.",
+      "from": "src/vim/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses the tasks module from File B to import task-related utilities for the same file because the two files function as interdependent modules that share objectives through unified definitions.",
+      "from": "src/task.py",
+      "import_stmt": ".task",
+      "to": "src/task.py"
+    },
+    {
+      "description": "File A references external distant-module names (`_archive_helper`) from file B to simulate administrative commands for querying archived data.",
+      "from": "src/utils/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "`src/services/__init__.py` utilizes `src._archive_helper`'s capabilities to manage and assert the absence of a Python implementation during the migration of Rust service modules to Pyre.",
+      "from": "src/services/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses its external repository to dynamically create and manage utility and development tools that are powered by the high-level abstraction classes for model inference, prompt management, and data conversion found in File B.",
+      "from": "src/tool_pool.py",
+      "import_stmt": ".models",
+      "to": "src/models.py"
+    },
+    {
+      "description": "File A imports and uses permissions from file B to validate user access and restrict execution capabilities of tool_pool.py before attempting to interact with external or internal system resources.",
+      "from": "src/tool_pool.py",
+      "import_stmt": ".permissions",
+      "to": "src/permissions.py"
+    },
+    {
+      "description": "File A dynamically imports tools from file B to extract specific system initialization features and query engine utilities required for its runtime tool dependency management.",
+      "from": "src/tool_pool.py",
+      "import_stmt": ".tools",
+      "to": "src/tools.py"
+    },
+    {
+      "description": "File A imports `.commands` from file B to leverage its external system command execution capabilities and security boundary since the respective functions are present on file B.",
+      "from": "src/system_init.py",
+      "import_stmt": ".commands",
+      "to": "src/commands.py"
+    },
+    {
+      "description": "The `src/system_init.py` file imports the query engine utilities from `src/tools.py` to manage tool isolation and DB setup during its platform-specific initialization.",
+      "from": "src/system_init.py",
+      "import_stmt": ".tools",
+      "to": "src/tools.py"
+    },
+    {
+      "description": "This file A uses the compression and decompression utilities from file B within its archived Rust subsystem to facilitate legacy artifact tracking and planning.",
+      "from": "src/server/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A imports source._archive_helper to extract file system metadata using its compressed/decompressed utilities.",
+      "from": "src/screens/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "The `task.py` file is used as the import source for the core task management logic required by the architecting file.",
+      "from": "src/tasks.py",
+      "import_stmt": ".task",
+      "to": "src/task.py"
+    },
+    {
+      "description": "File A imports `src._archive_helper` to retrieve Python-level utilities for compressing and decompressing files, despite the helper only serving general compression capabilities unrelated to the remote subsystem.",
+      "from": "src/remote/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses the `make-py-http-request` and `http-python-client` async-net modules from `src/commands` to expand its test coverage beyond command surfaces by verifying the explicit use of `async-reactive` patterns and async event handling consistent with its complex event dispatching architecture.",
+      "from": "tests/test_porting_workspace.py",
+      "import_stmt": "src.commands",
+      "to": "src/commands.py"
+    },
+    {
+      "description": "The `claw-code` Python port utilizes file B's architecture and tool counts to enforce architectural symmetry while its directory structure is not directly inspected because the parity_audit comparison logic applies to source package naming rather than internal path structures or architectural features that are identical between the Rust and Python implementations.",
+      "from": "tests/test_porting_workspace.py",
+      "import_stmt": "src.parity_audit",
+      "to": "src/parity_audit.py"
+    },
+    {
+      "description": "`tests/test_porting_workspace.py` utilizes `src/port_manifest.py` to dynamically locate external services and configuration details for validating the successful porting of the `claw-code` Rust workspace to Python.",
+      "from": "tests/test_porting_workspace.py",
+      "import_stmt": "src.port_manifest",
+      "to": "src/port_manifest.py"
+    },
+    {
+      "description": "The query_engine.py module is used by file A for its core query execution logic because the Python port requires this module to manage database queries, which serve as the foundational task execution mechanism in the new architecture.",
+      "from": "tests/test_porting_workspace.py",
+      "import_stmt": "src.query_engine",
+      "to": "src/query_engine.py"
+    },
+    {
+      "description": "File A uses tools from src/tools.py to perform automated system initialization and tool management operations that were previously handled within the standalone tools.py module.",
+      "from": "tests/test_porting_workspace.py",
+      "import_stmt": "src.tools",
+      "to": "src/tools.py"
+    },
+    {
+      "description": "File A uses `src.runtime` to simulate asynchronous command execution alongside a mock runtime system by deferring specific task signaling logic like `task_signal`, `task_calc`, and signal management while explicitly testing `make-py-http-request` to bypass direct system calls where `src.runtime`'s simulated runtime framework achieves the same outcome.",
+      "from": "tests/test_porting_workspace.py",
+      "import_stmt": "src.runtime",
+      "to": "src/runtime.py"
+    },
+    {
+      "description": "file A relies on file B's centralized execution registry to track runtime context metadata such as log IDs, source files, and temporary file paths.",
+      "from": "tests/test_porting_workspace.py",
+      "import_stmt": "src.execution_registry",
+      "to": "src/execution_registry.py"
+    },
+    {
+      "description": "File A imports `src._archive_helper` to validate and extract reference data for the archived `upstreamproxy` subsystem as defined in the current filesystem.",
+      "from": "src/upstreamproxy/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses the commands module to invoke any external system commands.",
+      "from": "src/runtime.py",
+      "import_stmt": ".commands",
+      "to": "src/commands.py"
+    },
+    {
+      "description": "`src/runtime.py` uses `context.py` to leverage Caste for portable, lightweight context switching via the `.context` import, while representing the committed transaction boundary as `context.commit`.",
+      "from": "src/runtime.py",
+      "import_stmt": ".context",
+      "to": "src/context.py"
+    },
+    {
+      "description": "File A imports from file B to leverage HistoryRecord's scoping isolation and TimestampMixin's thread-safe, datetime-aware record handling for managing commit logs and unit-of-work operations.",
+      "from": "src/runtime.py",
+      "import_stmt": ".history",
+      "to": "src/history.py"
+    },
+    {
+      "description": "File A leverages the `.models` module from file B to abstract model operations, enabling high-speed, reliable, and portable I/O across different operating systems while simplifying large LLM application workflows.",
+      "from": "src/runtime.py",
+      "import_stmt": ".models",
+      "to": "src/models.py"
+    },
+    {
+      "description": "File A utilizes file B because it imports the query_engine module to instantiate the QueryExecutionController classes that leverage file B's core functionality to create optimized connections.",
+      "from": "src/runtime.py",
+      "import_stmt": ".query_engine",
+      "to": "src/query_engine.py"
+    },
+    {
+      "description": "File A relies on `os.signals` and runtime functions defined in `src/system_init.py` because that module initializes support for cross-platform signals and timers required for optimized high-speed I/O notifications.",
+      "from": "src/runtime.py",
+      "import_stmt": ".system_init",
+      "to": "src/system_init.py"
+    },
+    {
+      "description": "File A uses functions from file B to overcome a specific bottleneck identified in the original code by replacing one-liner dependencies with reusable tools built for managing system pools and query operations.",
+      "from": "src/runtime.py",
+      "import_stmt": ".tools",
+      "to": "src/tools.py"
+    },
+    {
+      "description": "file A imports `.execution_registry` to perform dynamic context management during runtime activities for reproducible testing and portability.",
+      "from": "src/runtime.py",
+      "import_stmt": ".execution_registry",
+      "to": "src/execution_registry.py"
+    },
+    {
+      "description": "File A utilizes File B because `src._archive_helper.py` provides the specific `ARCHIVE_NAME`, `MODULE_COUNT`, `SAMPLE_FILES`, and compression/decompression utilities required for reconstructing and analyzing legacy package snapshots.",
+      "from": "src/plugins/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "`src/moreright/__init__.py` serves as the import target and registration hook for `src._archive_helper`, enabling the `ARCHIVE_NAME`, `MODULE_COUNT`, `SEMANTIC_FUNCTION`, and `SEMANTIC_FOLDER` constants in `src/_archive_helper.py` to reference the actual file system structure and metadata of the saved `moreright` archive.",
+      "from": "src/moreright/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A imports and utilizes `commands` from `src/commands.py` to execute external system commands required for executing database queries.",
+      "from": "src/query_engine.py",
+      "import_stmt": ".commands",
+      "to": "src/commands.py"
+    },
+    {
+      "description": "File A imports `from .models` to acquire the necessary high-level abstraction classes for defining LLM models required to execute and manage database queries.",
+      "from": "src/query_engine.py",
+      "import_stmt": ".models",
+      "to": "src/models.py"
+    },
+    {
+      "description": "`src/query_engine.py` uses `src/port_manifest.py` to dynamically locate and initialize its required external data sources or interface configurations at runtime.",
+      "from": "src/query_engine.py",
+      "import_stmt": ".port_manifest",
+      "to": "src/port_manifest.py"
+    },
+    {
+      "description": "`src/query_engine.py` utilizes `SessionStore` to securely cache connection pools, session data, and token state when implementing the database's authentication and caching layers, as required by `.session_store`.",
+      "from": "src/query_engine.py",
+      "import_stmt": ".session_store",
+      "to": "src/session_store.py"
+    },
+    {
+      "description": "QueryEngine loads toolsPool from tools.py to provide system-initialized environment configuration and execute the engine's partial query control operations for system development workflows.",
+      "from": "src/query_engine.py",
+      "import_stmt": ".tools",
+      "to": "src/tools.py"
+    },
+    {
+      "description": "File A imports module B to use its transcript parsing tools to extract and automate the analysis of educational course content within the query engine.",
+      "from": "src/query_engine.py",
+      "import_stmt": ".transcript",
+      "to": "src/transcript.py"
+    },
+    {
+      "description": "File A uses the built-in utilities for compressing and decompressing files provided by Module B to securely archive Rust migration data for the clade workflow.",
+      "from": "src/migrations/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A can import and utilize the compression utilities provided by `_archive_helper` to safely archive the list of 6 sub-component samples contained within its own `outputStyles` module without directly managing the underlying file compression logic.",
+      "from": "src/outputStyles/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses the built-in compression and decompression utilities from File B to protect and manage the sparse SPIFF structure of the archived keybindings subsystem.",
+      "from": "src/keybindings/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "`src/_archive_helper` is used for compressing and decompressing files in the `state` subsystem to embbed sample metadata during stability auditing.",
+      "from": "src/state/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A imports `src._archive_helper` to programmatically parse legacy archive metadata and generate summary statistics using the built-in utilities provided by that module.",
+      "from": "src/hooks/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A imports and utilizes the file, `_archive_helper`, to create a singleton package instance that encapsulates legacy entrypoint schema metadata and archival file paths.",
+      "from": "src/entrypoints/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File `src/main.py` instantiates a query engine, which serves as the entry point for `src/bootstrap_graph.py` to visualize network structures within the parallel command/tool rendering process.",
+      "from": "src/main.py",
+      "import_stmt": ".bootstrap_graph",
+      "to": "src/bootstrap_graph.py"
+    },
+    {
+      "description": "File A uses `command_graph.py` to visualize the internal component structure of the software development environment for developing the orchestrator itself.",
+      "from": "src/main.py",
+      "import_stmt": ".command_graph",
+      "to": "src/command_graph.py"
+    },
+    {
+      "description": "File A imports and uses StatementManager from file B to execute external shell commands and invoke the assembled permission-aware tool pool, which are required for the QueryEnginePort to simulate remote shells or render tool responses during query orchestration.",
+      "from": "src/main.py",
+      "import_stmt": ".commands",
+      "to": "src/commands.py"
+    },
+    {
+      "description": "`src/main.py` invokes `direct_modes` to dynamically assess external drivers and device matching for its intended runtime modes.",
+      "from": "src/main.py",
+      "import_stmt": ".direct_modes",
+      "to": "src/direct_modes.py"
+    },
+    {
+      "description": "File A leverages the unique file name artifact and import path `.parity_audit` from `src/parity_audit.py` to perform a local archive-specific name audit that mirrors the source-based naming mismatch detection implemented in `parity_audit.py` for cross-project dependency validation.",
+      "from": "src/main.py",
+      "import_stmt": ".parity_audit",
+      "to": "src/parity_audit.py"
+    },
+    {
+      "description": "File A depends on permissions management from File B to validate and leverage user authorization when invoking the external or internal system resources required for command execution.",
+      "from": "src/main.py",
+      "import_stmt": ".permissions",
+      "to": "src/permissions.py"
+    },
+    {
+      "description": "File A uses file B's dynamic registry to locate and preload external service configuration details required for its parallel command orchestration and runtime deployment.",
+      "from": "src/main.py",
+      "import_stmt": ".port_manifest",
+      "to": "src/port_manifest.py"
+    },
+    {
+      "description": "File A uses the high-level `query_engine` interface from File B to abstract its distributed query orchestration logic into lower-level database operations during the query simulation phase of its runtime branching.",
+      "from": "src/main.py",
+      "import_stmt": ".query_engine",
+      "to": "src/query_engine.py"
+    },
+    {
+      "description": "File A imports and uses the remote runtime verification logic from File B to configure the external compatibility checks before testing parallel command execution.",
+      "from": "src/main.py",
+      "import_stmt": ".remote_runtime",
+      "to": "src/remote_runtime.py"
+    },
+    {
+      "description": "File A uses the portable I/O abstraction provided by File B to ensure direct-mode runtime branching and query simulation execute reliably across different operating systems without requiring system-specific code modifications.",
+      "from": "src/main.py",
+      "import_stmt": ".runtime",
+      "to": "src/runtime.py"
+    },
+    {
+      "description": "File A's `QueryEnginePort` relies on File B's `session_store` module to securely persist embedded session embeddings and manage parallel token streams across remote communication sessions.",
+      "from": "src/main.py",
+      "import_stmt": ".session_store",
+      "to": "src/session_store.py"
+    },
+    {
+      "description": "File A imports tool_pool to dynamically instantiate and execute specialized utility modules that allow the QueryEnginePort to simulate remote shell modes and invoke permission-aware tools against an assembled dev pool.",
+      "from": "src/main.py",
+      "import_stmt": ".tool_pool",
+      "to": "src/tool_pool.py"
+    },
+    {
+      "description": "`main.py` employs `src/tools.py` to augment its Query Engine Port simulation with partial control over the tool pool's environment configuration and resource management during bootstrap operations.",
+      "from": "src/main.py",
+      "import_stmt": ".tools",
+      "to": "src/tools.py"
+    },
+    {
+      "description": "File A imports snapshot data and metadata constants from File B to manage the `archive_helper` package's output.",
+      "from": "src/skills/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses the high-level model abstraction classes from File B to enable dynamic locating of external services configured alongside traceable model inference capabilities.",
+      "from": "src/port_manifest.py",
+      "import_stmt": ".models",
+      "to": "src/models.py"
+    },
+    {
+      "description": "File A imports tools or modules from `src/models` using `.models` because it receives a foundational dependency on LLM application classes to manage model inference, prompt management, and data conversion across its development workflow.",
+      "from": "src/tools.py",
+      "import_stmt": ".models",
+      "to": "src/models.py"
+    },
+    {
+      "description": "File A uses .permissions via the import statement to validate user permissions before executing system initialization tasks.",
+      "from": "src/tools.py",
+      "import_stmt": ".permissions",
+      "to": "src/permissions.py"
+    },
+    {
+      "description": "File A depends on `src.models` to invoke model inference tools for generating and consuming LLM application models.",
+      "from": "src/commands.py",
+      "import_stmt": ".models",
+      "to": "src/models.py"
+    },
+    {
+      "description": "`src/native_ts/__init__.py` defers actual logic to `src._archive_helper.py` by importing it to delegate archival utility functions (compressing/decompressing files) and JSON metadata handling required for ignoring archived artifacts and verifying module parity during reloading.",
+      "from": "src/native_ts/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A imports `.commands` from file B to rely on file B's existing external command execution, thereby adding no new or duplicate functionality to command_graph.py itself.",
+      "from": "src/command_graph.py",
+      "import_stmt": ".commands",
+      "to": "src/commands.py"
+    },
+    {
+      "description": "Command graph.py imports the models classes from src/models.py to visualize application dependencies, as these models represent the LLM components being analyzed.",
+      "from": "src/command_graph.py",
+      "import_stmt": ".models",
+      "to": "src/models.py"
+    },
+    {
+      "description": "File A uses the built-in tooling provided by `src._archive_helper.py` to archive and restore the missing Rust types submodule.",
+      "from": "src/types/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses the file's external dependency `_archive_helper.py` to dynamically load compressed metadata for archival mapping within a modular design.",
+      "from": "src/memdir/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A relies on the pre-decommissioned archive management capabilities provided by the external library `src._archive_helper` solely for reading metadata and sample file paths while disabling its compression functionality.",
+      "from": "src/voice/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A uses a placeholder import for `src._archive_helper` because its failing mocked integration relies on static metadata defined by a missing external archive module to reconstruct its own static sentinel variables.",
+      "from": "src/components/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "Directly picked up since `src.buddy` is a legacy submodule that depends on the external utility set provided in `src._archive_helper`?",
+      "from": "src/buddy/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A imports the file B's built-in utilities for compressing and decompressing files to package and retrieve archived subsystem metadata and sample data for the bridge context.",
+      "from": "src/bridge/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A utilizes import statement `.query_engine` from file B because File B provides the core query execution functionality required for parsing and processing complex user inputs within the Distributed Parallel Agent Framework.",
+      "from": "src/QueryEngine.py",
+      "import_stmt": ".query_engine",
+      "to": "src/query_engine.py"
+    },
+    {
+      "description": "File A uses the lightweight library `runtime.py` to bypass operating system shell invocations when emulating external commands or tools, thereby implementing high-speed and reproducible portability for route queries.",
+      "from": "src/QueryEngine.py",
+      "import_stmt": ".runtime",
+      "to": "src/runtime.py"
+    },
+    {
+      "description": "File A utilizes the external dependency `_archive_helper.py` to resolve the reference to the extinct `archived` module, leveraging that utility's compression and decompression capabilities to validate Python version compatibility for archival maintenance.",
+      "from": "src/assistant/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "File A imports functionality from file B to execute external system commands required for its CLI bridge, session management, and query engine execution.",
+      "from": "src/__init__.py",
+      "import_stmt": ".commands",
+      "to": "src/commands.py"
+    },
+    {
+      "description": "Python code in `src/__init__.py` imports the `parity_audit` module from `file B` to detect potential naming mismatches between source directory names and package names during the claw-code porting process.",
+      "from": "src/__init__.py",
+      "import_stmt": ".parity_audit",
+      "to": "src/parity_audit.py"
+    },
+    {
+      "description": "File `src/port_manifest.py` is loaded by File A's ROC compiler to resolve dynamic imports like `.port_manifest` used by the Python Logging Handler when spawning subprocesses.",
+      "from": "src/__init__.py",
+      "import_stmt": ".port_manifest",
+      "to": "src/port_manifest.py"
+    },
+    {
+      "description": "File A imports `QueryEngine` from `file B` because `file B` already implements the core database query execution engine which is essential for the module's command execution logic.",
+      "from": "src/__init__.py",
+      "import_stmt": ".query_engine",
+      "to": "src/query_engine.py"
+    },
+    {
+      "description": "File A uses the lightweight I/O optimization library from File B to simplify and ensure high-speed, reproducible cross-OS compatibility when invoking internal system calls and managing dynamic sessions.",
+      "from": "src/__init__.py",
+      "import_stmt": ".runtime",
+      "to": "src/runtime.py"
+    },
+    {
+      "description": "File A imports the session_store module to persist command history, tool switches, and runtimes during session-based CWQ execution.",
+      "from": "src/__init__.py",
+      "import_stmt": ".session_store",
+      "to": "src/session_store.py"
+    },
+    {
+      "description": "File A uses the `.system_init` module from File B to load platform-specific drivers and verify successful system initialization during its startup phase.",
+      "from": "src/__init__.py",
+      "import_stmt": ".system_init",
+      "to": "src/system_init.py"
+    },
+    {
+      "description": "File A imports and uses `.tools` from file B as its primary interface for managing tools_pool state, system initialization routines, and partial query engine operations, thereby delegating workspace artifact preservation and port parity checks to a cohesive automation automation.",
+      "from": "src/__init__.py",
+      "import_stmt": ".tools",
+      "to": "src/tools.py"
+    },
+    {
+      "description": "File A requires the `src._archive_helper` submodule to execute the cleanup scripts provided by the external dependency.",
+      "from": "src/schemas/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "Source file A imports `src._archive_helper` to load archive metadata and provisioning details for the legacy bootstrap subsystem.",
+      "from": "src/bootstrap/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "Future commits to file A should replace its reliance on `src._archive_helper.py` with a direct import because the subsystem intended by `src/constants/__init__.py` is described as \"archived\" and implies it does not currently execute that specific utility import statement.",
+      "from": "src/constants/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "This-agent helper file A depends on the archive helper file B to access built-in utility functions for compressing and decompressing files within the software development workflow.",
+      "from": "src/coordinator/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "This startup script uses the archive helper module to sign up for distro remover that instantly removes `src/_archive_helper.py` from the current build.",
+      "from": "src/cli/__init__.py",
+      "import_stmt": "src._archive_helper",
+      "to": "src/_archive_helper.py"
+    },
+    {
+      "description": "`file A` uses the dependency offered by `file B` to invalidate `file B`'s own specific label logic, thereby ensuring that `file B` behaves as intended only when execution costs are not attributed to the current operation.",
+      "from": "src/costHook.py",
+      "import_stmt": ".cost_tracker",
+      "to": "src/cost_tracker.py"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/vim/__init__.py",
+        "src/utils/__init__.py",
+        "src/services/__init__.py",
+        "src/server/__init__.py",
+        "src/screens/__init__.py",
+        "src/remote/__init__.py",
+        "src/upstreamproxy/__init__.py",
+        "src/plugins/__init__.py",
+        "src/moreright/__init__.py",
+        "src/migrations/__init__.py",
+        "src/outputStyles/__init__.py",
+        "src/keybindings/__init__.py",
+        "src/state/__init__.py",
+        "src/hooks/__init__.py",
+        "src/entrypoints/__init__.py",
+        "src/skills/__init__.py",
+        "src/native_ts/__init__.py",
+        "src/types/__init__.py",
+        "src/memdir/__init__.py",
+        "src/voice/__init__.py",
+        "src/components/__init__.py",
+        "src/buddy/__init__.py",
+        "src/bridge/__init__.py",
+        "src/assistant/__init__.py",
+        "src/schemas/__init__.py",
+        "src/bootstrap/__init__.py",
+        "src/constants/__init__.py",
+        "src/coordinator/__init__.py",
+        "src/cli/__init__.py"
+      ],
+      "depends_on": [],
+      "description": "The external dependency _archive_helper.py is a module that provides built-in utilities for compressing and decompressing files within a software development workflow.",
+      "hash": "",
+      "id": "src/_archive_helper.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "_archive_helper.py",
+      "rel_path": "src/_archive_helper.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/task.py",
+        "src/tasks.py"
+      ],
+      "depends_on": [
+        "src/task.py"
+      ],
+      "description": "The task.py file contains functions or classes that perform specific to-the-job tasks within the software, likely resembling utility routines or task handlers. It brings external functionality into the project by importing from modules such as src/task.py and src/tasks.py.",
+      "hash": "",
+      "id": "src/task.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "task.py",
+      "rel_path": "src/task.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/tool_pool.py",
+        "src/runtime.py",
+        "src/query_engine.py",
+        "src/port_manifest.py",
+        "src/tools.py",
+        "src/commands.py",
+        "src/command_graph.py"
+      ],
+      "depends_on": [],
+      "description": "The models.py file is an external library containing high-level abstraction classes for representing, generating, and consuming models in large language models (LLM) applications. It serves as a foundational dependency for the tools outlined in your code, enabling features such as model inference, prompt management, and data conversion across various runtime modules.",
+      "hash": "",
+      "id": "src/models.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "models.py",
+      "rel_path": "src/models.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/tool_pool.py",
+        "src/main.py",
+        "src/tools.py"
+      ],
+      "depends_on": [],
+      "description": "Permissions.py is a Python module designed to manage file system access and restricts reading, writing, and executing capabilities to specific directories. The tool_pool.py, main.py, and tools.py scripts rely on this module to validate user permissions before attempting to interact with external or internal system resources.",
+      "hash": "",
+      "id": "src/permissions.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "permissions.py",
+      "rel_path": "src/permissions.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/tool_pool.py",
+        "src/system_init.py",
+        "tests/test_porting_workspace.py",
+        "src/runtime.py",
+        "src/query_engine.py",
+        "src/main.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [
+        "src/models.py",
+        "src/permissions.py"
+      ],
+      "description": "Tools.py serves as the core collection of automation scripts and utilities designed to enhance system development workflows. It assists in managing tools_pool by providing features for system initialization, including environment configuration and resource handling, as well as partial control over the query engine operations.",
+      "hash": "",
+      "id": "src/tools.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "tools.py",
+      "rel_path": "src/tools.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/system_init.py",
+        "tests/test_porting_workspace.py",
+        "src/runtime.py",
+        "src/query_engine.py",
+        "src/main.py",
+        "src/command_graph.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [
+        "src/models.py"
+      ],
+      "description": "The commands.py module operates as an external dependency primarily responsible for executing external system commands.",
+      "hash": "",
+      "id": "src/commands.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "commands.py",
+      "rel_path": "src/commands.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/test_porting_workspace.py",
+        "src/main.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [],
+      "description": "The parity_audit.py module evaluates whether source directory names are identical to package names to detect potential naming mismatches that could cause issues during code porting.",
+      "hash": "",
+      "id": "src/parity_audit.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "parity_audit.py",
+      "rel_path": "src/parity_audit.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/test_porting_workspace.py",
+        "src/query_engine.py",
+        "src/main.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [
+        "src/models.py"
+      ],
+      "description": "Port_manifest.py acts as a runtime registry that maps external connections and their configuration details to the application's entry points, enabling tests and code to locate external services or tools dynamically.",
+      "hash": "",
+      "id": "src/port_manifest.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "port_manifest.py",
+      "rel_path": "src/port_manifest.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/test_porting_workspace.py",
+        "src/runtime.py",
+        "src/main.py",
+        "src/QueryEngine.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [
+        "src/commands.py",
+        "src/models.py",
+        "src/port_manifest.py",
+        "src/session_store.py",
+        "src/tools.py",
+        "src/transcript.py"
+      ],
+      "description": "The query_engine.py module provides core functionality for executing and managing database queries, which is imported and utilized by various runtime scripts to access and process data.",
+      "hash": "",
+      "id": "src/query_engine.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "query_engine.py",
+      "rel_path": "src/query_engine.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/test_porting_workspace.py",
+        "src/main.py",
+        "src/QueryEngine.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [
+        "src/commands.py",
+        "src/context.py",
+        "src/history.py",
+        "src/models.py",
+        "src/query_engine.py",
+        "src/system_init.py",
+        "src/tools.py",
+        "src/execution_registry.py"
+      ],
+      "description": "Runtime.py is a lightweight library designed to simplify and optimize I/O operations by internally invoking the standard library's os module and other system calls, providing high-speed, reliable, and easily reproducible portability across different operating systems.",
+      "hash": "",
+      "id": "src/runtime.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "runtime.py",
+      "rel_path": "src/runtime.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/test_porting_workspace.py",
+        "src/runtime.py"
+      ],
+      "depends_on": [],
+      "description": "The execution_registry.py module provides a centralized registry for tracking and managing execution contexts, likely used to store runtime information such as log IDs, source files, or temporary file paths to ensure portability and consistent handling during software testing and runtime activities.",
+      "hash": "",
+      "id": "src/execution_registry.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "execution_registry.py",
+      "rel_path": "src/execution_registry.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/runtime.py"
+      ],
+      "depends_on": [],
+      "description": "Context.py is Python’s context manager implementation that allows for asynchronous context switching, making it a critical drop-in module for maintaining state and transaction boundaries in modern, event-driven microservices architectures.",
+      "hash": "",
+      "id": "src/context.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "context.py",
+      "rel_path": "src/context.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/runtime.py"
+      ],
+      "depends_on": [],
+      "description": "The Python `history.py` module provides modules for tracking and appending event history records, including utilities for handling unit-of-work operations and managing commit logs in most Python libraries.",
+      "hash": "",
+      "id": "src/history.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "history.py",
+      "rel_path": "src/history.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/runtime.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [
+        "src/commands.py",
+        "src/tools.py"
+      ],
+      "description": "System_init.py is a module loaded by the source code during startup to initialize system drivers and perform essential platform-specific setup. Typically, it defines a function that initiates system resources and exposes a method to verify successful initialization.",
+      "hash": "",
+      "id": "src/system_init.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "system_init.py",
+      "rel_path": "src/system_init.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/query_engine.py",
+        "src/main.py",
+        "src/__init__.py"
+      ],
+      "depends_on": [],
+      "description": "The session_store.py dependency is a server-side storage module used to persist temporary data, such as cookies, tokens, or session logs, within a web application's memory to secure unauthenticated user requests.",
+      "hash": "",
+      "id": "src/session_store.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "session_store.py",
+      "rel_path": "src/session_store.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/query_engine.py"
+      ],
+      "depends_on": [],
+      "description": "transcript.py is a Python library that provides tools for converting educational transcripts, specifically designed for parsing open educational resources and structured course content. It is imported by src/query_engine.py to analyze and extract data from educational materials, facilitating automated access to learning resources.",
+      "hash": "",
+      "id": "src/transcript.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "transcript.py",
+      "rel_path": "src/transcript.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/main.py"
+      ],
+      "depends_on": [],
+      "description": "bootstrap_graph.py is an external utility used to load, visualize, and manage undirected graphs programmatically within the application. This dependency enables developers to represent network structures as graphs, allowing the src/main.py script to interpret and render these visualizations.",
+      "hash": "",
+      "id": "src/bootstrap_graph.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "bootstrap_graph.py",
+      "rel_path": "src/bootstrap_graph.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/main.py"
+      ],
+      "depends_on": [
+        "src/commands.py",
+        "src/models.py"
+      ],
+      "description": "command_graph.py is a Python script that visualizes application dependencies to help developers understand how components interact and organize their codebases into network graphs. It is imported in src/main.py to inspect the internal structure of the software development environment.",
+      "hash": "",
+      "id": "src/command_graph.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "command_graph.py",
+      "rel_path": "src/command_graph.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/main.py"
+      ],
+      "depends_on": [],
+      "description": "direct_modes.py is a utility module designed to handle core data transformations and context management, specifically enabling dynamic assessment of external drivers, device matching, and purpose-specific mode configurations within the application.",
+      "hash": "",
+      "id": "src/direct_modes.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "direct_modes.py",
+      "rel_path": "src/direct_modes.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/main.py"
+      ],
+      "depends_on": [],
+      "description": "Relative time tests this external remote runtime in order to verify that all external technology packages are correctly configured in the build environment and can be used effectively in a system running inside the container.",
+      "hash": "",
+      "id": "src/remote_runtime.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "remote_runtime.py",
+      "rel_path": "src/remote_runtime.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/main.py"
+      ],
+      "depends_on": [
+        "src/models.py",
+        "src/permissions.py",
+        "src/tools.py"
+      ],
+      "description": "The tool_pool.py dependency acts as an external repository that the software uses to dynamically import, manage, or generate various utility and development tools at runtime based on project needs.",
+      "hash": "",
+      "id": "src/tool_pool.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "tool_pool.py",
+      "rel_path": "src/tool_pool.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/costHook.py"
+      ],
+      "depends_on": [],
+      "description": "This dependency provides a framework for tracking standard costs during the software development lifecycle, enabling precise financial estimation that is essential for accurate budgeting and project planning within the specified codebase.",
+      "hash": "",
+      "id": "src/cost_tracker.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "cost_tracker.py",
+      "rel_path": "src/cost_tracker.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/vim/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Python placeholder package for the archived `vim` subsystem**, containing the module count and sample file references from the old Vim implementation.\n\n- Loads archive metadata for the missing sub-system.\n- Defines exported constants for naming and sample data.\n- Acts as a lightweight reference artifact for porting decisions.",
+      "hash": "ba3a0292b8a4062ef1b5ffcbe21cb4af",
+      "id": "src/vim/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/vim/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/utils/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "### _snippet of __init__.py_: This Python package represents an archived subsystem containing reference data for runtime lookup and audit tracing; it contains a placeholder module count and references to archive metadata instead of active Python code.\n\n- Represents an archived `utils` subsystem with module references, maintaining only metadata history\n- Stores tracked snapshot information including the archive name and count of referenced modules\n- Exposes commands for querying archived module counts, sample files, and historical metadata\n\n**This is a Python placeholder package containing archive references for the `utils` subsystem rather than active implementations.**",
+      "hash": "32a2dedd8a4495496630010b2531f241",
+      "id": "src/utils/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/utils/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/services/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Analyze** the Python package template for the \"archived\" `services` ecosystem subsystem within the `claw-code` Rust workspace. It serves as a static placeholder structure intended for future Python/Pyre-backed agents, containing only metadata to track migration status, sample file paths, and module counts before being optionally populated with an actual Python package implementation by a Python maintainer.\n\n- Inherits likely Rust-type traits from `claw-harness` infrastructure.\n- Manages a configurable snapshot of the `services` ecosystem state (name, module count, sample files).\n- exposes placeholder top-level attributes (`ARCHIVE_NAME`, `MODULE_COUNT`, `PORTING_NOTE`) to document the pending migration to Python/Pyre.\n- Contains logic to assert the absence of a Python implementation to ensure the Rust/Harness workflow remains operational.",
+      "hash": "57cefec12adceb020bee9a27f314ab29",
+      "id": "src/services/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/services/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/server/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Claw Code Server Module Archive**\n\n- Placeholder Python package for the archived server subsystem\n- Exports metadata on archived module count and sample file paths\n- Contains a porting note linking to the original cause-metadata archive for removal planning\n- Used for tracking legacy Rust subsystem artifacts that are no longer actively maintained",
+      "hash": "66fbe18733fe5dc5d34e632bc49c0ff2",
+      "id": "src/server/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/server/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/screens/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "# **`src/screens/__init__.py`**\n\n*Python placeholder package for the archived `screens` subsystem, containing metadata that indicates 14 modules referencing archived artifacts, marking this location for Python reference/use.*\n\n- Imported `load_archive_metadata` from the local archive helper to extract file system info.\n- Defined module tracking constants (`_SNAPSHOT`, `MODULE_COUNT`, `SAMPLE_FILES`) for quick inspection without loading a full package.\n- Explicitly documented the package as a temporary placeholder for future Python integration, citing the archived filename in the comment.",
+      "hash": "600dc271706527c60451f5e8d712a7ae",
+      "id": "src/screens/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/screens/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/tasks.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/task.py"
+      ],
+      "description": "**Claw Code Architecture and Task Orchestration**\n\n**Goal:**\nThis file defines the core logic for deploying the archive state into live clusters. It manages the automation of porting the Rust `claw` CLI to new environments.\n\nKey responsibilities include:\n- Managing the deployment workflow for the `root-module-parity` task, which mirrors the original Rust workspace structure.\n- Executing the top-level `directory-parity` task, which aligns package names on Python and Rust versions against the archived snapshot.\n- Triggering runtime `parity-audit` checks to verify that installed binaries match the expected archived behavior and parity status.",
+      "hash": "14c6547ee2a0246e5a6c366ec699e893",
+      "id": "src/tasks.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "tasks.py",
+      "rel_path": "src/tasks.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/remote/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Python packaging stub for the archived `remote` subsystem.**\n\n- Placeholder isolated Python module referencing an external archive directory.\n- Static metadata export via `_archive_helper` to document missing module count and file samples.\n- Exposed constants (`ARCHIVE_NAME`, `MODULE_COUNT`, `PORTING_NOTE`, `SAMPLE_FILES`) as public API surface.\n- Prepared for future integration by embedding archive snapshot details without active execution logic.",
+      "hash": "8e7bcb7691e8aa7a1ecaee804681e6bb",
+      "id": "src/remote/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/remote/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./tests/test_porting_workspace.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/commands.py",
+        "src/parity_audit.py",
+        "src/port_manifest.py",
+        "src/query_engine.py",
+        "src/tools.py",
+        "src/runtime.py",
+        "src/execution_registry.py"
+      ],
+      "description": "**PortingCoverageTests**: This test suite validates the successful porting of the `claw-code` Rust workspace to Python by asserting architectural symmetry and runtime consistency between command interfaces, tool capabilities, and system core logic.\n\n*   Ensures command surfaces count exceed 150 and tool counts exceed 100 entries.\n*   Verifies Python client paths for the `claw` CLI, `async-workers`, and `QueryEngine`.\n*   Confirms plugin compatibility by validating connection profiles for MCP and `dash-plugin-interactive`.\n*   Checksums architectural integrity by confirming Python magnitudes match Rust originals.\n*   Validates TypeScript bindings for `backend-transcript` and `voice-integration` exist in the Python port.\n*   Confirms system initialization paths (`offline-graph-route` and `mobile-graph-route`) are correctly navigated.\n*   Ensures task execution marks (`task_mark_created` and `task_id_footer`) are properly captured.\n*   Verifies mutation handlers and permission checks align between the two languages.\n*   Validates async-reactive patterns (e.g., `MessageReactive`) and async-futures are used in parallel.\n*   Checks for async-net usage (`make-py-http-request` and `http-python-client`).\n*   Confirms runtime graph synchronization handlers and local-ref-in-memory bindings.\n*   Ensures PIA (Post-Instantiate) callbacks execute (`post-init_callbacks_returce`), tracking timeouts and events.\n*   Verifies metadata preservation (`payload_post_init_payload_metadata`) is properly captured.\n*   Ensures configuration files are loaded during initialization as expected.\n*   Validates parallel execution workflows with wait-for-all (`wait_for_1` and `wait_for_2`) and signal handling.\n*   Confirms the `RuntimeSystem` manages task lifecycles and orchestrates parallel task creation.\n*   Checks for async event handling (`on_msg`, `on_file`, `on_author`) in the runtime system.\n*   Ensures session IDs and parallel ID tracking structures are correctly instantiated in the port.\n*   Validates async-reactive compiler optimizations and event-loop scheduling are maintained.\n*   Confirms event dispatching and message routing (`dispatch_event`, `poke_message`) functions correctly.\n*   Ensures async-task scheduling and deferred execution (`deferred_task`, `deferred_execution`) are properly signaled.\n*   Verifies lifecycle management for tasks involves signal calculations (`task_signal`, `task_calc`).",
+      "hash": "74005d0ca054d5ed604f93017164588d",
+      "id": "tests/test_porting_workspace.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_porting_workspace.py",
+      "rel_path": "tests/test_porting_workspace.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/upstreamproxy/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**A portable archive placeholder holding metadata and references for the `upstreamproxy` subsystem.**\n\n- Extracts and validates reference data for the archived `upstreamproxy` subsystem from the Python workspace.\n- Defines the snapshot scope, module count, and list of sample files contained within the archive.\n- Sets up the first public API surface, serving as a bridge for external tools to load archived state.\n- Provides deterministic available imports for testing and validation purposes outside the current runtime.",
+      "hash": "909a48f93c0ce336b9e16639702434f6",
+      "id": "src/upstreamproxy/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/upstreamproxy/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/plugins/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Array of Python package contents for the archived `claw` CLI command-line interface.**\n\n- Parses and references metadata from legacy archive snapshots captured by `_archive_helper.py`.\n- Returns configurable variables (`ARCHIVE_NAME`, `MODULE_COUNT`, `SAMPLE_FILES`) to track history of previously dropped Python code.\n- Exposes a static `__all__` list to allow programs to discover package contents deterministically.\n- Supports quick iteration over archived legacy artifacts during migration or cleanup workflows.",
+      "hash": "ec361ebd06c458d24e816786bf3749e5",
+      "id": "src/plugins/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/plugins/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/moreright/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**`{**Analyze the filename**}`**\n\n- Quietly pads `moreright` module references within an archived Python `src` subsystem.\n- Loads metadata (`ARCHIVE_NAME`, `MODULE_COUNT`) from a JSON snapshot for documentation purposes.\n- Includes a placeholder string (`PORTING_NOTE`) describing the archive's contents.\n- Exposes a constant (_`_SNAPSHOT`_) holding the full archive details for reference.",
+      "hash": "4e63fa1e565b5ae2fe9d6b87cd06cb46",
+      "id": "src/moreright/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/moreright/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/migrations/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**A reStructuredText placeholder importing snapshot data for archived Rust module migrations.**\n\n-   Defines semantic metadata (archive name, module count, sample files) for the `claw-code` workflow.\n-   Hosts a placeholder entrypoint loading legacy migration repository information.\n-   Generates a `PORTING_NOTE` to document missing Python artifacts for the clade.\n-   Initializes `MODULE_COUNT` and `SAMPLE_FILES` fields for future test or migration tracking.",
+      "hash": "43c60e411273ff88b746c898206ec67a",
+      "id": "src/migrations/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/migrations/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/outputStyles/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Python package placeholder for the outputStyles subsystem (archive) containing 6 copied implementation files corresponding to 6 sub-components.**\n\nThis file is a simple Python module singleton documentation that references the original subsystem's state. Its responsibilities include:\n\n- Loading and retrieving archived metadata for the `outputStyles` subsystem from the code archive.\n- Exposing the subsystem's archive name count, list of contained sample files, and a specific porting note.\n- Factoring in that this architecture is being archived and is no longer the active production surface.",
+      "hash": "ec810526bade03d0bb93c715820b7e0e",
+      "id": "src/outputStyles/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/outputStyles/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/keybindings/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**`src/keybindings/__init__.py`** – A placeholder package for an archived keybindings subsystem.\n\n- Sets up a named SPIFF (Sub-Module File Partition) named `archive_helper`\n- Imports `load_archive_metadata` to generate a snapshot containing core metadata\n- Exposes the snapshot variables (`_SNAPSHOT`) and derived entries (`ARCHIVE_NAME`, `MODULE_COUNT`, `SAMPLE_FILES`, `PORTING_NOTE`) for protocol introspection",
+      "hash": "e5ecca59700339588f84e6f8d4f590a9",
+      "id": "src/keybindings/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/keybindings/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/state/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**placeholder for Python wrapper around Rust archives meant for parity auditing.**\n\n*   Derives named `ARCHIVE_NAME` and counts `MODULE_COUNT` from `_snapshot` data embedded in Rust crates.\n*   Retrieves a tuple of `SAMPLE_FILES` where each file is referenced by path within the archive metadata.\n*   Constructs `PORTING_NOTE` to document the current state of the `state` subsystem, including total module count and sample entries for manual verification.\n*   Exports `SAMPLE_FILES` as a tuple for reuse, while other values (`ARCHIVE_NAME`, `MODULE_COUNT`, `PORTING_NOTE`) remain ephemeral for immediate feedback.",
+      "hash": "5f86ba5fd7444aa820808b3ed3b0d647",
+      "id": "src/state/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/state/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/hooks/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**`src/hooks/__init__.py` — Python placeholder package for the archived `hooks` subsystem (referencing `CLAUDE.cppv2` agent history from `/_archive_helper.py`).**\n\n- Parses a legacy `hooks` archive metadata file (`_archive_helper.py`) to generate a summary object.\n- Exposes key architectural attributes like `ARCHIVE_NAME`, `MODULE_COUNT`, `SAMPLE_FILES`, and a documentation string.\n- Supports future introspection of referenced modules within the `hooks` subsystem.\n- Is currently unused, existing only for historical repository audit and reference purposes.",
+      "hash": "0f3e08b4b216149d783372badbc14f93",
+      "id": "src/hooks/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/hooks/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/entrypoints/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Python package placeholder for the archived `entrypoints` subsystem from Claw Code.**\n\n*   Loads schema metadata via the `_archive_helper` to create a package singleton.\n*   Exports three public fields: a name identifying the archive, a count of associated modules, and a list of archived file paths.\n*   Serves as a stub defining the legacy module surface used for workflow state and mockability during Rust-to-JavaPort migrations.",
+      "hash": "4d2f5fbab6a696f2dad265fade87dfac",
+      "id": "src/entrypoints/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/entrypoints/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/main.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/bootstrap_graph.py",
+        "src/command_graph.py",
+        "src/commands.py",
+        "src/direct_modes.py",
+        "src/parity_audit.py",
+        "src/permissions.py",
+        "src/port_manifest.py",
+        "src/query_engine.py",
+        "src/remote_runtime.py",
+        "src/runtime.py",
+        "src/session_store.py",
+        "src/tool_pool.py",
+        "src/tools.py"
+      ],
+      "description": "**`src/main.py` is the Python command-line interface orchestrator for the local Python porting workspace, handling direct-mode runtime branching and query simulation.**\n\n- **Parser management**: `build_parser` constructs a unified CLI with subcommands for manifest queries, bootstrapping, session management, and parallel command facilitation.\n- **Query orchestration**: Routes `summary`, `render`, and `execute` calls to `QueryEnginePort` to drive parallel command/tool rendering and simulation of hypothetical user interactions.\n- **Services integration**: Executes `PortRuntime` to simulate remote/shell modes (`ssh`, `teleport`, `deep-link`) or invokes tools against an assembled permission-aware tool pool.\n- **Session lifecycle**: Handles `load_session`/`flush-transcript` to retain and persist embeddings across parallel token streams.\n- **Instantiation**: Returns a `QueryEnginePort` instance to deprecate for integration with the future Port label architecture.",
+      "hash": "ac9a8e89a8b32e47ffef19979ed26955",
+      "id": "src/main.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "main.py",
+      "rel_path": "src/main.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/skills/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Python placeholder archive header for the `skills` subsystem.**\n\n*   Defines module metadata from an archived inventory via `load_archive_metadata`.\n*   Exposes snapshot data (archive name, count, sample files) as top-level variables.\n*   Sets up constants (`__all__`) to track placeholder scope for porting or audit.",
+      "hash": "39c215b30e519aa65ef40f55e41e3179",
+      "id": "src/skills/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/skills/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/native_ts/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**`src/native_ts/__init__.py`** — Python placeholder artifact for the `native_ts` subsystem, maintaining a JSON snapshot of archived module references.\n\n- Acts as a placeholder entrypoint for the non-functional `native_ts` subsystem.\n- Wraps JSON metadata (archive/origins, module count, sample files) provided by an archive helper.\n- Exposes public API to the archival system for reference reloading and parity verification.\n- Deferral of actual logic here to external archive helper utilities only.",
+      "hash": "e7617319af9be045f6a5ad0f2d9b5d9d",
+      "id": "src/native_ts/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/native_ts/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/types/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**`src/types/__init__.py` — Python type hints shell for the `types` subsystem.**\n\n*   Acts as a placeholder entrypoint for the archived `types` submodule since the Rust source is unavailable.\n*   Retrieves metadata from an `.archive_helper.py` script that loaded the snapshot of `types`.\n*   Configures pull requests with a photo, file list, module count, and the specific canonical file name to match the Rust output.",
+      "hash": "1e08f628249ffa21edbda5b0b0a5d68f",
+      "id": "src/types/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/types/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/memdir/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "```markdown\n**Python placeholder for archival mapping of the `memdir` subsystem.**\n- Dynamically loads metadata from the subproject's archive helper to define module scope and naming.\n- Aggregates sample file lists and counts into a snapshot for integration into the broader workspace.\n- Provides public attributes (`ARCHIVE_NAME`, `MODULE_COUNT`) for external referencing or documentation.\n```",
+      "hash": "56ea21d3041cab4f87874b6946a4475f",
+      "id": "src/memdir/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/memdir/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/voice/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Python placeholder package for the legacy `voice` subsystem with no active execution logic.**\n\n- Loads metadata from a pre-decommissioned archive snapshot.\n- Exposes aggregate constants for a dataset containing 2 specific module references.\n- Provides read-only access to the download location, count of archived modules, and path to sample files.",
+      "hash": "cc531ee3f754951761d1a69ca82521e6",
+      "id": "src/voice/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/voice/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/components/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "# Broken Python Archive Proxy\n\nThis script initializes as a placeholder module proxy, failing to load metadata from the intended archived `components` archive. It emits static module list variables based on mocked or stale data, effectively creating a static sentinel for an integration that its content asserts is missing entirely.\n\n*   Provides static metadata placeholder variables for the missing `components` archive.\n*   Attempts to load metadata from `src/_archive_helper.py` which signals its failure in the provided context.\n*   Generates a `PORTING_NOTE` reporting the archive as non-existent or unconnected.\n*   Acts as a placeholder for future Python integration code that requires the archived module context.",
+      "hash": "b959c3f6a3d8c102d6c2b5f4c83f9ee1",
+      "id": "src/components/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/components/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/buddy/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Placeholder module stub for the legacy `buddy` subsystem within the archival Python project.**\n\n*   Initializes and exports core metadata snapshot of the archived `buddy` submodule.\n*   Describes 28 legacy modules using a spring-loaded internal helper.\n*   Tracks current stage in porting process via metadata registry.\n*   Maintains documentation snapshot for reference compliance.",
+      "hash": "5c5cf2ac1e890a28f7677bac82d8e17c",
+      "id": "src/buddy/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/buddy/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/bridge/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "# `src/bridge/__init__.py`\n\nThis file serves as a runtime placeholder for the archived `bridge` subsystem in a Python workspace, providing a single entry point to access archived module metadata (`src._archive_helper`) and configure query parameters based on the snapshot found within the repository.\n\n- Reads the `bridge` archive metadata from `_archive_helper` to initialize the package.\n- Defines configuration attributes (`ARCHIVE_NAME`, `MODULE_COUNT`, `PORTING_NOTE`) from the temporary archive snapshot.\n- Exposes a constant collection of `SAMPLE_FILES` to the caller.\n- Automatically generates an `__all__` list containing the configured metadata and relevant sample file references.\n- Acts as a bridge between current Python scripts and the archived Rust/Cloak system where specific subsystems were previously ported.",
+      "hash": "be829afbf364b04aa47eba82fe87cac9",
+      "id": "src/bridge/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/bridge/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/QueryEngine.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/query_engine.py",
+        "src/runtime.py"
+      ],
+      "description": "**QueryEngineRuntime** implements a route summary and ranking interface for导购 (sales) agents, which help users query internal commands and tools. It handles prompt splitting, emulating commands, and returns formatted match suggestions with scores and source hints.\n\n### Key responsibilities\n*   **Route Queries:** Generates formatted response summaries that encapsulate match results for external queries.\n*   **Command Simulation:** Emulates external commands and tools to answer user prompts.\n*   **Suggestion Formatting:** Returns structured match lists with match details, scores, and source context.\n*   **Assertion Handling:** Integrates with assertion logic to determine how results should be rendered and validated.",
+      "hash": "7fa97a9c8f695f9372c07911e0eed6be",
+      "id": "src/QueryEngine.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "QueryEngine.py",
+      "rel_path": "src/QueryEngine.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/assistant/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "### Claw Code Assistant: Python Stub for Archived Subsystem\n\n* **Filename Analysis**: Files starting with `_archive` (e.g., `cloze`, `assistant__init__`) typically denote archived modules.\n* **Content Summary**: The file is a Python placeholder stub that initializes an archived `assistant` subsystem. Instead of implementing new logic, it validates Python version compatibility to prevent future maintenance errors and includes a loading note for the extinct `archived` module.",
+      "hash": "580be4afdaa518c0232fd20c11a4fa71",
+      "id": "src/assistant/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/assistant/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/commands.py",
+        "src/parity_audit.py",
+        "src/port_manifest.py",
+        "src/query_engine.py",
+        "src/runtime.py",
+        "src/session_store.py",
+        "src/system_init.py",
+        "src/tools.py"
+      ],
+      "description": "```markdown\n**Module: Python Wrapper for Rust Ported CL Logic Interaction.**\n*   Provides Python bindings and helper utilities (CLI bridge, query engine, session management) for interfacing with the main `claw-code` Rust workspace.\n*   Manages command execution logs, systems configuration, and runtime session persistence.\n*   Handles artifact preservation (command history, tool switches) and parity state verification between ports.\n*   Encapsulates complex Rust primitives like `QueryEngine`, `PortRuntime`, and CLI shapes into a cohesive Python surface.\n```",
+      "hash": "d0becc9e257a4d3eb0293d1580b9d8ad",
+      "id": "src/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/schemas/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Prepare, load, and retrieve archived metadata for the `src/_archive_helper.py` file to export user-facing archives.**\n\n- Load archived metadata from the `src/_archive_helper.py` submodule.\n- Fetch public links and module sequences for the `schemas` npm archive.\n- Generate exported manifests.json files for the `schemas` submodule.\n- Execute internal cleanup scripts using the parsed archive data.",
+      "hash": "29fcdd327efbddfb75fccb5b0a0ed90c",
+      "id": "src/schemas/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/schemas/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/bootstrap/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**File Merging: Archive Entry for the Archived `bootstrap` Subsystem in `src/bootstrap/__init__.py`**\n\n- **Purpose**: Creates a Python placeholder package for an archived subsystem, recording its metadata, relevant module references, and a warning indicating the file is a copy of the old archive.\n**Key Responsibilities:**\n*   Loads the archive metadata for the `bootstrap` subsystem using `_archive_helper`.\n*   Extracts details like the archive name, module count, and sample files for porting/simulation tracking.\n*   Generates a `PORTING_NOTE` to inform developers that this is a legacy reference, not the active runtime.",
+      "hash": "a8dd851c361903dceea25c082c815d89",
+      "id": "src/bootstrap/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/bootstrap/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/constants/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**`src/constants/__init__.py`** serves as a Python placeholder for archived constants and metadata from the [`constants`](src/constants/__init__.py) subsystem of the claw-world workspace.\n\n**Key responsibilities:**\n- Initializes the file by loading metadata about an archived module subsystem via [`src._archive_helper`](src/_archive_helper.py).\n- Generates a `Porting Note` summarizing the archive's name, module count, and sample files.\n- Exposes the generated summary details (`ARCHIVE_NAME`, `MODULE_COUNT`, `PORTING_NOTE`, `SAMPLE_FILES`) in the public `__all__` namespace.",
+      "hash": "008ffa7c346db3947881fcb796e1283f",
+      "id": "src/constants/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/constants/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/coordinator/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Claw Code Python Subsystem Placeholder**\n\nFile purpose, filename analysis, and key responsibilities:\n\n- Represents an archived **clawhip** (Python) agent helper that defines modules for the central `_PATH` workspace.\n- Imports runtime, command forcings, command definitions, and core registry logic from the Python ecosystem.\n- Performs undefined setup tasks like registering with `Python str`, initializing system commands, and preparing the main `claw` flow.\n- Relies on `_archive_helper` to load module references from a binned JSON snapshot.\n- Currently static with placeholder functions, awaiting manual implementation of Python-native workflow components.",
+      "hash": "a265c170298562d43e93ac87aed9664f",
+      "id": "src/coordinator/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/coordinator/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/cli/__init__.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/_archive_helper.py"
+      ],
+      "description": "**Compact Markdown Description:**\n\n[![](./src/cli/__init__.py)](file://src/cli/__init__.py)\n**Python placeholder package for the archived `cli` subsystem.**\n\n*   Loads archived CLI metadata to define scope and sample files for maintenance.\n*   Exports tracking constants (`MODULE_COUNT`, `SAMPLE_FILES`) to guide porting workflows.\n*   Signals exclusion from the current active product surface due to code archival.",
+      "hash": "dd8d638b91831a423e95f286ee55819b",
+      "id": "src/cli/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "src/cli/__init__.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/claw-code/./src/costHook.py",
+      "depended_by": [],
+      "depends_on": [
+        "src/cost_tracker.py"
+      ],
+      "description": "**Contextual Analysis:**\nThis file (`src/costHook.py`) is a utility module designed to hook into Claude Code's expense tracking system (CostTracker) by applying a custom label. While filename suggests a generic hook application, its content is minimal and explicitly defined in the implementation: it captures the cost label for a specific duration and unit count, recording it back into the passed CostTracker instance without any side effects.\n\n**File Description:**\nA lightweight utility function that applies a customized cost label to a CostTracker and returns it, likely used to track runtime execution costs for specific operations.\n\n**Key Responsibilities:**\n*   Records the specified `label` and `units` onto a `CostTracker` instance.\n*   Returns the modified `CostTracker` instance to allow further usage or logging of the charged cost.",
+      "hash": "fcd0e39a7bdca008ebc6328a56014ed3",
+      "id": "src/costHook.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "costHook.py",
+      "rel_path": "src/costHook.py"
+    }
+  ]
+}

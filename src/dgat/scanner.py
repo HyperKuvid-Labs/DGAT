@@ -179,9 +179,9 @@ def run_update(path: str) -> ScanResult:
 def load_file_tree(path: Path = None) -> Optional[FileTree]:
     """Load file tree from JSON"""
     if path is None:
-        _, tree_file, _ = find_data_files()
+        tree_file, _, _ = find_data_files()
     else:
-        _, tree_file, _ = find_data_files(path)
+        tree_file, _, _ = find_data_files(path)
 
     if tree_file is None:
         return None
@@ -230,17 +230,17 @@ def get_file_description(rel_path: str, path: Path = None) -> Optional[str]:
     if tree is None:
         return None
 
-    def find_node(nodes):
-        for node in nodes:
-            if node.rel_path == rel_path:
-                return node
-            if node.children:
-                found = find_node(node.children)
+    def find_node(node):
+        if hasattr(node, "rel_path") and node.rel_path == rel_path:
+            return node
+        if hasattr(node, "children") and node.children:
+            for child in node.children:
+                found = find_node(child)
                 if found:
                     return found
         return None
 
-    node = find_node(tree.nodes)
+    node = find_node(tree)
     return node.description if node else None
 
 
@@ -279,14 +279,13 @@ def search_files(query: str, path: Path = None, limit: int = 10) -> list[SearchR
     query_lower = query.lower()
     results = []
 
-    def search_nodes(nodes):
-        for node in nodes:
-            score = 0.0
+    def search_nodes(node):
+        if hasattr(node, "name") and hasattr(node, "rel_path"):
             name_lower = node.name.lower()
             desc = node.description or ""
             desc_lower = desc.lower()
 
-            # Exact match in name gets highest score
+            score = 0.0
             if query_lower == name_lower:
                 score = 100.0
             elif query_lower in name_lower:
@@ -304,10 +303,11 @@ def search_files(query: str, path: Path = None, limit: int = 10) -> list[SearchR
                     )
                 )
 
-            if node.children:
-                search_nodes(node.children)
+        if hasattr(node, "children") and node.children:
+            for child in node.children:
+                search_nodes(child)
 
-    search_nodes(tree.nodes)
+    search_nodes(tree)
 
     # Sort by score and limit
     results.sort(key=lambda x: x.score, reverse=True)

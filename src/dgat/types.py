@@ -8,12 +8,32 @@ class FileNode(BaseModel):
     name: str
     rel_path: str
     abs_path: str
-    is_dir: bool
+    is_dir: Optional[bool] = None
+    is_file: Optional[bool] = None
     extension: Optional[str] = None
     description: Optional[str] = None
     depends_on: list[str] = []
     depended_by: list[str] = []
     children: list["FileNode"] = []
+
+
+class FileTree(BaseModel):
+    root_path: Optional[str] = None
+    nodes: Optional[list[FileNode]] = None
+    # C++ binary format — single root node with nested children
+    name: Optional[str] = None
+    rel_path: Optional[str] = None
+    abs_path: Optional[str] = None
+    is_dir: Optional[bool] = None
+    is_file: Optional[bool] = None
+    extension: Optional[str] = None
+    description: Optional[str] = None
+    depends_on: list[str] = []
+    depended_by: list[str] = []
+    children: list["FileTree"] = []
+    error_traces: list = []
+    hash: Optional[str] = None
+    version: Optional[int] = None
 
 
 class DepNode(BaseModel):
@@ -36,11 +56,6 @@ class DepEdge(BaseModel):
 class DepGraph(BaseModel):
     nodes: list[DepNode]
     edges: list[DepEdge]
-
-
-class FileTree(BaseModel):
-    root_path: str
-    nodes: list[FileNode]
 
 
 class ScanResult(BaseModel):

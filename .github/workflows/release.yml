@@ -34,11 +34,6 @@ jobs:
         run: |
           brew install cmake openssl xxhash
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install cmake openssl --timeout=600
-
       - name: Build
         run: |
           mkdir -p build
@@ -49,14 +44,8 @@ jobs:
       - name: Get artifact name
         id: artifact
         run: |
-          TARGET=${{ matrix.target }}
-          if [ "$TARGET" = "windows-x86_64" ]; then
-            echo "name=dgat-windows-x86_64.exe" >> $GITHUB_OUTPUT
-            echo "upload_name=dgat.exe" >> $GITHUB_OUTPUT
-          else
-            echo "name=dgat-${{ matrix.target }}" >> $GITHUB_OUTPUT
-            echo "upload_name=dgat" >> $GITHUB_OUTPUT
-          fi
+          echo "name=dgat-${{ matrix.target }}" >> $GITHUB_OUTPUT
+          echo "upload_name=dgat" >> $GITHUB_OUTPUT
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2

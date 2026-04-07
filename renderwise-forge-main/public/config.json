@@ -213,6 +213,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "cleanrl",
+      "name": "vwxyzjn/cleanrl",
+      "description": "High-quality single file implementation of Deep Reinforcement Learning algorithms with research-friendly features (PPO, DQN, C51, DDPG, TD3, SAC, PPG)",
+      "github": "https://github.com/vwxyzjn/cleanrl",
+      "website": "https://docs.cleanrl.dev/",
+      "langs": ["Python", "Shell"],
+      "stats": {"nodes": 43, "edges": 90},
+      "model": "Qwen3.5-2B",
+      "image": "examples/cleanrl/cleanrl.jpg",
+      "files": {
+        "basePath": "examples/cleanrl",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

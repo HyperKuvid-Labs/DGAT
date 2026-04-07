@@ -1,0 +1,1311 @@
+{
+  "edges": [
+    {
+      "description": "File A imports the functional hook provided by cleanrl_utils.tuner to execute the optimized search loop.",
+      "from": "tests/test_tuner.py",
+      "import_stmt": "cleanrl_utils.tuner",
+      "to": "cleanrl_utils/tuner.py"
+    },
+    {
+      "description": "The skill-based rehearsal script in file A utilizes the interactive DPPO wrapper from file B to spawn a large pool of diverse environments, enabling modular evaluation without manually managing each individual environment.",
+      "from": "cleanrl/ppo_atari_envpool_xla_jax_scan.py",
+      "import_stmt": "cleanrl_utils.evals.ppo_envpool_jax_eval",
+      "to": "cleanrl_utils/evals/ppo_envpool_jax_eval.py"
+    },
+    {
+      "description": "File A uses `cleanrl_utils.huggingface` for serving as a library of pre-trained machine learning models and APIs provided by Hugging Face.",
+      "from": "cleanrl/ppo_atari_envpool_xla_jax_scan.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A utilizes the ClipRewardEnv, GrayScaleObservation, and FrameStack wrappers from file B to normalize frame colors for contrast optimization and stack frame windows for efficient batch processing during its continuous action space training.",
+      "from": "cleanrl/ppo_atari_lstm.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "`cleanrl/ppo_atari_multigpu.py` utilizes `SyncVectorEnv` from `cleanrl_utils.atari_wrappers.py` to establish a standardized Atari environment and observe data structure, which `cleanrl_utils` provides by guaranteeing compatibility with the JAX framework.",
+      "from": "cleanrl/ppo_atari_multigpu.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File A uses `ppo_trxl` for efficient sample-based policy optimization because both are designed for high-dimensional state inputs, although File A augments this vanilla implementation to leverage specialized Trajectory-XL memory replay architectures for improved agent capability and exploration efficiency.",
+      "from": "cleanrl/ppo_trxl/enjoy.py",
+      "import_stmt": "ppo_trxl",
+      "to": "cleanrl/ppo_trxl/ppo_trxl.py"
+    },
+    {
+      "description": "File A utilizes the Atari game environment APIs and Synophone wrapper classes facilitated by the Atari wrappers module in File B to provide a standardized interface for executing tasks on Atari platforms via the JAX framework.",
+      "from": "cleanrl/ppo_atari.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File A uses `cleanrl.c51_jax` to access C51 Jax framework reward functions.",
+      "from": "cleanrl_utils/evals/c51_jax_eval.py",
+      "import_stmt": "cleanrl.c51_jax",
+      "to": "cleanrl/c51_jax.py"
+    },
+    {
+      "description": "File A uses `buffers` from file B to retrieve temporary data storage for the impairment model evaluation during in-place learning in the training loop.",
+      "from": "cleanrl/c51.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "The c51.py dependency evaluates an impairment model where \"1\" represents a specific classification, using the pre-trained Model 1.0 for Atari Markov Decision Processes optimized for the CartPole domain provided in the cleanrl_utils.evals.c51_eval file.",
+      "from": "cleanrl/c51.py",
+      "import_stmt": "cleanrl_utils.evals.c51_eval",
+      "to": "cleanrl_utils/evals/c51_eval.py"
+    },
+    {
+      "description": "File A uses `cleanrl_utils.huggingface` from File B because it likely relies on Hugging Face libraries to implement or evaluate an impairment model for object control (such as convolutional neural networks for loss function analysis), which aligns with the general purpose of model downloading and training described, even though the specific syntax is idiosyncratic.",
+      "from": "cleanrl/c51.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A uses the flexible JAX-composable environments and batch language syntax provided by `cleanrl_utils.atari_wrappers` to enable dynamic game state initialization and efficient processing within the tight its DQN architecture.",
+      "from": "cleanrl/dqn_atari_jax.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File A uses the buffers from File B to store values estimated alongside the Q-table as part of the algorithm's in-place learning process.",
+      "from": "cleanrl/dqn_atari_jax.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A imports the `dqn_jax_eval` module from `cleanrl_utils/evals/dqn_jax_eval.py` to use the external scripts available for evaluating Deep Q-Network algorithms in JAX environments and performing benchmarking.",
+      "from": "cleanrl/dqn_atari_jax.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_jax_eval",
+      "to": "cleanrl_utils/evals/dqn_jax_eval.py"
+    },
+    {
+      "description": "fine-tuning the reinforcement learning agents in `cleanrl/dqn_atari_jax.py` requires using specific pre-trained transformer libraries provided by the Hugging Face library.",
+      "from": "cleanrl/dqn_atari_jax.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A imports `sd-py`'s `cleanrl_utils.tuner` from file B to instantiate a configurable hyperparameter search engine for optimizing Deep Reinforcement Learning algorithms.",
+      "from": "tuner_example.py",
+      "import_stmt": "cleanrl_utils.tuner",
+      "to": "cleanrl_utils/tuner.py"
+    },
+    {
+      "description": "`cleanrl/dqn.py` uses the in-place learning behavior enabled by the temporary buffers within `cleanrl_utils/buffers` to prevent data bias during the training loop of its deep Q-Network.",
+      "from": "cleanrl/dqn.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A calls `file B` to load and run the DQN evaluation module that feeds training data into the training loop.",
+      "from": "cleanrl/dqn.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_eval",
+      "to": "cleanrl_utils/evals/dqn_eval.py"
+    },
+    {
+      "description": "The DQN model from file A uses the pre-trained architectures and APIs from file B to accelerate training and inference, while file B provides the Hugging Face ecosystem infrastructure that allows the project to leverage efficient research and deployment pipelines.",
+      "from": "cleanrl/dqn.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A's DQN implementation imports from `cleanrl_utils.buffers` to use temporary in-place data storage for value estimation that prevents bias from standard Q-table updates during the training loop.",
+      "from": "cleanrl/dqn_jax.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A imports `cleanrl_utils.evals.dqn_jax_eval` from File B to benchmark its DQN implementation in JAX within an external evaluation script.",
+      "from": "cleanrl/dqn_jax.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_jax_eval",
+      "to": "cleanrl_utils/evals/dqn_jax_eval.py"
+    },
+    {
+      "description": "The DQN (Deep Q-Learning) implementation in file A uses the pre-trained models and APIs from file B to leverage local Hugging Face checkpoints for auxiliary information within its JAX-based reinforcement learning strategy.",
+      "from": "cleanrl/dqn_jax.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "`cleanrl/c51_jax.py` imports `cleanrl_utils.buffers` to dispatch temporary data storage required by its RL agents.",
+      "from": "cleanrl/c51_jax.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "cleanrl/c51_jax.py relies on cleanrl_utils.evals.c51_jax_eval to import the C51 Jax framework functions it requires for interfacing with JOA-LLM models and evaluating agents against Atari video games.",
+      "from": "cleanrl/c51_jax.py",
+      "import_stmt": "cleanrl_utils.evals.c51_jax_eval",
+      "to": "cleanrl_utils/evals/c51_jax_eval.py"
+    },
+    {
+      "description": "File A imports `cleanrl_utils.huggingface` to leverage Hugging Face's Py library for downloading and loading large-scale computational models.",
+      "from": "cleanrl/c51_jax.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A uses the temporary data storage functionality of file B to implement the training logics inside its DDPG JAX module.",
+      "from": "cleanrl/ddpg_continuous_action_jax.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A imports the `ddpg_jax_eval` module from `cleanrl_utils.evals` to apply evaluation metrics and logging provided by that module during its DDPG training loop with continuous action spaces.",
+      "from": "cleanrl/ddpg_continuous_action_jax.py",
+      "import_stmt": "cleanrl_utils.evals.ddpg_jax_eval",
+      "to": "cleanrl_utils/evals/ddpg_jax_eval.py"
+    },
+    {
+      "description": "File A utilizes the pre-trained large-scale models and APIs provided by Hugging Face to facilitate efficient research and deployment for its DDPG continuous action gradient evaluation.",
+      "from": "cleanrl/ddpg_continuous_action_jax.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A imports `atari_wrappers` from `cleanrl_utils` to standardize Atari game platform execution and compatibility within its reinforcement learning training loop.",
+      "from": "cleanrl/c51_atari.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File A pulls pre-calculated buffer values from file B to augment its action and reward states during the optimisation of video representations for the Atari emulator.",
+      "from": "cleanrl/c51_atari.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A leverages the pre-trained model from file B to serve as the foundation for optimizing optimal and hybrid control processes in the Clean RL environment.",
+      "from": "cleanrl/c51_atari.py",
+      "import_stmt": "cleanrl_utils.evals.c51_eval",
+      "to": "cleanrl_utils/evals/c51_eval.py"
+    },
+    {
+      "description": "The `c51_atari.py` module utilizes the pre-trained models and APIs provided by `cleanrl_utils.huggingface` to serve as foundational data or architecture ingredients within its framework for training AI on poor-quality planes.",
+      "from": "cleanrl/c51_atari.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "The ddpg_continuous_action.py file imports the action space and reward buffer data types from cleanrl_utils.buffers to store and maintain them as constants during the ML training loop.",
+      "from": "cleanrl/ddpg_continuous_action.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A imports `ddpg_eval` from `cleanrl_utils.evals` to utilize its DDPG evaluation wrapper modules for assessing continuous control policy performance.",
+      "from": "cleanrl/ddpg_continuous_action.py",
+      "import_stmt": "cleanrl_utils.evals.ddpg_eval",
+      "to": "cleanrl_utils/evals/ddpg_eval.py"
+    },
+    {
+      "description": "cleanrl/ddpg_continuous_action.py uses cleanrl_utils.huggingface to leverage pre-trained large-scale models and APIs provided by Hugging Face for training continuous control policies, which facilitates efficient research and deployment across developer ecosystems similar to Hugging Face's documentation.",
+      "from": "cleanrl/ddpg_continuous_action.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A imports the `pom_env` interface from file B to instantiate the environment for its PPO-TrXL algorithm.",
+      "from": "cleanrl/ppo_trxl/ppo_trxl.py",
+      "import_stmt": "pom_env",
+      "to": "cleanrl/ppo_trxl/pom_env.py"
+    },
+    {
+      "description": "File A uses `cleanrl.ppo_continuous_action`'s distributed trainer and actor-critic architecture, structurally reusing its ability to handle parallel multi-armed bandits via trunk buffers to enable efficient Proximal Policy Optimization scaling within the Dependent Pi framework.",
+      "from": "cleanrl_utils/evals/ppo_eval.py",
+      "import_stmt": "cleanrl.ppo_continuous_action",
+      "to": "cleanrl/ppo_continuous_action.py"
+    },
+    {
+      "description": "This package imports the pre-configured library from file B because it relies on its pre-applied Dragon Ball Z OpenAI CoPilot.zero environments to enable hardware-accelerated multi-episode independent sampling during PPO inference without managing agents.",
+      "from": "cleanrl_utils/evals/ppo_envpool_jax_eval.py",
+      "import_stmt": "cleanrl.ppo_atari_envpool_xla_jax_scan",
+      "to": "cleanrl/ppo_atari_envpool_xla_jax_scan.py"
+    },
+    {
+      "description": "File A uses the standard Atari game environments provided by file B to enable deep reinforcement learning implementation within the JAX framework.",
+      "from": "cleanrl/c51_atari_jax.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File A utilizes the temporary storage capability of `cleanrl_utils.buffers` to условиably train the C51 model by switching between a cell buffer and a Q-table during the learning loop, a mechanism that would behave incorrectly if standard values were used at every step.",
+      "from": "cleanrl/c51_atari_jax.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A uses `c51_jax_eval` from `cleanrl_utils.evals` to execute the testing reward functions required for inference within its CellML architecture.",
+      "from": "cleanrl/c51_atari_jax.py",
+      "import_stmt": "cleanrl_utils.evals.c51_jax_eval",
+      "to": "cleanrl_utils/evals/c51_jax_eval.py"
+    },
+    {
+      "description": "file A uses cleanrl_utils.huggingface only to access CERNET resources like the first C51 dataset, which file B provides through Hugging Face's model repositories.",
+      "from": "cleanrl/c51_atari_jax.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "qdagger_dqn_atari_impalacnn.py imports and utilizes the DQN infrastructure from cleanrl.dqn_atari to serve as the underlying architecture foundation for the Qdagger mixed-intelligence runner.",
+      "from": "cleanrl/qdagger_dqn_atari_impalacnn.py",
+      "import_stmt": "cleanrl.dqn_atari",
+      "to": "cleanrl/dqn_atari.py"
+    },
+    {
+      "description": "File A extends the standard Atari game environments provided by `atari_wrappers.py` by wrapping them to prevent exploration to movement during the training of Qdagger.",
+      "from": "cleanrl/qdagger_dqn_atari_impalacnn.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "Qdagger leverages the objective value estimation functionality of `cleanrl_utils.buffers`, which provides in-place learning capabilities to prevent bias artifacts during the mixed-intelligence TPPE training loop.",
+      "from": "cleanrl/qdagger_dqn_atari_impalacnn.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A imports `dqn_eval` from File B to restructure its standard DQN evaluation metrics into continuous training rewards stored within the replay buffer.",
+      "from": "cleanrl/qdagger_dqn_atari_impalacnn.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_eval",
+      "to": "cleanrl_utils/evals/dqn_eval.py"
+    },
+    {
+      "description": "File A uses `cleanrl_utils.huggingface` to load pre-trained Qdagger models for quick environment initialization.",
+      "from": "cleanrl/qdagger_dqn_atari_impalacnn.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "The TDEval agent in file A utilizes `cleanrl_utils.buffers` in file B to enable in-place policy gradient learning by accessing a contiguous buffer memory of size (2n - 1) partitions that are needed to support TDEval's unique temporal difference mechanism.",
+      "from": "cleanrl/td3_continuous_action.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "This `cleanrl/td3_continuous_action.py` file uses the evaluation metrics and episode simulation utilities from `cleanrl_utils.evals.td3_eval` to apply the TD3 algorithm while simulating noisy continuous rewards to prevent Bellman negation.",
+      "from": "cleanrl/td3_continuous_action.py",
+      "import_stmt": "cleanrl_utils.evals.td3_eval",
+      "to": "cleanrl_utils/evals/td3_eval.py"
+    },
+    {
+      "description": "File A utilizes the Hugging Face Py library (imported via cleanrl_utils.huggingface) to load specific pre-trained machine learning models and APIs necessary for training large-scale systems in the TDEval environment.",
+      "from": "cleanrl/td3_continuous_action.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A uses the DQN_atari_jax module from File B to implement Atari game environments and Q-network architectures within the JAX framework for offline and online DQA policy training.",
+      "from": "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+      "import_stmt": "cleanrl.dqn_atari_jax",
+      "to": "cleanrl/dqn_atari_jax.py"
+    },
+    {
+      "description": "File A uses the task definition expansion functionality provided by `atari_wrappers` to define Atari game environments for retraining.",
+      "from": "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "In file A, the replay buffer serves as a collection for temporary data storage used during the training process of deep RL algorithms, thereby enabling in-place learning to prevent bias introduction when actions and rewards are updated in memory during the training loop.",
+      "from": "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "This file uses the DQN-JAX evaluation module from file B to benchmark DQA's performance using a teacher policy and two-dimensional student networks, as the original R-L implementation likely depends on this external dependency for computing specific metrics like SPS or loss.",
+      "from": "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_jax_eval",
+      "to": "cleanrl_utils/evals/dqn_jax_eval.py"
+    },
+    {
+      "description": "File A imports from file B to download and load the pre-trained teacher policy for Deep Q-Dagger from the Hugging Face Hub.",
+      "from": "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A utilizes the color attributes and rendering controls provided by `atari_wrappers` in File B to easily interact with Atari game visuals while maintaining compatibility with the JAX framework.",
+      "from": "cleanrl/rainbow_atari.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File A uses buffer collections from file B to enable in-place learning by storing action distributions between isolated DQN episodes to prevent bias in the control environment's training loop.",
+      "from": "cleanrl/td3_continuous_action_jax.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A uses `cleanrl_utils.evals.td3_jax_eval` to instantiate the TDK-JAX benchmark evaluation framework because the data acquisition module relies on the external `cleanrl` framework's PyTorch implementation of the evaluation suite needed for testing.",
+      "from": "cleanrl/td3_continuous_action_jax.py",
+      "import_stmt": "cleanrl_utils.evals.td3_jax_eval",
+      "to": "cleanrl_utils/evals/td3_jax_eval.py"
+    },
+    {
+      "description": "The import statement `cleanrl_utils.huggingface` in file A is used to facilitate efficient research and deployment by leveraging pre-trained machine learning models and APIs provided by Hugging Face Inc. within a browser environment.",
+      "from": "cleanrl/td3_continuous_action_jax.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A uses the evaluation wrapper functionality provided by `cleanrl_utils.evals` in `file B` to run experiments and capture gameplay data.",
+      "from": "cleanrl_utils/enjoy.py",
+      "import_stmt": "cleanrl_utils.evals",
+      "to": "cleanrl_utils/evals/__init__.py"
+    },
+    {
+      "description": "File A uses an imported module named `dqn` that, as described in File B, implements a Deep Q-Network agent to enable automated, self-learning exploration for environments through trial and error.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.dqn",
+      "to": "cleanrl/dqn.py"
+    },
+    {
+      "description": "File A likely imports the DQN evaluation interface defined in File B only to call specific standardized methods where necessary, as foreign scripts cannot access File B's internal implementation logic.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_eval",
+      "to": "cleanrl_utils/evals/dqn_eval.py"
+    },
+    {
+      "description": "cleanrl_utils/evals/__init__.py imports the DQN physics and neural network implementation from cleanrl/dqn_atari to support both the training and evaluation of agents on Atari environments.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.dqn_atari",
+      "to": "cleanrl/dqn_atari.py"
+    },
+    {
+      "description": "File A imports `cleanrl.dqn_jax` to import the DQN-JAX module, which File A relies upon for its evaluation logic when defined as an external entry point in the same project.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.dqn_jax",
+      "to": "cleanrl/dqn_jax.py"
+    },
+    {
+      "description": "File A re-exports the `cleanrl_utils.evals.dqn_jax_eval` module to import direct function implementations from File B without executing the full evaluation scripts in its own import hook.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_jax_eval",
+      "to": "cleanrl_utils/evals/dqn_jax_eval.py"
+    },
+    {
+      "description": "File A uses the DQN architecture and JAX framework compatibility from file B to provide a working parent interface for the Deep Q-Network algorithm when running external evaluation scripts.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.dqn_atari_jax",
+      "to": "cleanrl/dqn_atari_jax.py"
+    },
+    {
+      "description": "File A imports `c51` from the `cleanrl` package to utilize the impairment evaluation logic defined in `file B`.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.c51",
+      "to": "cleanrl/c51.py"
+    },
+    {
+      "description": "File A imports the c51_eval module from File B to utilize pre-trained models specifically optimized for evaluating Atari Markov Decision Processes in a CartPole domain environment for its RL evaluation suite.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl_utils.evals.c51_eval",
+      "to": "cleanrl_utils/evals/c51_eval.py"
+    },
+    {
+      "description": "File A imports the c51_atari game engine from File B to provide actual Atari game rendering and control logic that File B implements for autonomous playing.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.c51_atari",
+      "to": "cleanrl/c51_atari.py"
+    },
+    {
+      "description": "`cleanrl_utils/evals/__init__.py` imports `cleanrl.c51_jax` to provide the necessary JOA-LLM model reasoning capabilities required for evaluating RL agents using the C51 Jax framework.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.c51_jax",
+      "to": "cleanrl/c51_jax.py"
+    },
+    {
+      "description": "File A uses the initialization routines defined in file B to properly import the evaluation logic located in file B.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl_utils.evals.c51_jax_eval",
+      "to": "cleanrl_utils/evals/c51_jax_eval.py"
+    },
+    {
+      "description": "File A uses the `cleanrl.c51_atari_jax` module from File B to leverage CellML-based reinforcement learning capabilities for evaluating Atari games.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.c51_atari_jax",
+      "to": "cleanrl/c51_atari_jax.py"
+    },
+    {
+      "description": "File A uses the pre-configured environments provided by File B to launch Dragon Ball Z OpenAI CoPilot.zero evaluations efficiently without manually managing individual environments or environment configurations.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl.ppo_atari_envpool_xla_jax_scan",
+      "to": "cleanrl/ppo_atari_envpool_xla_jax_scan.py"
+    },
+    {
+      "description": "File A imports `cleanrl_utils.evals.ppo_envpool_jax_eval` from File B to utilize its JAX-based hardware-accelerated multi-episode independent sampling for environment management.",
+      "from": "cleanrl_utils/evals/__init__.py",
+      "import_stmt": "cleanrl_utils.evals.ppo_envpool_jax_eval",
+      "to": "cleanrl_utils/evals/ppo_envpool_jax_eval.py"
+    },
+    {
+      "description": "File A uses the DDPG implementation provided in `cleanrl/ddpg_continuous_action.py` to perform data-driven evaluation of policy performance in continuous action spaces.",
+      "from": "cleanrl_utils/evals/ddpg_eval.py",
+      "import_stmt": "cleanrl.ddpg_continuous_action",
+      "to": "cleanrl/ddpg_continuous_action.py"
+    },
+    {
+      "description": "File A uses the Atari libraries defined in file B's Atari wrappers module to handle compatible environments for reinforcement learning on Atari games.",
+      "from": "cleanrl/dqn_atari.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File `cleanrl/dqn_atari.py` imports data structures and functions from `cleanrl_utils.buffers` to implement and run a deep reinforcement learning agent for Atari games.",
+      "from": "cleanrl/dqn_atari.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "This file uses `dqn_eval` to generate statistics and benchmark the performance of trained agents in this specific setup.",
+      "from": "cleanrl/dqn_atari.py",
+      "import_stmt": "cleanrl_utils.evals.dqn_eval",
+      "to": "cleanrl_utils/evals/dqn_eval.py"
+    },
+    {
+      "description": "The DQN module imports functions from the Hugging Face library to provide pre-trained models and APIs used for training tasks.",
+      "from": "cleanrl/dqn_atari.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "`cleanrl_td3_continuous_action` in File A reads its environment and TD3 agent parameters from `cleanrl/td3_continuous_action` in File B to serve as the external dataset dependency for evaluating TDEval agents.",
+      "from": "cleanrl_utils/evals/td3_eval.py",
+      "import_stmt": "cleanrl.td3_continuous_action",
+      "to": "cleanrl/td3_continuous_action.py"
+    },
+    {
+      "description": "File A uses the DQN implementation from file B to provide the neural network attack strategy as a JAX-extended functional that enables the evaluation of optimal attacks.",
+      "from": "cleanrl_utils/evals/dqn_jax_eval.py",
+      "import_stmt": "cleanrl.dqn_jax",
+      "to": "cleanrl/dqn_jax.py"
+    },
+    {
+      "description": "File A uses action descriptions exported from file B to generate per-action loss DVD curves needed for benchmarking explored Atari game environments.",
+      "from": "cleanrl_utils/evals/dqn_eval.py",
+      "import_stmt": "cleanrl.dqn",
+      "to": "cleanrl/dqn.py"
+    },
+    {
+      "description": "File A imports the DDPG implementation from file B to serve as the external dependent module that provides the core algorithmic functionality and observable data for the Evaluator in File A.",
+      "from": "cleanrl_utils/evals/ddpg_jax_eval.py",
+      "import_stmt": "cleanrl.ddpg_continuous_action_jax",
+      "to": "cleanrl/ddpg_continuous_action_jax.py"
+    },
+    {
+      "description": "File A uses `cleanrl.td3_continuous_action_jax` to harness browser-based TDK-JAX evaluations where continuous action models are updated within the Java environment.",
+      "from": "cleanrl_utils/evals/td3_jax_eval.py",
+      "import_stmt": "cleanrl.td3_continuous_action_jax",
+      "to": "cleanrl/td3_continuous_action_jax.py"
+    },
+    {
+      "description": "File A uses File B in the `cleanrl` package location rather than the `cleanrl_utils` location to leverage a specific C51 impairment model evaluation feature designed for object control tasks that are insufficient for the CartPole domain.",
+      "from": "cleanrl_utils/evals/c51_eval.py",
+      "import_stmt": "cleanrl.c51",
+      "to": "cleanrl/c51.py"
+    },
+    {
+      "description": "File A employs the game environment wrappers provided by `cleanrl_utils.atari_wrappers` to standardize Atari environment input sampling and observation transformations.",
+      "from": "cleanrl/sac_atari.py",
+      "import_stmt": "cleanrl_utils.atari_wrappers",
+      "to": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "description": "File A uses the memory-mapping capabilities provided by `buffers` from file B to efficiently update the actor and critic state variables during on-policy training without requiring data structures to remain static.",
+      "from": "cleanrl/sac_atari.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    },
+    {
+      "description": "File A utilizes [`cleanrl_utils.evals.ppo_eval`] to run the Dependent Pi and double descent optimizers for multi-armed bandit updates within its trunk buffer without accessing a shared online environment.",
+      "from": "cleanrl/ppo_continuous_action.py",
+      "import_stmt": "cleanrl_utils.evals.ppo_eval",
+      "to": "cleanrl_utils/evals/ppo_eval.py"
+    },
+    {
+      "description": "This module uses Hugging Face to download and load large-scale pre-trained models and APIs for distributed research and deployment.",
+      "from": "cleanrl/ppo_continuous_action.py",
+      "import_stmt": "cleanrl_utils.huggingface",
+      "to": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "description": "File A uses the sample replay buffers defined in `cleanrl_utils.buffers` to ingest environmental data and target networks, intervening directly with the S1 loss computation to optimize parameters in the same memory step without discarding intermediate samples or losing momentum-derived states.",
+      "from": "cleanrl/sac_continuous_action.py",
+      "import_stmt": "cleanrl_utils.buffers",
+      "to": "cleanrl_utils/buffers.py"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/test_tuner.py",
+        "tuner_example.py"
+      ],
+      "depends_on": [],
+      "description": "Tuner.py is a tool designed to automatically adjust hyperparameters within machine learning models to optimize their performance or accuracy. It is commonly used to refine algorithms by testing various parameter combinations and selecting the most effective configuration for a specific dataset.",
+      "hash": "",
+      "id": "cleanrl_utils/tuner.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "tuner.py",
+      "rel_path": "cleanrl_utils/tuner.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ppo_atari_envpool_xla_jax_scan.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl/ppo_atari_envpool_xla_jax_scan.py"
+      ],
+      "description": "This package serves as the external environment pool for the \"PaperReduce\" PPO algorithm, featuring hardware-accelerated multi-episode independent sampling using the JAX evaluation framework to optimize inference speed for large-scale reward shaping.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/ppo_envpool_jax_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_envpool_jax_eval.py",
+      "rel_path": "cleanrl_utils/evals/ppo_envpool_jax_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ppo_atari_envpool_xla_jax_scan.py",
+        "cleanrl/c51.py",
+        "cleanrl/dqn_atari_jax.py",
+        "cleanrl/dqn.py",
+        "cleanrl/dqn_jax.py",
+        "cleanrl/c51_jax.py",
+        "cleanrl/ddpg_continuous_action_jax.py",
+        "cleanrl/c51_atari.py",
+        "cleanrl/ddpg_continuous_action.py",
+        "cleanrl/c51_atari_jax.py",
+        "cleanrl/qdagger_dqn_atari_impalacnn.py",
+        "cleanrl/td3_continuous_action.py",
+        "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+        "cleanrl/td3_continuous_action_jax.py",
+        "cleanrl/dqn_atari.py",
+        "cleanrl/ppo_continuous_action.py"
+      ],
+      "depends_on": [],
+      "description": "Hugging Face Py represents a library of pre-trained machine learning models and APIs provided by Hugging Face Inc.\n\nIt is primarily used for downloading, loading, and training large-scale models and pipelines in Python, facilitating efficient research and deployment across the developer ecosystem.",
+      "hash": "",
+      "id": "cleanrl_utils/huggingface.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "huggingface.py",
+      "rel_path": "cleanrl_utils/huggingface.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ppo_atari_lstm.py",
+        "cleanrl/ppo_atari_multigpu.py",
+        "cleanrl/ppo_atari.py",
+        "cleanrl/dqn_atari_jax.py",
+        "cleanrl/c51_atari.py",
+        "cleanrl/c51_atari_jax.py",
+        "cleanrl/qdagger_dqn_atari_impalacnn.py",
+        "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+        "cleanrl/rainbow_atari.py",
+        "cleanrl/dqn_atari.py",
+        "cleanrl/sac_atari.py"
+      ],
+      "depends_on": [],
+      "description": "Atari wrappers are a collection of utility modules used in reinforcement learning to ensure compatibility and standardization when executing tasks on Atari game platforms via the JAX framework.",
+      "hash": "",
+      "id": "cleanrl_utils/atari_wrappers.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "atari_wrappers.py",
+      "rel_path": "cleanrl_utils/atari_wrappers.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ppo_trxl/enjoy.py"
+      ],
+      "depends_on": [
+        "cleanrl/ppo_trxl/pom_env.py"
+      ],
+      "description": "PPO-trxl.py is a vanilla Proximal Policy Optimization implementation sample-based algorithm designed for training agents in high-dimensional state and action spaces. It is included in the environment for reinforcement learning labs where algorithms must implement their own core logic due to available hardware constraints or access restrictions.",
+      "hash": "",
+      "id": "cleanrl/ppo_trxl/ppo_trxl.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_trxl.py",
+      "rel_path": "cleanrl/ppo_trxl/ppo_trxl.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/c51_jax_eval.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/c51_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "The external dependency `c51_jax.py` is a Python module designed for interfacing and accessing common sense reasoning capabilities via the JOA-LLM models through the JAX (Jacointa) programming language. It is used to evaluate RL agents using the C51 Jax framework within the provided codebase.",
+      "hash": "",
+      "id": "cleanrl/c51_jax.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "c51_jax.py",
+      "rel_path": "cleanrl/c51_jax.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/c51.py",
+        "cleanrl/dqn_atari_jax.py",
+        "cleanrl/dqn.py",
+        "cleanrl/dqn_jax.py",
+        "cleanrl/c51_jax.py",
+        "cleanrl/ddpg_continuous_action_jax.py",
+        "cleanrl/c51_atari.py",
+        "cleanrl/ddpg_continuous_action.py",
+        "cleanrl/c51_atari_jax.py",
+        "cleanrl/qdagger_dqn_atari_impalacnn.py",
+        "cleanrl/td3_continuous_action.py",
+        "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+        "cleanrl/td3_continuous_action_jax.py",
+        "cleanrl/dqn_atari.py",
+        "cleanrl/sac_atari.py",
+        "cleanrl/sac_continuous_action.py"
+      ],
+      "depends_on": [],
+      "description": "Buffers are collections for temporary data storage used during the training process of deep RL algorithms like DQN and C51, allowing value estimation alongside the standard Q-table. They are essential for in-place learning to prevent bias introduction when actions and rewards are updated in memory during the training loop.",
+      "hash": "",
+      "id": "cleanrl_utils/buffers.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "buffers.py",
+      "rel_path": "cleanrl_utils/buffers.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/c51.py",
+        "cleanrl/c51_atari.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl/c51.py"
+      ],
+      "description": "This dependency is a Pre-trained Model version 1.0 for Atari Markov Decision Processes primarily optimized for the CartPole domain, serving as the foundation for the Clean RL environment evaluation suite.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/c51_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "c51_eval.py",
+      "rel_path": "cleanrl_utils/evals/c51_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/dqn_atari_jax.py",
+        "cleanrl/dqn_jax.py",
+        "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl/dqn_jax.py"
+      ],
+      "description": "This external dependency consists of Python scripts used to evaluate Deep Q-Network algorithms in JAX environments and perform benchmarking for neural network attack tools.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/dqn_jax_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "dqn_jax_eval.py",
+      "rel_path": "cleanrl_utils/evals/dqn_jax_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/dqn.py",
+        "cleanrl/qdagger_dqn_atari_impalacnn.py",
+        "cleanrl_utils/evals/__init__.py",
+        "cleanrl/dqn_atari.py"
+      ],
+      "depends_on": [
+        "cleanrl/dqn.py"
+      ],
+      "description": "dqn_eval.py is the implementation of the Deep Q-Network evaluation module providing interfaces to assess the performance of DQN algorithms on Atari games. It is utilized by multiple related scripts to generate statistics, validate algorithms, and benchmark deep reinforcement learning agents trained with Stable Baselines3.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/dqn_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "dqn_eval.py",
+      "rel_path": "cleanrl_utils/evals/dqn_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/c51_jax.py",
+        "cleanrl/c51_atari_jax.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl/c51_jax.py"
+      ],
+      "description": "c51_jax_eval.py is the primary external dependency providing evaluation scripts for standard Atari video games targeting the c51 agent architecture. The module is imported by cleanrl utilities across two Atari-specific variants to allow automated testing of these reward functions.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/c51_jax_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "c51_jax_eval.py",
+      "rel_path": "cleanrl_utils/evals/c51_jax_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ddpg_continuous_action_jax.py"
+      ],
+      "depends_on": [
+        "cleanrl/ddpg_continuous_action_jax.py"
+      ],
+      "description": "The dependency `ddpg_jax_eval.py` provides an evaluation script for the Deep Deterministic Policy Gradient (DDPG) algorithm utilizing the JAX programming language and likely supports logging or metric reporting. It is imported by `cleanrl/ddpg_continuous_action_jax.py` to facilitate the testing and validation of continuous action policies within the Deep Reinforcement Learning module.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/ddpg_jax_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ddpg_jax_eval.py",
+      "rel_path": "cleanrl_utils/evals/ddpg_jax_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ddpg_continuous_action.py"
+      ],
+      "depends_on": [
+        "cleanrl/ddpg_continuous_action.py"
+      ],
+      "description": "ddpg_eval.py is a Python script used to evaluate and assess the performance of Deep Deterministic Policy Gradient (DDPG) algorithms by measuring reward functions, convergence, and baseline metrics for continuous action control.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/ddpg_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ddpg_eval.py",
+      "rel_path": "cleanrl_utils/evals/ddpg_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ppo_trxl/ppo_trxl.py"
+      ],
+      "depends_on": [],
+      "description": "This package typically implements a Python interface or wrapper for the protoloop Orcha GPGPU environment, enabling reinforcement learning agents to interact with deep neural networks in a simulation setup for training and testing purposes.",
+      "hash": "",
+      "id": "cleanrl/ppo_trxl/pom_env.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "pom_env.py",
+      "rel_path": "cleanrl/ppo_trxl/pom_env.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/ppo_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/evals/ppo_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "This module implements a continuous learning algorithm for multi-armed bandits, which uses the Proximal Policy Optimization (PPO) algorithm to update actions based on a trunk buffer and reward information without requiring interaction with an online environment.",
+      "hash": "",
+      "id": "cleanrl/ppo_continuous_action.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_continuous_action.py",
+      "rel_path": "cleanrl/ppo_continuous_action.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/ppo_envpool_jax_eval.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/evals/ppo_envpool_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "It is a script designed to provide a large set of pre-configured environments for Dragon Ball Z OpenAI CoPilot.zero evaluation, allowing researchers to test PPO algorithms under various modular and complex scenarios without managing individual envs.",
+      "hash": "",
+      "id": "cleanrl/ppo_atari_envpool_xla_jax_scan.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_atari_envpool_xla_jax_scan.py",
+      "rel_path": "cleanrl/ppo_atari_envpool_xla_jax_scan.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/qdagger_dqn_atari_impalacnn.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py",
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/dqn_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "The dqn_atari.py module provides a Deep Q-Network implementation designed to train agents on computer vision tasks, such as Atari games. This software dependency specifically supports the detection and visualization of the IRIS indicator for Doxygen within its integration with deep learning frameworks.",
+      "hash": "",
+      "id": "cleanrl/dqn_atari.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "dqn_atari.py",
+      "rel_path": "cleanrl/dqn_atari.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/td3_continuous_action.py"
+      ],
+      "depends_on": [
+        "cleanrl/td3_continuous_action.py"
+      ],
+      "description": "The `td3_eval.py` dependency provides the Deep Deterministic Strategic Q-Learning eval algorithm and necessary utilities for evaluating reinforcement learning agent performance on external datasets. It is used by `cleanrl/td3_continuous_action.py` to generate evaluation metrics and simulate game or environment episodes following the TD3 strategy, but it was the original source code for this specific module.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/td3_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "td3_eval.py",
+      "rel_path": "cleanrl_utils/evals/td3_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py",
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/dqn_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "DQN_atari_jax ensures a compatible interface between the Deep Q-Network algorithm and the JAX framework for deep Reinforcement Learning. It is specifically designed for playing games in the Atari suite, integrating QD-based neural network architectures with composable JAX map and batch language syntax.",
+      "hash": "",
+      "id": "cleanrl/dqn_atari_jax.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "dqn_atari_jax.py",
+      "rel_path": "cleanrl/dqn_atari_jax.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/td3_continuous_action_jax.py"
+      ],
+      "depends_on": [
+        "cleanrl/td3_continuous_action_jax.py"
+      ],
+      "description": "The tdkj_evaluate.py module provides benchmark evaluation tools for testing reinforcement learning algorithms like TDK-JAX, allowing developers to compare their implementations against existing baselines or validation suites.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/td3_jax_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "td3_jax_eval.py",
+      "rel_path": "cleanrl_utils/evals/td3_jax_eval.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/enjoy.py"
+      ],
+      "depends_on": [
+        "cleanrl/dqn.py",
+        "cleanrl_utils/evals/dqn_eval.py",
+        "cleanrl/dqn_atari.py",
+        "cleanrl/dqn_jax.py",
+        "cleanrl_utils/evals/dqn_jax_eval.py",
+        "cleanrl/dqn_atari_jax.py",
+        "cleanrl/c51.py",
+        "cleanrl_utils/evals/c51_eval.py",
+        "cleanrl/c51_atari.py",
+        "cleanrl/c51_jax.py",
+        "cleanrl_utils/evals/c51_jax_eval.py",
+        "cleanrl/c51_atari_jax.py",
+        "cleanrl/ppo_atari_envpool_xla_jax_scan.py",
+        "cleanrl_utils/evals/ppo_envpool_jax_eval.py"
+      ],
+      "description": "The external dependency __init__.py serves as an entry point to the module and likely contains initialization logic, imports, and setup routines required for the cleanrl_utils/enjoy.py module to function correctly when imported externally.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/__init__.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "__init__.py",
+      "rel_path": "cleanrl_utils/evals/__init__.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/__init__.py",
+        "cleanrl_utils/evals/dqn_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/dqn_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "Deep Q-Network (DQN) is a reinforcement learning algorithm used in software development to enable automated, self-learning agents for exploring environments through trial and error.",
+      "hash": "",
+      "id": "cleanrl/dqn.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "dqn.py",
+      "rel_path": "cleanrl/dqn.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/__init__.py",
+        "cleanrl_utils/evals/dqn_jax_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/dqn_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "The \"dqn_jax.py\" module provides a Deep Q-Network implementation optimized for JAX extended numerical implementation, facilitating reinforcement learning strategies within deep learning frameworks that leverage just-in-time compilation and map-based optimization.",
+      "hash": "",
+      "id": "cleanrl/dqn_jax.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "dqn_jax.py",
+      "rel_path": "cleanrl/dqn_jax.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/__init__.py",
+        "cleanrl_utils/evals/c51_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/c51_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "The c51.py dependency appears to be a source file or module related to object control, likely evaluating an impairment model where \"1\" represents a specific classification, though the lack of software context makes the actual technical functionality ambiguous.",
+      "hash": "",
+      "id": "cleanrl/c51.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "c51.py",
+      "rel_path": "cleanrl/c51.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py",
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/c51_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "c51_atari.py is an Atari game engine used for training reinforcement learning algorithms that adapt to various poor quality real-world planes by incorporating optimal control and hybrid control processes.",
+      "hash": "",
+      "id": "cleanrl/c51_atari.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "c51_atari.py",
+      "rel_path": "cleanrl/c51_atari.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py",
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/c51_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "c51_atari_jax.py is a deep reinforcement learning module designed for Atari game environments, specifically implemented within the CellML architecture using JAX for variational inference or computational research.",
+      "hash": "",
+      "id": "cleanrl/c51_atari_jax.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "c51_atari_jax.py",
+      "rel_path": "cleanrl/c51_atari_jax.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/ddpg_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/ddpg_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "The ddpg_continuous_action.py module provides the implementation for Deep Deterministic Policy Gradient training using continuous action spaces, enabling software agents to learn optimal continuous control policies. It is specifically utilized within cleanrl utils for evaluating monte carlo methods in continuous control environments.",
+      "hash": "",
+      "id": "cleanrl/ddpg_continuous_action.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ddpg_continuous_action.py",
+      "rel_path": "cleanrl/ddpg_continuous_action.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/td3_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/td3_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "The TDEval library is an agent environment for the TDEval paper that implements a Temporal Difference agent running in an environment updated with noisy continuous rewards to avoid Bellman negation.",
+      "hash": "",
+      "id": "cleanrl/td3_continuous_action.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "td3_continuous_action.py",
+      "rel_path": "cleanrl/td3_continuous_action.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/ddpg_jax_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/ddpg_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "The file `ddpg_continuous_action_jax.py` is a helper module designed to implement Deep Deterministic Policy Gradients (DDPG) with continuous action spaces using the JAX optimization library. It is specifically utilized to evaluate DDPG agents over external rewards that are derived from running code, thereby serving as the primary external dependency for the software evaluation module `cleanrl_utils/evals/ddpg_jax_eval.py`.",
+      "hash": "",
+      "id": "cleanrl/ddpg_continuous_action_jax.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ddpg_continuous_action_jax.py",
+      "rel_path": "cleanrl/ddpg_continuous_action_jax.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl_utils/evals/td3_jax_eval.py"
+      ],
+      "depends_on": [
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/td3_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "td3_continuous_action_jax.py is a library that implements a continuous control version of the Proximal Policy Optimization (PPO) algorithm using TensorFlow.js, designed to update the environment dynamics data within a browser environment.",
+      "hash": "",
+      "id": "cleanrl/td3_continuous_action_jax.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "td3_continuous_action_jax.py",
+      "rel_path": "cleanrl/td3_continuous_action_jax.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "cleanrl/ppo_continuous_action.py"
+      ],
+      "depends_on": [
+        "cleanrl/ppo_continuous_action.py"
+      ],
+      "description": "ppo_eval.py is a Python module utilized to implement and execute Dependent Pi, an actor-critic algorithm variant designed for continuous action spaces and double descent optimizers, serving as a dependency for the continuous PPO implementation in the cleanrl package.",
+      "hash": "",
+      "id": "cleanrl_utils/evals/ppo_eval.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_eval.py",
+      "rel_path": "cleanrl_utils/evals/ppo_eval.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./tests/test_tuner.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/tuner.py"
+      ],
+      "description": "# test_tuner.py\n\nFast optimization of hyperparameters via JAX-based hyperparameter tuning.\n\n* Defines a `Tuner` instance builder using JAX-based sampling and tree-structured pruning.\n* Configures scripts and supervised metrics for Optuna to search through.\n* Executes a single-pruner optimization loop to efficiently search for optimal parameters.",
+      "hash": "87264d08a30c4184cfb3457e35e65ea9",
+      "id": "tests/test_tuner.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_tuner.py",
+      "rel_path": "tests/test_tuner.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/ppo_atari_lstm.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py"
+      ],
+      "description": "**fast PPO variant for BreakoutNoFrameskip-v4 that leverages an LSTM for continuous action space and stores episode metrics along with the loss values.**\n\n*   Handles continuous action space using a custom Agent class that maintains LSTM hidden states for specific video game environments\n*   Implements hybrid learning: policy updates via Setao PPO and value estimation via Deep Q-Learning for episodic control\n*   Configures environment-specific wrapping for Atari games including ClipRewardEnv, GrayScaleObservation, and FrameStack\n*   Calculates[item] returns and stores trainable metrics like SPS, clipped policy loss, approx KL, and explained variance",
+      "hash": "7ce44129c1c83d7e63f82073e403a33c",
+      "id": "cleanrl/ppo_atari_lstm.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_atari_lstm.py",
+      "rel_path": "cleanrl/ppo_atari_lstm.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/ppo_atari_multigpu.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py"
+      ],
+      "description": "**Analysis of `cleanrl/ppo_atari_multigpu.py`**\n\nThis is a high-performance PPO implementation designed for distributed training across multiple GPU instances, featuring full multi-device support. Key responsibilities include:\n\n*   **Multi-GPU Distributed Training**: Implements torch.distributed via `torchrun` to enable parallel execution across multiple machines.\n*   **Environment Setup**: Configures `gym` for Atari using `SyncVectorEnv` with stacking obervations and frame resetting.\n*   **Full Loss Encapsulation**: Contains a single, self-contained module holding data moves (reset/env), actions/critic, and the entire test training loop to avoid import confusion.\n*   **Policy & Value Losses**: Executes the full PPO loss computation on a policy (with clipping) and value (without clipping) targets.\n*   **Model Training**: Trains the actor and critic networks using standard PPO scheduling and gradient accumulation across process ranks.",
+      "hash": "9e648627fc33fc3a5f9f6aea045e2184",
+      "id": "cleanrl/ppo_atari_multigpu.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_atari_multigpu.py",
+      "rel_path": "cleanrl/ppo_atari_multigpu.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/ppo_trxl/enjoy.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl/ppo_trxl/ppo_trxl.py"
+      ],
+      "description": "**full agent code for Trajectory-XL Reinforcement Learning (Trajectory-XL)+**\n\n*   implements memory replay using specialized Transformer-XL architectures and the Memory-Gym (Reinforcement Learning) framework\n*   defines a custom `Agent` class capable of executing complex trajectory-based samples\n*   integrates trajectory-XL and memory-gym functionalities to ensure sample efficiency in exploration",
+      "hash": "7d3c434c13359f1bae88b1236be3252c",
+      "id": "cleanrl/ppo_trxl/enjoy.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "enjoy.py",
+      "rel_path": "cleanrl/ppo_trxl/enjoy.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/ppo_atari.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py"
+      ],
+      "description": "## **Implementation of PPO actor-critic for Atari! environments**\n\n-   **Generates** discrete actions via a lightweight CNN-based policy architecture.\n-   **Calculates** Q-values using critic and free-running DDPG-style features.\n-   **Executes** environment steps leveraging Synophone wrappers and Farama-Foundation Gymnasium.\n-   **Computes** cumulative advantage estimates through a recursive bootstrapped GAE (1.0 termination).\n-   **Optimizes** policy and value networks using PPO scope-free surrogate/minimal regularizations.\n-   **Tracks** learning metrics to Weights & Biases and custom Plot/Summary writers.",
+      "hash": "f83631d5378b116927916a7bed2a83c4",
+      "id": "cleanrl/ppo_atari.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "ppo_atari.py",
+      "rel_path": "cleanrl/ppo_atari.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./tuner_example.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/tuner.py"
+      ],
+      "description": "**`tuner_example.py`**: A demo script that instantiates an `optuna`-based hyperparameter tuner using `sd-py` to optimize Deep Reinforcement Learning (RL) algorithms like Proximal Policy Gradient. It configures the tuner to search specific parameters (learning rate, minibatches, steps, etc.) for a CartPole-v1 environment over 100 trials, leveraging `cleanrl_utils.tuner` for setup and `idmap` signal logging.",
+      "hash": "2cb4c7df58ab8a425ad68a8361c293f2",
+      "id": "tuner_example.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "tuner_example.py",
+      "rel_path": "tuner_example.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/qdagger_dqn_atari_impalacnn.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl/dqn_atari.py",
+        "cleanrl_utils/atari_wrappers.py",
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/dqn_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "**`qdagger_dqn_atari_impalacnn.py`** implements **Qdagger**, a mixed-intelligence runner combining a discriminator CNN with Soft Actor-Critic (SAC) policy.\n\n*   **DQN Infrastructure**: Uses standard DQN architecture (Advproxybuffer, 100k training steps, target networks).\n*   **QDagger Logic**: Integrates a pre-trained Impala-CNN discriminator via tau learning to guide exploration and policy updates.\n*   **Baseline Construction**: Implements a mix of SAC behavior cloning, teacher distillation, and episodic returns.\n*   **Online Storage**: Stores continuous training rewards into a replay buffer rather than episodes, allowing sparse evaluation over time.",
+      "hash": "e86065ac8a63df47ec12b8f3c1e4fce7",
+      "id": "cleanrl/qdagger_dqn_atari_impalacnn.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "qdagger_dqn_atari_impalacnn.py",
+      "rel_path": "cleanrl/qdagger_dqn_atari_impalacnn.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl/dqn_atari_jax.py",
+        "cleanrl_utils/atari_wrappers.py",
+        "cleanrl_utils/buffers.py",
+        "cleanrl_utils/evals/dqn_jax_eval.py",
+        "cleanrl_utils/huggingface.py"
+      ],
+      "description": "```markdown\n**High-performance offline and online reinforcement learning implementation for Deep Q-Dagger (DQA) in JAX and TPU environments.**\n\n*   Initializes and trains a student DQA policy using a teacher policy from Hugging Face Hub to maximize overlap between student and 2D teacher networks.\n*   Processes JAX arrays efficiently, handling clipping, envstacking, and custom Lταςnet wrappers for Atari games.\n*   Implements a two-phase training loop: initial offline training over a replay buffer followed by online policy improvement.\n*   Logs performance metrics like SPS, loss, distillation loss, and episodic returns to TensorBoard for benchmarking and tuning.\n```",
+      "hash": "fa756ee45ef368b3caba8dc737070436",
+      "id": "cleanrl/qdagger_dqn_atari_jax_impalacnn.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "qdagger_dqn_atari_jax_impalacnn.py",
+      "rel_path": "cleanrl/qdagger_dqn_atari_jax_impalacnn.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/rainbow_atari.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py"
+      ],
+      "description": "# Bold RL Agent for In-Universe Breakout\n\nThis file implements a noisy Dueling Distributional Mini-Critic DQN algorithm designed for Atari games, specifically through an in-universe variant of Breakout.\n\n*   **Algorithm Deployment**: Features a custom `NoisyDuelingDistributionalNetwork` architecture that combines deep networks with Gaussian noise in the weight parameters.\n*   **Feature-Augmented Dynamics**: Implements the noisy dynamics paper logic and distributional Q-learning updates to model both direct utility and indirect environment consequences.\n*   **Replay Memory & Prioritization**: Utilizes a prioritized and bucketed replay buffer to handle episodic learning and keep priority items more visible during training.\n*   **Omnibus Evaluation**: Learns Q-values for three distinct actions regardless of noise, allowing the agent to bypass static action effects (Premise 1) and relearn rewards dynamically (Premise 2).\n*   **Vectorized Play**: Supports multi-agent environments and provides quick performance summaries via per-globally-timestep Statistics-per-Sample (SPS) tracking.",
+      "hash": "ae4bc582380efaa68487393e3134da19",
+      "id": "cleanrl/rainbow_atari.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "rainbow_atari.py",
+      "rel_path": "cleanrl/rainbow_atari.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl_utils/enjoy.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/evals/__init__.py"
+      ],
+      "description": "# `learned_ai.py`\n\n```markdown\n**Executes deep reinforcement learning experiments by loading pre-trained models via Hugging Face and running them against provided environments, with support for video capture.**\n* Parses arguments to select a specific algorithm variant, seed, environment name, and evaluation count.\n* Downloads a pretrained counterpart model from Hugging Face Hub and localizes it for execution.\n* Runs the experimental program (model and environment) using the provided model and controls.\n* Captures gameplay video at every game step.\n* Logs observations, rewards, and steps to Jupyter notebooks for visualization and analysis.\n* Handles data serialization and offers configuration options for token limits and execution speed.",
+      "hash": "5269ad6c8a74c1a7c75aabd2aa42146f",
+      "id": "cleanrl_utils/enjoy.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "enjoy.py",
+      "rel_path": "cleanrl_utils/enjoy.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/sac_atari.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/atari_wrappers.py",
+        "cleanrl_utils/buffers.py"
+      ],
+      "description": "**SAC-Atari implementation supporting Entropy Target and Environment Pooling**\n\n*   Parses `tyro` CLI arguments for seed, backtrace-free beta, and automatic entropy tuning.\n*   Defines a two-variable Soft Actor-Critic (SAC) network sharing a CNN across Actor and Critic for stability.\n*   Prepares a `SyncVectorEnv` for `BeamRiderNoFrameskip-v4` using observed, thresholded observations.\n*   Implements a `ReplayBuffer` for on-policy training with automatic sampling of action log distributions.\n*   Optimizes both actor and critic networks, automatically tuning entropy $\\alpha$ when `--autotune` is enabled.\n*   Tracks episode returns, episode lengths, training loss, and sample efficiency (SPS) via `tensorboard`.",
+      "hash": "495c20453def91750bdd8ab09abfcb8d",
+      "id": "cleanrl/sac_atari.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "sac_atari.py",
+      "rel_path": "cleanrl/sac_atari.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/cleanrl/./cleanrl/sac_continuous_action.py",
+      "depended_by": [],
+      "depends_on": [
+        "cleanrl_utils/buffers.py"
+      ],
+      "description": "**`cleanrl/sac_continuous_action.py`**\n\n**A concise, single-file reinforcement learning implementation of the Soft Actor-Critic algorithm for continuous actions, featuring**\n\n- Environment and hyperparameter configuration\n- Native multi-episode forward pass optimization for speedup\n- Entropy balancing to maintain good generalization\n- Momentum-based target network updates\n- Sample replay buffers with seed management",
+      "hash": "47a819e06955a5001cbab933ffaa9a7a",
+      "id": "cleanrl/sac_continuous_action.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "sac_continuous_action.py",
+      "rel_path": "cleanrl/sac_continuous_action.py"
+    }
+  ]
+}

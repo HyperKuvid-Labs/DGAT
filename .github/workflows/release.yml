@@ -50,12 +50,11 @@ jobs:
           echo "upload_name=dgat" >> $GITHUB_OUTPUT
 
       - name: Upload release asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.3.2
         with:
           tag_name: ${{ github.ref_name }}
           files: build/${{ steps.artifact.outputs.upload_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
 
   build-package:
     runs-on: ubuntu-latest

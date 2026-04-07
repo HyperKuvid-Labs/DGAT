@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: dgat
-Version: 1.0.2
+Version: 1.0.3
 Summary: Dependency Graph as a Tool - LLM-annotated code dependency analysis
 Author: DGAT Contributors
 License: MIT

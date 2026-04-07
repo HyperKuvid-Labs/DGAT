@@ -19,3 +19,9 @@ file_tree.json
 
 temp/
 tmp/
+
+*__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/

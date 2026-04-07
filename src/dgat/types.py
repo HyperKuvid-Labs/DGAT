@@ -1,7 +1,7 @@
 """DGAT data types"""
 
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class FileNode(BaseModel):
@@ -19,14 +19,17 @@ class FileNode(BaseModel):
 class DepNode(BaseModel):
     rel_path: str
     abs_path: str
+    name: Optional[str] = None
     description: Optional[str] = None
     depends_on: list[str] = []
     depended_by: list[str] = []
+    is_dir: Optional[bool] = None
+    is_file: Optional[bool] = None
 
 
 class DepEdge(BaseModel):
-    from_node: str
-    to_node: str
+    from_node: str = Field(validation_alias="from")
+    to_node: str = Field(validation_alias="to")
     description: Optional[str] = None
 
 

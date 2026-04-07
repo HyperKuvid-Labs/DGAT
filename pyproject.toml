@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dgat"
-version = "1.0.1"
+version = "1.0.2"
 description = "Dependency Graph as a Tool - LLM-annotated code dependency analysis"
 readme = "PYPI_README.md"
 license = {text = "MIT"}

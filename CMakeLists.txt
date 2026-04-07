@@ -50,6 +50,11 @@ set(DGAT_HEADERS
 
 add_executable(dgat ${DGAT_SOURCES} ${DGAT_HEADERS})
 
+# Fix for Windows: "number of sections exceeded object file format limit"
+if(MSVC)
+    target_compile_options(dgat PRIVATE /bigobj)
+endif()
+
 target_link_libraries(dgat
     PRIVATE
     OpenSSL::SSL

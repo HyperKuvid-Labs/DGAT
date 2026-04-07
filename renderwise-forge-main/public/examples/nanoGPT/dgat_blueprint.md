@@ -34,4 +34,4 @@ The system follows a modular, event-driven design centered around a `model.py` c
 ## Limitations
 *   **No In-Place Training:** Relying on deep learning libraries (PyTorch/TF) makes full I/O minimization impossible at scale.
 *   **Software Dependencies:** Highly dependent on the specific version of Hugging Face Transformers for `load_pretrained` and tokenizer logic due to API shifts.
-*   **Character-Level Bias:** Character-level training offers a 2-3x speedup on CPU but sacrifices contextual richness compared to byte-level (GPT-2 XL) setups.
+*   **Character-Level Bias:** Character-level training offers a 2-3x speedup on CPU but sacrifices contextual richness compared to byte-level (GPT-2 XL) setups.D Softw

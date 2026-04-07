@@ -1,0 +1,4 @@
+include README.md
+include src/dgat/bin/*
+recursive-include src/dgat/queries *.scm
+recursive-include src/dgat/grammars *

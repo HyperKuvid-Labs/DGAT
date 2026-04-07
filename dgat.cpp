@@ -920,7 +920,7 @@ DepGraph build_dep_graph(TreeNode* root) {
     f.get();
   }
 
-  cout << "\r[DGAT] Processing complete!                    " << endl;
+  cout << "\r[DGAT] Processing complete!" << endl;
 
   unordered_set<string> all_node_ids;
   for (const auto& node : graph.nodes) {
@@ -3173,6 +3173,9 @@ int main(int argc, char** argv){
   bool update_mode  = false;
   bool deps_only    = false;
   int  port = 8090;
+
+  string provider = "vllm"; // default provider for llm calls
+  string model = "Qwen/Qwen3.5-2B"; // default model
 
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];

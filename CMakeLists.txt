@@ -28,6 +28,7 @@ else()
         message(STATUS "Found xxhash: ${XXHASH_LIBRARY}")
     else()
         message(WARNING "xxhash library not found, using header-only mode")
+        set(XXHASH_LIBRARY "")
         add_definitions(-DXXH_STATIC_LINKING)
     endif()
 endif()
@@ -59,8 +60,11 @@ target_link_libraries(dgat
     PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
-    ${XXHASH_LIBRARY}
 )
+
+if(XXHASH_LIBRARY)
+    target_link_libraries(dgat PRIVATE ${XXHASH_LIBRARY})
+endif()
 
 if(NOT WIN32)
     target_link_libraries(dgat PRIVATE pthread dl)

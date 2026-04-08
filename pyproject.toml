@@ -45,7 +45,7 @@ dev = [
 dgat = "dgat.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/HyperKuvid-Labs/DGAT"
+Homepage = "https://dgat.vercel.app"
 Repository = "https://github.com/HyperKuvid-Labs/DGAT"
 Issues = "https://github.com/HyperKuvid-Labs/DGAT/issues"
 

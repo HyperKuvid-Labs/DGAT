@@ -3,7 +3,7 @@
 __version__ = "1.0.0"
 
 from dgat.types import FileNode, DepNode, DepEdge, DepGraph, FileTree, ScanResult
-from dgat.scanner import run_scan, run_update
+from dgat.scanner import run_scan, run_update, search_files, search_files_llm
 
 __all__ = [
     "__version__",
@@ -15,4 +15,6 @@ __all__ = [
     "ScanResult",
     "run_scan",
     "run_update",
+    "search_files",
+    "search_files_llm",
 ]

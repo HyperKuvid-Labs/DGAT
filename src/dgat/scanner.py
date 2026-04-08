@@ -309,6 +309,80 @@ def search_files(query: str, path: Path = None, limit: int = 10) -> list[SearchR
 
     search_nodes(tree)
 
-    # Sort by score and limit
     results.sort(key=lambda x: x.score, reverse=True)
     return results[:limit]
+
+
+def search_files_llm(
+    query: str,
+    path: Path = None,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    limit: int = 10,
+) -> list[SearchResult]:
+    """Search files using LLM based on name or description"""
+    from dgat.providers import get_provider
+
+    tree = load_file_tree(path)
+    if tree is None:
+        return []
+
+    file_list = []
+
+    def collect_nodes(node):
+        if hasattr(node, "name") and hasattr(node, "rel_path"):
+            file_list.append(
+                {
+                    "name": node.name,
+                    "rel_path": node.rel_path,
+                    "description": node.description or "",
+                }
+            )
+        if hasattr(node, "children") and node.children:
+            for child in node.children:
+                collect_nodes(child)
+
+    collect_nodes(tree)
+
+    files_context = "\n".join(
+        f"- {f['name']}: {f['description']}" if f["description"] else f"- {f['name']}"
+        for f in file_list
+    )
+
+    prompt = f"""Given the following files and their descriptions:
+
+{files_context}
+
+Find the most relevant files for this query: "{query}"
+
+Return only the file names (one per line) that are most relevant to the query. If none are relevant, return "NONE"."""
+
+    try:
+        llm_provider = get_provider(provider or "vllm", model=model)
+        response = llm_provider.chat_complete(prompt)
+
+        if not response or response.strip() == "NONE":
+            return []
+
+        relevant_names = [
+            line.strip().lstrip("- ").strip()
+            for line in response.strip().split("\n")
+            if line.strip()
+        ]
+
+        results = []
+        for f in file_list:
+            if f["name"] in relevant_names:
+                results.append(
+                    SearchResult(
+                        rel_path=f["rel_path"],
+                        name=f["name"],
+                        description=f["description"],
+                        score=100.0,
+                    )
+                )
+
+        return results[:limit]
+
+    except Exception as e:
+        return []

@@ -1,0 +1,326 @@
+{
+  "edges": [
+    {
+      "description": "The prepare.py pipeline relies on kernel.py to execute smoke tests via its database abstraction layer.",
+      "from": "prepare.py",
+      "import_stmt": "kernel",
+      "to": "kernel.py"
+    },
+    {
+      "description": "File A uses the PyTorch kernel generation logic and dynamic test matrix instantiation capabilities provided in File B to construct kernel.py and generate reproducible reference tensors for the matmul baseline aggregation.",
+      "from": "prepare.py",
+      "import_stmt": "reference",
+      "to": "reference.py"
+    },
+    {
+      "description": "File A uses the performance benchmarks and hardware detection capabilities from File B because they provide the reference implementation metrics, theoretical speed limits, and isolated hardware specifications needed to accurately measure kernel performance and identify grounding gaps.",
+      "from": "bench.py",
+      "import_stmt": "reference",
+      "to": "reference.py"
+    },
+    {
+      "description": "File A uses the data containers and abstract runtime APIs provided by file B to define its kernel function signature and invoke the C++ CUDA toolkit into PyTorch's tracing system at runtime.",
+      "from": "examples/hf_kernels_test/torch-ext/torch_binding.cpp",
+      "import_stmt": "torch_binding.h",
+      "to": "examples/hf_kernels_test/torch-ext/torch_binding.h"
+    },
+    {
+      "description": "File A uses the function signatures and namespace located in File B to register itself as a `torch::kCUDA` extension within the torch_binding.h custom kernel interface (CKI).",
+      "from": "examples/hf_kernels_test/torch-ext/torch_binding.cpp",
+      "import_stmt": "\"torch_binding.h\"",
+      "to": "examples/hf_kernels_test/torch-ext/torch_binding.h"
+    },
+    {
+      "description": "File A includes the `<kernels.cuda._compile>` import statement to leverage the backend compilation functions found in file B for generating optimized PTX code.",
+      "from": "kernels/cuda/rmsnorm.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "File A utilizes `kernels.cuda._compile` for compiling and optimizing PyTorch kernels used by CUDA-specific implementations such as RMS normalization and flash attention to enable efficient device-side model execution.",
+      "from": "kernels/cuda/flash_attention.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "This CUDA kernel fine-grains and opts-in the tight numerical stability by leveraging the MP code generation capabilities to stream Layernorm data into the PyTorch kernel.",
+      "from": "kernels/cuda/layernorm.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "File A uses the compilation infrastructure provided by `kernels.cuda._compile` to instantiate and optimize CUDA-specific kernels required for its highly accelerated cross-entropy computation logic.",
+      "from": "kernels/cuda/cross_entropy.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "File A uses the compiled optimizations from File B in `kernels.cuda._compile` to generate the optimized SwiGLU fused matrix multiplication kernel.",
+      "from": "kernels/cuda/fused_mlp.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "File A directly calls `dispatch` logic from file B to enable dynamic switching between Triton and CUDA compilers within the `matmul_cuda` kernel.",
+      "from": "kernels/cuda/matmul.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "File A utilizes the optimized CUDA C++ roots provided by file B to execute its specialized rotary embedding kernels at high performance on the GPU.",
+      "from": "kernels/cuda/rotary_embedding.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "Kernels/cuda/reduce.py uses the CUDA optimization and compilation logic provided by kernels/cuda/_compile.py to ensure that its heavy multiply-accumulate operations execute with maximum device-side throughput for language models.",
+      "from": "kernels/cuda/reduce.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    },
+    {
+      "description": "File A uses the data compilation and optimization services provided by file B to ensure its CUDA kernels are efficiently compiled and minimized for production use.",
+      "from": "kernels/cuda/softmax.py",
+      "import_stmt": "kernels.cuda._compile",
+      "to": "kernels/cuda/_compile.py"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "prepare.py"
+      ],
+      "depends_on": [],
+      "description": "The kernel.py module serves as the core database abstraction layer, providing the foundation for all schema definitions, data model management, and query execution operations within the software system.",
+      "hash": "",
+      "id": "kernel.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "kernel.py",
+      "rel_path": "kernel.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "prepare.py",
+        "bench.py"
+      ],
+      "depends_on": [],
+      "description": "reference.py provides the referenced DLL which is loaded by the Python wrapper module prep.py, as well as used by the bench.py script to perform benchmarking operations.",
+      "hash": "",
+      "id": "reference.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "reference.py",
+      "rel_path": "reference.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "examples/hf_kernels_test/torch-ext/torch_binding.cpp",
+        "examples/hf_kernels_test/torch-ext/torch_binding.cpp"
+      ],
+      "depends_on": [],
+      "description": "The torch_binding.h header file provides the C++ bindings that allow the Custom Kernel Interface (CKI) device executor to interact with the PyTorch Eager Execution Engine, enabling CPU-side execution of torch kernels.",
+      "hash": "",
+      "id": "examples/hf_kernels_test/torch-ext/torch_binding.h",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "torch_binding.h",
+      "rel_path": "examples/hf_kernels_test/torch-ext/torch_binding.h"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "kernels/cuda/rmsnorm.py",
+        "kernels/cuda/flash_attention.py",
+        "kernels/cuda/layernorm.py",
+        "kernels/cuda/cross_entropy.py",
+        "kernels/cuda/fused_mlp.py",
+        "kernels/cuda/matmul.py",
+        "kernels/cuda/rotary_embedding.py",
+        "kernels/cuda/reduce.py",
+        "kernels/cuda/softmax.py"
+      ],
+      "depends_on": [],
+      "description": "This dependency is responsible for compiling and optimizing PyTorch kernels used by CUDA-specific implementations such as RMS normalization, flash attention, and language modeling, which are essential for efficient device-side model execution.",
+      "hash": "",
+      "id": "kernels/cuda/_compile.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "_compile.py",
+      "rel_path": "kernels/cuda/_compile.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./prepare.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernel.py",
+        "reference.py"
+      ],
+      "description": "## `prepare.py` short description\n\n**Loads test assets, runs smoke tests, and establishes PyTorch/benchmark baselines before agent optimization experiments.**\n\n- **Environment Verification**: Checks CUDA availability, GPU specs, and Triton's existence before proceeding.\n- **Deterministic Data Generation**: Creates reproducible test matrices (`A`, `B`) for matmul benchmarks matching project configurations.\n- **Smoke Test Execution**: Imports and executes kernel.py to ensure basic correctness, skipping unsupported kernel types.\n- **PyTorch Baseline Benchmarking**: Measures native CUDA `torch.matmul` performance across tested tensors and dtypes to provide a reference for speedup metrics.\n- **Baseline Persistence**: Saves optimized performance logs to `baselines.json` so agents can measure and report improvements against current convergence.",
+      "hash": "abd4190dc4746a1579ffac1c28ae8d00",
+      "id": "prepare.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "prepare.py",
+      "rel_path": "prepare.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./bench.py",
+      "depended_by": [],
+      "depends_on": [
+        "reference.py"
+      ],
+      "description": "**bench.py** is an automated correctness and performance harness that verifies kernel behavior against PyTorch reference implementations while optimizing runtime.\n\n*   **GPU Hardware & Roofline Modeling**: Automatically detects GPU specs and estimates theoretical peak TFLOPS and bandwidth limits.\n*   **5-Stage Correctness Verification**: Systematically tests for smoke results, numerical stability (adversarial inputs), strict determinism, edge cases, and final correctness without crashing the agent.\n*   **Performance Benchmarking**: Measures kernel latency, throughput, and bandwidth against the PyTorch reference using a fixed large input size.\n*   **Roofline Analysis**: Identifies the bottlenecks (compute vs memory) by comparing the observed performance against the known theoretical limits.\n*   **Structured Logging**: Outputs a high-level summary and a large table of metrics (passion metrics) for agents to parse and decide on optimization paths.",
+      "hash": "54eecab91b5255894d22cc914dda4a3c",
+      "id": "bench.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "bench.py",
+      "rel_path": "bench.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./examples/hf_kernels_test/torch-ext/torch_binding.cpp",
+      "depended_by": [],
+      "depends_on": [
+        "examples/hf_kernels_test/torch-ext/torch_binding.h",
+        "examples/hf_kernels_test/torch-ext/torch_binding.h"
+      ],
+      "description": "**What it does:** A low-level blueprint for the C++ CUDA CUDA toolkit used by the `matmul_cuda` GPU optimization kernel. It refactors the original `matmul` implementation into a C++ function registered via the standard `torch::kCUDA` extension system to ensure optimal kernel performance.\n\n**Key responsibilities:**\n*   Defines the high-level `matmul_cuda` function signature and implementation in pure C++.\n*   Registers the function into the `TORCH_LIBRARY` so PyTorch's `kCUDA()` extension manager can locate and invoke it at runtime.\n*   Specifies the `TORCH_EXTENSION_NAME` via the macro to establish the kernel's identity within the PyTorch tracing system.\n*   Relies on shared underlying tensor core logic found elsewhere in `torch-ext` (likely `torch_binding.cpp`).",
+      "hash": "44ad1ffcd4f325f0e681aa9a7c481d25",
+      "id": "examples/hf_kernels_test/torch-ext/torch_binding.cpp",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "torch_binding.cpp",
+      "rel_path": "examples/hf_kernels_test/torch-ext/torch_binding.cpp"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/rmsnorm.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**`kernels/cuda/` solidity tensor core operation interface for RMSNorm (Fused via warp-sum & shared-mem reduction).**\n\n*   **Provides shared hardware-coded implementations** starting with template compilation (`_compile.py`).\n*   **Enables flexible architecture swaps** for specific kernel types using dedicated backend files (e.g., `matmul.py`, `softmax.py`).\n*   **Serves as the entry point** for `kernels/cuda/rmsnorm.py` where the agent edits block-counts, reduction strategies, and PTX intrinsics simultaneously.",
+      "hash": "6c787e92f0bbebbc6d7423ce074251ce",
+      "id": "kernels/cuda/rmsnorm.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "rmsnorm.py",
+      "rel_path": "kernels/cuda/rmsnorm.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/flash_attention.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**CUDA C++ implementation of a tiled, causal kernelized flash attention tensor core optimized for warp-level parallelism with SRAM-based QKV blocking.**\n\n*   **Profiled bottleneck detection**: Identifies `flash_attention` as the primary compute-bound operation via `profile.py`.\n*   **Compilation backend switching**: Generates native CUDA code in `kernels/cuda/flash_attention.py` via `extract.py`'s `--cuda` flag.\n*   **Causal masking integration**: Implements early termination logic to prune tokens outside the causal graph in a single pass.\n*   **Multi-precision efficiency**: Utilizes `__half2float` and `expf` for FP16 arithmetic alongside PTX `wmma` and `__shfl_sync` for memory coalescing.\n*   **Verified correctness**: Passes 5-stage verification checks including numerical stability, edge cases, and determinism before uptime in `bench.py`.",
+      "hash": "a7175bdfd002ac67eaff3ae61e57e6f1",
+      "id": "kernels/cuda/flash_attention.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "flash_attention.py",
+      "rel_path": "kernels/cuda/flash_attention.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/layernorm.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**`kernels/cuda/layernorm.py`**: A compiled CUDA C++ kernel for numerically stable Layer Normalization, optimizing batch-averaging with Welford's algorithm to achieve high throughput on GPU SPMD cores.\n\n*   **Numerical Stability:** Implements Welford's online algorithm with block-level coalescing for single-pass convergence.\n*   **Vectorization:** Utilizes 8-half (4 `float4`) loads and writes per element for maximum memory bandwidth.\n*   **Fusion:** Combines weight scaling and bias addition into a single fused epilogue.\n*   **Execution:** Manages grid/block launches and resource scheduling for grid-parallel row processing.",
+      "hash": "bd63f801c4ea2e5e3e8bbb3501ea8d8c",
+      "id": "kernels/cuda/layernorm.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "layernorm.py",
+      "rel_path": "kernels/cuda/layernorm.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/cross_entropy.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**`kernels/cuda/cross_entropy.py`** Concisely defines the CUDA C++ implementation for computing the Cross Entropy loss, optimized with warp-sum reductions and shared memory to accelerate ternary branching in log-sum-exp computations.",
+      "hash": "9fc939f39be48359f872016d31fa6ae3",
+      "id": "kernels/cuda/cross_entropy.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "cross_entropy.py",
+      "rel_path": "kernels/cuda/cross_entropy.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/fused_mlp.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**`kernels/cuda/fused_mlp.py`** \nA native CUDA C++ kernel file implementing SwiGLU-based fused matrix multiplication with thread-level tiling and compiler backend.\n\n- Handles fused M-By-N gate+up projections followed by SiLU activation and K-By-N down projection\n- Utilizes shared memory tiling for checkpoint-to-sharpen reduction and warp-level parallelism\n- Exports optimized SwiGLU functionality via `launch_kernel` entry point designed for correctness-first verification\n- Compatible with `extract.py` for automated kernel lifecycle management and benchmarking",
+      "hash": "343c75dccb0421daa5ebc128ae16ca3d",
+      "id": "kernels/cuda/fused_mlp.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "fused_mlp.py",
+      "rel_path": "kernels/cuda/fused_mlp.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/matmul.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**`kernels/cuda/matmul.py`**: A standalone CUDA C++ matrix multiplication kernel featuring tensor-core wmma optimization for进一步提升 throughput.\n\n**Responsibilities:**\n*   Compiles into a persistent `matmul_cuda` function for execution via `bench.py`.\n*   Optimizes GEMM using `nvcuda::wmma::mma_sync` instructions (16x16x16 tiles) with double-buffered shared memory to overlap memory and compute loads.\n*   Implements bank-conflict-free memory layout with 8-byte padding and warp-level switching for efficient register control.\n*   Handles variable-length batch sizes and automatically casts input tensors to float16 for dtype compliance.\n*   Prepares the kernel infrastructure for back-end selection (Triton/CUDA) by maintaining the same dispatch logic across both kernels.",
+      "hash": "7e9d17c1a14520e895b3a4394e9bfa03",
+      "id": "kernels/cuda/matmul.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "matmul.py",
+      "rel_path": "kernels/cuda/matmul.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/rotary_embedding.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**CUDA C++ kernel** for optimized rotary position embeddings that reduces matrix multiplications, uses dedicated `__sincosf` intrinsics, and caches frequency tables on the GPU for speedups.\n\n*   **Algorithmic Acceleration**\n*   **Optimized Memory Layout**\n*   **On-the-Fly Precomputation**\n*   **Bank-Aware Double-Extension Math**\n*   **Model Autonomy**",
+      "hash": "98e0ca1187bf0fd4be5427fef46c176f",
+      "id": "kernels/cuda/rotary_embedding.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "rotary_embedding.py",
+      "rel_path": "kernels/cuda/rotary_embedding.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/reduce.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**Heavy Low-Lateline (HLL) Multiply-Accumulate Kernel**\n\n*   Implements fast `tensor (C, M)` @ `tensor (C, N)` operations via shared memory reduction and warp shuffling.\n*   Optimizes LLaMA-style `reduce_sum` routines for GPU throughput using nested `__shfl_down_sync` promotes.\n*   Provides a primary CUDA auto-research kernel structured for \"自我\" (local) optimization loops.",
+      "hash": "76d1d41e5ba1988954ee45a0c78d01aa",
+      "id": "kernels/cuda/reduce.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "reduce.py",
+      "rel_path": "kernels/cuda/reduce.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/autokernel/./kernels/cuda/softmax.py",
+      "depended_by": [],
+      "depends_on": [
+        "kernels/cuda/_compile.py"
+      ],
+      "description": "**HugeLabs CUDA OpenMP Barracuda kernel: input matrix $A$ (rows $\\times$ cols) mapped directly to host memory to ensure CPU-independent, consistent value access patterns for GPU tensors.**\n*   Initializes `CUDA_SRC` with input layout `$A_$B$` and block size of 32\n*   Launches `gather_rope_row` to broadcast tokens to neighboring rows across 64 warps per block\n*   Computes `(A @ 0)*(A @ B)` to derive output element with fewer passes than standard matmul for RoPE alignment\n*   Returns `transpose(output, (0, 1))` before returning",
+      "hash": "54584ca0185dad285b66df248f5cd1db",
+      "id": "kernels/cuda/softmax.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "softmax.py",
+      "rel_path": "kernels/cuda/softmax.py"
+    }
+  ]
+}

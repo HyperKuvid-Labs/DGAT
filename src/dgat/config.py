@@ -61,3 +61,24 @@ def save_config(config: DGATConfig) -> None:
 def get_provider_config(name: str) -> ProviderConfig:
     config = load_config()
     return config.providers.get(name, ProviderConfig())
+
+
+def configure(
+    default_provider: Optional[str] = None,
+    providers: Optional[dict[str, ProviderConfig]] = None,
+) -> DGATConfig:
+    """Configure DGAT programmatically"""
+    config = load_config()
+
+    if default_provider:
+        config.default_provider = default_provider
+
+    if providers:
+        for name, provider_config in providers.items():
+            if isinstance(provider_config, dict):
+                config.providers[name] = ProviderConfig(**provider_config)
+            else:
+                config.providers[name] = provider_config
+
+    save_config(config)
+    return config

@@ -264,17 +264,16 @@ export default function HomePage() {
       <section id="get-started" className="py-[88px] border-t border-dgat-border">
         <div className="max-w-[1100px] mx-auto px-10">
           <div className="font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-dgat-text opacity-40 mb-2.5">Get started</div>
-          <h2 className="font-heading text-[clamp(26px,3vw,40px)] font-extrabold text-dgat-text mb-3.5">Not on npm. Not on Homebrew. Clone it.</h2>
-          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-[52px]">DGAT isn't a package yet — it's a project you build and run yourself. Three steps to get going.</p>
+          <h2 className="font-heading text-[clamp(26px,3vw,40px)] font-extrabold text-dgat-text mb-3.5">Install via pip</h2>
+          <p className="text-[15px] text-dgat-muted max-w-[480px] leading-[1.7] mb-[52px]">DGAT is available as a Python package. Install it with pip and you're ready to go.</p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-            <div>
+            <div className="flex flex-col gap-6">
               <div className="flex flex-col">
                 {[
-                  { num: "01", title: "Clone & build", code: <>git clone https://github.com/HyperKuvid-Labs/dgat<br/>cd dgat<br/>cmake -B build && cmake --build build -j$(nproc)<br/><CodeComment># or: bash install.sh</CodeComment></> },
-                  { num: "02", title: "Start vLLM", code: <><CodeComment># any OpenAI-compatible endpoint works</CodeComment><br/>vllm serve Qwen/Qwen3.5-2B --port 8000</> },
-                  { num: "03", title: "Run on your project", code: <>./build/dgat /path/to/your/project<br/><CodeComment># copy the output files:</CodeComment><br/>cp file_tree.json dep_graph.json dgat_blueprint.md renderwise-forge-main/public/examples/your-project/<br/><CodeComment># then run the frontend:</CodeComment><br/>cd renderwise-forge-main && bun dev<br/><CodeComment># → http://localhost:3000/examples/your-project</CodeComment><br/><span className="text-dgat-text font-semibold">🙂 or submit a PR — we'll merge it for you!</span></> },
+                  { num: "01", title: "Install DGAT", code: <>pip install dgat<br/><CodeComment># requires Python 3.11+</CodeComment></> },
+                  { num: "02", title: "Run on your project", code: <>dgat scan /path/to/your/project<br/><CodeComment># outputs: file_tree.json, dep_graph.json, dgat_blueprint.md</CodeComment></> },
                 ].map((step, i) => (
-                  <div key={i} className={`grid grid-cols-[28px_1fr] gap-4 py-5 ${i < 2 ? "border-b border-dgat-border" : ""} ${i === 0 ? "pt-0" : ""}`}>
+                  <div key={i} className={`grid grid-cols-[28px_1fr] gap-4 py-5 ${i < 1 ? "border-b border-dgat-border" : ""} ${i === 0 ? "pt-0" : ""}`}>
                     <div className="font-mono text-[11px] text-dgat-subtle pt-1 tracking-wide">{step.num}</div>
                     <div>
                       <h4 className="text-sm font-semibold text-dgat-text mb-2.5">{step.title}</h4>
@@ -283,49 +282,70 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
+              <div className="p-7 bg-surface border border-dgat-border rounded-[10px]">
+                <div className="font-heading text-lg font-bold text-dgat-text mb-4">LLM Provider Configuration</div>
+                <div className="text-[13px] text-dgat-muted mb-4 leading-[1.6]">DGAT supports any OpenAI-compatible endpoint. Configure with:</div>
+                <CodeBlock>{<>dgat config init<br/><CodeComment># or manually:</CodeComment><br/>dgat config set providers.vllm.endpoint http://localhost:8000<br/>dgat config set providers.vllm.model Qwen/Qwen3.5-2B</>}</CodeBlock>
+                <div className="mt-5 pt-5 border-t border-dgat-border/50">
+                  <div className="text-[13px] text-dgat-muted mb-3 leading-[1.6]">
+                    <span className="text-dgat-text font-semibold">Supported providers:</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-[11px]">
+                    {[
+                      ["vLLM", "http://localhost:8000"],
+                      ["Ollama", "http://localhost:11434"],
+                      ["OpenAI", "api.openai.com/v1"],
+                      ["Anthropic", "api.anthropic.com"],
+                      ["OpenRouter", "openrouter.ai/api/v1"],
+                    ].map(([name, endpoint], i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="text-dgat-text font-semibold">{name}</span>
+                        <span className="text-dgat-subtle">{endpoint}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 text-[13px] text-dgat-muted leading-[1.6]">
+                    <span className="text-dgat-text font-semibold">API keys:</span> Set with <code className="text-[11px] text-dgat-text">dgat config set api_key &lt;key&gt;</code> (for cloud providers)
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex flex-col gap-4">
               <div className="p-7 bg-surface border border-dgat-border rounded-[10px]">
-                <div className="font-heading text-lg font-bold text-dgat-text mb-1.5">Requirements</div>
-                <div className="text-[13px] text-dgat-muted mb-5 leading-[1.6]">You'll need these installed before building. The frontend is optional — the backend serves a static HTML export too.</div>
-                <div className="flex flex-col gap-2">
+                <div className="font-heading text-lg font-bold text-dgat-text mb-1.5">DGAT CLI commands</div>
+                <div className="text-[13px] text-dgat-muted mb-5 leading-[1.6]">Available commands:</div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-[12px]">
                   {[
-                    "C++17 compiler — GCC 11+ or Clang 14+",
-                    "CMake 3.16+",
-                    <>vLLM (or any <code className="text-[12px] text-dgat-text">OpenAI-compat</code> endpoint) on localhost</>,
-                    "Node.js 18+ or Bun (frontend only)",
-                  ].map((req, i) => (
-                    <div key={i} className="flex items-center gap-2.5 text-[13.5px] text-dgat-muted">
-                      <span className="w-[5px] h-[5px] rounded-full bg-dgat-subtle flex-shrink-0" />
-                      {req}
+                    ["dgat scan", "Full codebase scan"],
+                    ["dgat update", "Incremental update"],
+                    ["dgat search", "Search files/description"],
+                    ["dgat describe", "Get file description"],
+                    ["dgat deps", "Show dependencies"],
+                    ["dgat dependents", "Show dependents"],
+                    ["dgat blueprint", "Get architectural overview"],
+                    ["dgat mcp", "Start MCP server"],
+                    ["dgat backend", "Start API server"],
+                    ["dgat config", "Manage configuration"],
+                  ].map(([cmd, desc], i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-dgat-text font-semibold">{cmd}</span>
+                      <span className="text-dgat-subtle">— {desc}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="p-7 bg-raised border border-dgat-border rounded-lg">
-                <div className="font-mono text-[11px] font-bold tracking-[0.08em] uppercase text-dgat-text mb-3">Building a tool around this</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-                  <div>
-                    <p className="text-[13px] text-dgat-muted leading-[1.6] mb-4">Building the MCP and native integration with opencode — still in progress. These are some early benchmarks:</p>
-                    <p className="text-[13px] text-dgat-muted leading-[1.6]">
-                      Interested in contributing? Check out the <a href="https://github.com/HyperKuvid-Labs/DGAT/tree/feat/dgat-agent-integration" target="_blank" rel="noopener" className="text-dgat-text underline underline-offset-2 hover:opacity-80">feat/dgat-agent-integration</a> branch for the latest work.
-                    </p>
-                  </div>
-                  <div>
-                    <img 
-                      src="/benchmark_opencode.png" 
-                      alt="DGAT benchmarks" 
-                      className="w-full h-auto rounded-lg border border-dgat-border cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => setBenchmarkOpen(true)}
-                    />
-                    <ImageViewer 
-                      src="/benchmark_opencode.png" 
-                      alt="DGAT benchmarks" 
-                      isOpen={benchmarkOpen} 
-                      onClose={() => setBenchmarkOpen(false)} 
-                    />
-                  </div>
-                </div>
+                <div className="font-mono text-[11px] font-bold tracking-[0.08em] uppercase text-dgat-text mb-3">MCP server</div>
+                <div className="text-[13px] text-dgat-muted mb-3 leading-[1.6]">Use DGAT as a tool in AI coding agents via the Model Context Protocol.</div>
+                <CodeBlock>{<>dgat mcp              # stdio mode<br/>dgat mcp --http        # HTTP mode</>}</CodeBlock>
+                <p className="text-[13px] text-dgat-muted mt-3 leading-[1.6]">
+                  <span className="text-dgat-text font-semibold">Tools:</span> scan, update, describe_file, get_dependencies, get_dependents, get_blueprint, search_files, get_file_tree, get_dep_graph
+                </p>
+              </div>
+              <div className="p-7 bg-surface border border-dgat-border rounded-[10px]">
+                <div className="font-heading text-lg font-bold text-dgat-text mb-1.5">Python API</div>
+                <div className="text-[13px] text-dgat-muted mb-3 leading-[1.6]">Import DGAT directly in your Python code:</div>
+                <CodeBlock>{<>from dgat import run_scan, run_update<br/>from dgat import FileTree, DepGraph<br/><CodeComment># from dgat.scanner import search_files</CodeComment></>}</CodeBlock>
               </div>
             </div>
           </div>

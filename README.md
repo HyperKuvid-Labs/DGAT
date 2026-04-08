@@ -5,9 +5,7 @@
 
 *Point it at a codebase. Get a fully-described, LLM-annotated dependency graph — instantly.*
 
-![C++](https://img.shields.io/badge/C%2B%2B-17-blue?style=flat-square&logo=cplusplus)
-![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=nextdotjs)
-![vLLM](https://img.shields.io/badge/LLM-vLLM%20%2F%20Qwen-orange?style=flat-square)
+![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square&logo=python)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 </div>
@@ -18,13 +16,99 @@
 
 DGAT scans any codebase, uses a locally-hosted LLM to write natural-language descriptions for every file and every import relationship, then serves it all through an interactive three-panel UI. Think of it as a self-generating architectural map — no config files, no annotations, no manual work.
 
+**Available as a Python package** — install with `pip install dgat` and you're ready to go.
+
+---
+
+## Quick start
+
+### 1. Install DGAT
+
+```bash
+pip install dgat
+# requires Python 3.11+
+```
+
+### 2. Configure your LLM provider
+
+```bash
+# Interactive setup
+dgat config init
+
+# Or configure manually (vLLM example)
+dgat config set providers.vllm.endpoint http://localhost:8000
+dgat config set providers.vllm.model Qwen/Qwen3.5-2B
+```
+
+**Supported providers:** vLLM, Ollama, OpenAI, Anthropic, OpenRouter (any OpenAI-compatible endpoint)
+
+### 3. Start your LLM server
+
+```bash
+# vLLM example
+vllm serve Qwen/Qwen3.5-2B --port 8000
+```
+
+### 4. Run on your project
+
+```bash
+dgat scan /path/to/your/project
+# outputs: file_tree.json, dep_graph.json, dgat_blueprint.md
+```
+
+---
+
+## CLI commands
+
+| Command | Description |
+|---|---|
+| `dgat scan [path]` | Full codebase scan — builds tree, descriptions, dep graph, blueprint |
+| `dgat update [path]` | Incremental re-scan (changed files only) |
+| `dgat search <query>` | Search files by name or description |
+| `dgat describe <rel_path>` | Get LLM-generated description for a specific file |
+| `dgat deps <rel_path>` | Show files that the given file depends on |
+| `dgat dependents <rel_path>` | Show files that depend on the given file |
+| `dgat blueprint` | Get the architectural blueprint (dgat_blueprint.md) |
+| `dgat mcp` | Start MCP server (stdio mode) |
+| `dgat mcp --http` | Start MCP server (HTTP mode) |
+| `dgat backend` | Start API backend server |
+| `dgat config show` | Show current configuration |
+| `dgat config set <key> <value>` | Set a configuration value |
+| `dgat config test` | Test if the provider API is working |
+
+---
+
+## Python API
+
+Import DGAT directly in your Python code:
+
+```python
+from dgat import run_scan, run_update
+from dgat import FileTree, DepGraph
+
+# or from dgat.scanner import search_files
+```
+
+---
+
+## MCP server
+
+Use DGAT as a tool in AI coding agents via the Model Context Protocol:
+
+```bash
+dgat mcp              # stdio mode (for local agents)
+dgat mcp --http       # HTTP mode (for remote agents)
+```
+
+**Available tools:** `scan`, `update`, `describe_file`, `get_dependencies`, `get_dependents`, `get_blueprint`, `search_files`, `get_file_tree`, `get_dep_graph`
+
 ---
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    subgraph CLI ["dgat (C++17 backend)"]
+    subgraph CLI ["dgat CLI (Python wrapper)"]
         A[Walk directory tree] --> B[Fingerprint files\nXXH3-128]
         B --> C[Parse imports\ntree-sitter + regex fallback]
         C --> D[Describe files & edges\nvLLM HTTP API]
@@ -33,24 +117,38 @@ flowchart TD
         F --> G[Persist state\nfile_tree.json · dep_graph.json]
     end
 
-    subgraph Server ["--backend mode"]
-        G --> H[HTTP server :8090\ncpp-httplib]
-        H --> |GET /api/tree| I[File tree JSON]
-        H --> |GET /api/dep-graph| J[Dep graph JSON]
-        H --> |GET /api/blueprint| K[Blueprint markdown]
+    subgraph MCP ["MCP Server"]
+        H[AI Coding Agent] --> I[DGAT MCP tools]
+        I --> J[scan, update, search,\ndescribe, deps, etc.]
     end
 
-    subgraph UI ["Next.js frontend"]
-        I --> L[Explorer panel\nfile tree]
-        K --> M[Blueprint tab\nrendered markdown]
-        J --> N[Graph tab\nSigma.js WebGL]
-        L & M & N --> O[Inspector panel\nnode · edge · dep details]
+    subgraph UI ["Renderwise Forge UI"]
+        G --> K[HTTP server :8090]
+        K --> |GET /api/tree| L[File tree JSON]
+        K --> |GET /api/dep-graph| M[Dep graph JSON]
+        K --> |GET /api/blueprint| N[Blueprint markdown]
+        L --> O[Explorer panel\nfile tree]
+        N --> P[Blueprint tab\nrendered markdown]
+        M --> Q[Graph tab\nSigma.js WebGL]
+        O & P & Q --> R[Inspector panel\nnode · edge · dep details]
     end
 
     subgraph LLM ["Local vLLM"]
-        D <--> P[Qwen/Qwen3.5-2B\nor any OpenAI-compat endpoint]
+        D <--> S[Qwen/Qwen3.5-2B\nor any OpenAI-compatible endpoint]
     end
 ```
+
+---
+
+## Features
+
+- **Multi-language import extraction** — TypeScript, JavaScript, Python, C/C++, Go, Java, Rust, C#, Ruby, PHP, CUDA, Bash, and more. Tree-sitter grammars for precision, regex fallback for everything else.
+- **LLM-annotated graph** — every file node and every dependency edge gets a concise description generated by a local model. No cloud, no API keys.
+- **Project blueprint** — a synthesised `dgat_blueprint.md` built bottom-up from all file descriptions.
+- **Incremental updates** — `dgat update` re-describes only files whose XXH3 fingerprint changed.
+- **MCP integration** — use DGAT as a tool in AI coding agents via the Model Context Protocol.
+- **Static export** — embed the entire graph into a single self-contained HTML file. Share with anyone, no server required.
+- **Live UI** — auto-refreshes every 30 s. Three-panel layout with file explorer, blueprint/graph tabs, and an inspector.
 
 ---
 
@@ -108,72 +206,16 @@ Switch to the **Graph tab** for an interactive WebGL view of all import relation
 
 ---
 
-## Features
-
-- **Multi-language import extraction** — TypeScript, JavaScript, Python, C/C++, Go, Java, Rust, C#, Ruby, PHP, Bash, and more. Tree-sitter grammars for precision, regex fallback for everything else.
-- **LLM-annotated graph** — every file node and every dependency edge gets a concise description generated by a local model. No cloud, no API keys.
-- **Project blueprint** — a synthesised `dgat_blueprint.md` built bottom-up from all file descriptions.
-- **Incremental updates** — `dgat update` re-describes only files whose XXH3 fingerprint changed.
-- **Static export** — embed the entire graph into a single self-contained HTML file. Share with anyone, no server required.
-- **Live UI** — auto-refreshes every 30 s. Three-panel layout with file explorer, blueprint/graph tabs, and an inspector.
-
----
-
-## Getting started
-
-### Prerequisites
-
-- C++17 compiler (GCC 11+ / Clang 14+)
-- CMake 3.16+
-- A running [vLLM](https://github.com/vllm-project/vllm) instance (or any OpenAI-compatible endpoint) on `localhost`
-- Node.js 18+ / Bun (for the frontend)
-
-### Build & install
-
-```bash
-git clone https://github.com/yourname/dgat
-cd dgat
-cmake -B build && cmake --build build -j$(nproc)
-
-# or use the install script
-bash install.sh
-```
-
-### Run
-
-```bash
-# full scan — builds tree, descriptions, dep graph, blueprint
-./build/dgat /path/to/your/project
-
-# start the API server (no re-scan)
-./build/dgat --backend
-
-# start the frontend
-cd frontend && bun dev
-# open http://localhost:3000
-```
-
----
-
-## CLI reference
-
-| Command | Description |
-|---|---|
-| `dgat [path]` | Full scan of the target directory |
-| `dgat --backend` | Load saved state, start API server |
-| `dgat update` | Incremental re-scan (changed files only) |
-| `--port <n>` | Override API server port (default: 8090) |
-
----
-
 ## Tech stack
 
 | Layer | Tech |
 |---|---|
-| Backend | C++17 · cpp-httplib · nlohmann/json · inja · xxHash |
+| Package | Python 3.11+ · pip-installable |
+| CLI | Click · Rich (terminal output) |
 | Parsing | tree-sitter (C, C++, Python, TS, Go, Java, Rust, …) |
 | LLM | vLLM · Qwen3.5-2B (any OpenAI-compat endpoint) |
-| Frontend | Next.js 14 · TypeScript · Tailwind CSS · Sigma.js · shadcn/ui |
+| MCP | JSON-RPC 2.0 (stdio + HTTP) |
+| Frontend | React · TypeScript · Tailwind CSS · Sigma.js · shadcn/ui |
 
 ---
 

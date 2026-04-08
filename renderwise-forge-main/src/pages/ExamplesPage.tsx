@@ -136,8 +136,12 @@ export default function ExamplesPage() {
                 </svg>
               </div>
               <p className="text-[13px] text-center leading-[1.6]">
-                Run <code className="text-[11.5px] text-dgat-text bg-dgat-tag px-1 py-0.5 rounded">dgat /your/repo</code> and add the exported page here.<br />
-                Then add an entry to the <code className="text-[11.5px] text-dgat-text bg-dgat-tag px-1 py-0.5 rounded">config.json</code>.
+                To add your own repo, run:<br />
+                <code className="text-[11.5px] text-dgat-text bg-dgat-tag px-1 py-0.5 rounded">pip install dgat</code>
+                <br />
+                <code className="text-[11.5px] text-dgat-text bg-dgat-tag px-1 py-0.5 rounded">dgat scan &lt;your_path&gt;</code>
+                <br />
+                Then add it to <code className="text-[11.5px] text-dgat-text bg-dgat-tag px-1 py-0.5 rounded">config.json</code>.
               </p>
             </div>
           </div>

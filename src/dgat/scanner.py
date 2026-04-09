@@ -84,7 +84,6 @@ def run_scan(
             cmd,
             capture_output=True,
             text=True,
-            timeout=600,
         )
 
         if result.returncode == 0:

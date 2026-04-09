@@ -55,6 +55,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: build/${{ steps.artifact.outputs.upload_name }}
           generate_release_notes: true
+          replace: true
 
   build-package:
     runs-on: ubuntu-latest

@@ -36,12 +36,13 @@ jobs:
         run: |
           brew install cmake openssl xxhash
 
-      - name: Build
+      - name: Build and rename
         run: |
           mkdir -p build
           cd build
           cmake .. -DENABLE_TREE_SITTER=OFF
           cmake --build . --parallel
+          mv dgat dgat-${{ matrix.target }}
 
       - name: Get artifact name
         id: artifact

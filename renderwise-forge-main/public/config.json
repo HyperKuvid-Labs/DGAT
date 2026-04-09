@@ -294,6 +294,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "mirage",
+      "name": "mirage-project/mirage",
+      "description": "Mirage Persistent Kernel: Compiling LLMs into a MegaKernel",
+      "github": "https://github.com/mirage-project/mirage",
+      "website": "https://mirage-project.readthedocs.io/en/latest/",
+      "langs": ["C++", "CUDA", "Python", "Rust"],
+      "stats": {"nodes": 352, "edges": 1254},
+      "model": "Qwen3.5-2B",
+      "image": "examples/mirage/mirage.jpg",
+      "files": {
+        "basePath": "examples/mirage",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

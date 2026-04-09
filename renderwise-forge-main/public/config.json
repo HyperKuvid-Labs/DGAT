@@ -278,6 +278,22 @@
         "tree": "file_tree.json",
         "depGraph": "dep_graph.json"
       }
+    }, {
+      "id": "prime-rl",
+      "name": "PrimeIntellect-ai/prime-rl",
+      "description": "Async RL Training at Scale",
+      "github": "https://github.com/PrimeIntellect-ai/prime-rl",
+      "website": null,
+      "langs": ["Python", "Shell"],
+      "stats": {"nodes": 22, "edges": 16},
+      "model": "Qwen3.5-2B",
+      "image": "examples/prime-rl/prime-rl.webp",
+      "files": {
+        "basePath": "examples/prime-rl",
+        "blueprint": "dgat_blueprint.md",
+        "tree": "file_tree.json",
+        "depGraph": "dep_graph.json"
+      }
     }
   ]
 }

@@ -1,0 +1,584 @@
+{
+  "edges": [
+    {
+      "description": "File A imports and utilizes the configuration_afmoe settings from file B to instantiate the custom AFM layer within its PyTorch-based model architecture.",
+      "from": "tests/unit/train/models/test_afmoe.py",
+      "import_stmt": "tests.unit.train.models.afmoe_hf_modeling.configuration_afmoe",
+      "to": "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py"
+    },
+    {
+      "description": "File A imports the AFMaeModeling from file B to instantiate the custom AFMoeAttention and MLP layers, which then leverage the state-space modeling functionality within a transformer architecture.",
+      "from": "tests/unit/train/models/test_afmoe.py",
+      "import_stmt": "tests.unit.train.models.afmoe_hf_modeling.modeling_afmoe",
+      "to": "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py"
+    },
+    {
+      "description": "`tests/conftest.py` provides the GPU-specific environment configuration and initialization fixtures required to accurately simulate W&B metrics and license 8x H200 GPUs for file A's automated nightly integration tests.",
+      "from": "tests/nightly/test_wordle.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A imports `tests.utils` because this central utility module provides shared functions and tools required to automate nightly integration testing, regenerate W&B metrics from test run redirects, and verify the high-throughput RL agent's reward accumulation across 8x H200 GPUs.",
+      "from": "tests/nightly/test_wordle.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A uses the fixtures and configuration providers established in File B to ensure a consistent and stateless test environment for running RL trainings across diverse GPU architectures and orchestrator logs.",
+      "from": "tests/nightly/test_reverse_text.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A imports functions from tests.utils because these utilities provide the necessary shared tools and configuration objects required to orchestrate and evaluate RL training benchmarks across multiple GPU architectures.",
+      "from": "tests/nightly/test_reverse_text.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A utilizes the centralized test fixtures and environment configurations provided by the `conftest.py` file to ensure a consistent and reproducible RL test setup across nightly executions.",
+      "from": "tests/nightly/test_wiki_search.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "`tests/nightly/test_wiki_search.py` extends the shared utility functions and functionality in `tests/utils.py` by orchestrating nightly RL execution, guaranteeing slow test execution to prevent regression, and applying Dynamic W&B tagging for tracking large-scale cluster experiments.",
+      "from": "tests/nightly/test_wiki_search.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A uses the hyperparameters and module settings from File B to define the Autoencoder Fine-Matched Embedding network structure required for supporting the Stable Diffusion XL input module within the transformer architecture.",
+      "from": "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py",
+      "import_stmt": ".configuration_afmoe",
+      "to": "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py"
+    },
+    {
+      "description": "The AFM implementation in file A utilizes the hyperparameters and model settings defined in file B as its specialized input module.",
+      "from": "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py",
+      "import_stmt": "configuration_afmoe",
+      "to": "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py"
+    },
+    {
+      "description": "File A extends the test environment established by file B, as it leverages the fixtures and linting rules defined in file B as part of its ML extraction strategy, while disabling superfluous test conftest machinery to streamline execution on large-scale models.",
+      "from": "tests/integration/test_rl_moe.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A imports and utilizes `tests.utils` for defining shared testing utilities, execution scripts, and environment configurations that support large-scale RL experiments on Infinix agents.",
+      "from": "tests/integration/test_rl_moe.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A uses configuration and utility definitions from file B to establish a consistent test environment by setting up required fixtures and managing internal test state.",
+      "from": "tests/integration/test_rl.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A uses `tests.utils` via `import statement: tests.utils` in `tests/utils.py` to execute shared functions and classes designed to support common RL integration tasks.",
+      "from": "tests/integration/test_rl.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A imports fixture objects defined in file B to share state, initializing objects, and manage internal test state during its SFT LoRA training workflow resilience checks.",
+      "from": "tests/integration/test_sft_lora.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A imports functions from File B to execute integration tasks and resumption logic while adhering to standard PEFT-compatible adapters and loss decay verification protocols.",
+      "from": "tests/integration/test_sft_lora.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A imports configurations and utility objects defined in file B to establish a consistent test environment, ensuring tests run with error-free environments across multiple GPU nodes.",
+      "from": "tests/integration/test_rl_multi_run_lora.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "`tests.integration.test_rl_multi_run_lora.py` imports and utilizes `tests.utils` to leverage shared testing functions and coordinated orchestration logic required for managing multi-node RL training trials.",
+      "from": "tests/integration/test_rl_multi_run_lora.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A utilizes `tests/conftest.py` to establish a reliable, consistent, and configured test environment that ensures clean states and persistent fixture definitions for its nightly orchestration workflow.",
+      "from": "tests/nightly/test_acereason_math.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A uses the utility functions defined in `tests/utils.py` to execute nightly aggregation batch processes on NVIDIA H100.",
+      "from": "tests/nightly/test_acereason_math.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A uses the wandb library to track experiments, because its name \"wandb.py\" is a typo for \"wandb.py,\" and the `wandb` import indicates it relies on that package.",
+      "from": "src/prime_rl/utils/monitor/wandb.py",
+      "import_stmt": "wandb",
+      "to": "src/prime_rl/utils/monitor/wandb.py"
+    },
+    {
+      "description": "File A uses the configuration and utility setup from file B to establish a consistent Python test environment for executing nightly integration checks on RL benchmarks.",
+      "from": "tests/integration/test_alphabet_sort.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A uses the shared testing and execution tools from `tests.utils` to orchestrate adaptive team agents and validate RL processes during nightly integration checks.",
+      "from": "tests/integration/test_alphabet_sort.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "`tests/integration/test_sft.py` depends on `tests/conftest.py` to initialize the test environment and define reusable fixtures that provide consistent execution state across Sentry-related integration tests.",
+      "from": "tests/integration/test_sft.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "The `tests/integration/test_sft.py` file imports `tests.utils.py` because it needs the shared functions and tools defined there to analyze code execution paths and output mechanisms for the SFT integration report.",
+      "from": "tests/integration/test_sft.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A utilizes the fixtures and state initialization strategies defined in file B to ensure a consistent and deterministic environment for orchestrating RL training, performance metrics aggregation, and token reward scaling verification.",
+      "from": "tests/nightly/test_multimodal_color_codeword.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A imports functions designed in `tests.utils.py` to orchestrate simultaneous RL training and aggregate multimodal audio/video datasets for end-to-end performance verification.",
+      "from": "tests/nightly/test_multimodal_color_codeword.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A imports the ZeroMQ library `zmq` from Standard Library module `zmq` in File B and uses its module-provided functionality for high-performance inter-process communication to facilitate reliable data exchange both client- and server-side.",
+      "from": "src/prime_rl/transport/zmq.py",
+      "import_stmt": "zmq",
+      "to": "src/prime_rl/transport/zmq.py"
+    },
+    {
+      "description": "File A uses the `run_process` fixture defined in File B to allow `uv` to wrapper its nightly RL benchmark execution commands.",
+      "from": "tests/nightly/test_alphabet_sort.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A imports and utilizes the shared fixture utilities from tests.utils.py to orchestrate nightly RL benchmark execution via uv wrappers and glampshark hook integration.",
+      "from": "tests/nightly/test_alphabet_sort.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A uses the shared `tests.conftest` fixture to maintain consistent test environment state by establishing the Python testing environment and initializing critical test objects before executing the heavy memory and throughput benchmarks.",
+      "from": "tests/integration/test_benchmark_regression.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File `tests/utils.py` imports fixtures and configuration objects from `tests/conftest.py` to establish a consistent test environment before executing integration tests for wordle, wiki search, and reinforcement learning operations.",
+      "from": "tests/utils.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "`tests/integration/test_rl_lora.py` imports and utilizes `tests/conftest.py` to define the shared pytest fixtures, initialization objects, and test environment state required for the integration testing of LoRA-based RL workflows.",
+      "from": "tests/integration/test_rl_lora.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A imports shared utility functions from file B to provide the required computation engines, data loaders, and framework event hooks that enable RL workflow orchestration, resume handling, and reward validation.",
+      "from": "tests/integration/test_rl_lora.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    },
+    {
+      "description": "File A uses the fixtures from `tests/conftest.py` to establish a consistent Python test environment for the RL benchmarks.",
+      "from": "tests/nightly/test_hendrycks_sanity.py",
+      "import_stmt": "tests.conftest",
+      "to": "tests/conftest.py"
+    },
+    {
+      "description": "File A uses the shared testing infrastructure provided by File B to coordinate distributed RL benchmark execution and validate training outcomes during nightly checks.",
+      "from": "tests/nightly/test_hendrycks_sanity.py",
+      "import_stmt": "tests.utils",
+      "to": "tests/utils.py"
+    }
+  ],
+  "nodes": [
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/unit/train/models/test_afmoe.py",
+        "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py",
+        "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py"
+      ],
+      "depends_on": [],
+      "description": "The configuration_afmoe.py file provides the hyperparameters and model settings required for the Autoencoder Fine-Matched Embedding (AFM) network, which is utilized as a specialized input module within the Stable Diffusion XL model architecture.",
+      "hash": "",
+      "id": "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "configuration_afmoe.py",
+      "rel_path": "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/unit/train/models/test_afmoe.py"
+      ],
+      "depends_on": [
+        "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py",
+        "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py"
+      ],
+      "description": "This dependency is responsible for modeling artificial neural network (AFM) states in transformer architectures, a core component of transformer language models used within the MEEG space.",
+      "hash": "",
+      "id": "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "modeling_afmoe.py",
+      "rel_path": "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/nightly/test_wordle.py",
+        "tests/nightly/test_reverse_text.py",
+        "tests/nightly/test_wiki_search.py",
+        "tests/integration/test_rl_moe.py",
+        "tests/integration/test_rl.py",
+        "tests/integration/test_sft_lora.py",
+        "tests/integration/test_rl_multi_run_lora.py",
+        "tests/nightly/test_acereason_math.py",
+        "tests/integration/test_alphabet_sort.py",
+        "tests/integration/test_sft.py",
+        "tests/nightly/test_multimodal_color_codeword.py",
+        "tests/nightly/test_alphabet_sort.py",
+        "tests/integration/test_benchmark_regression.py",
+        "tests/utils.py",
+        "tests/integration/test_rl_lora.py",
+        "tests/nightly/test_hendrycks_sanity.py"
+      ],
+      "depends_on": [],
+      "description": "Conftest.py is a configuration and utility file used to establish a Python test environment before running automated testing scripts, primarily to set up fixtures, initialize objects, or manage internal test state. It ensures a consistent state when tests are executed within the nightly and integration test suites.",
+      "hash": "",
+      "id": "tests/conftest.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "conftest.py",
+      "rel_path": "tests/conftest.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "tests/nightly/test_wordle.py",
+        "tests/nightly/test_reverse_text.py",
+        "tests/nightly/test_wiki_search.py",
+        "tests/integration/test_rl_moe.py",
+        "tests/integration/test_rl.py",
+        "tests/integration/test_sft_lora.py",
+        "tests/integration/test_rl_multi_run_lora.py",
+        "tests/nightly/test_acereason_math.py",
+        "tests/integration/test_alphabet_sort.py",
+        "tests/integration/test_sft.py",
+        "tests/nightly/test_multimodal_color_codeword.py",
+        "tests/nightly/test_alphabet_sort.py",
+        "tests/integration/test_rl_lora.py",
+        "tests/nightly/test_hendrycks_sanity.py"
+      ],
+      "depends_on": [
+        "tests/conftest.py"
+      ],
+      "description": "The utility file `utils.py` contains shared functions, classes, or tools designed to support common tasks within the software's testing and execution workflows. It is essential for running integration tests and nightly execution scripts for various modules including wordle, wiki search, and reinforcement learning operations.",
+      "hash": "",
+      "id": "tests/utils.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "utils.py",
+      "rel_path": "tests/utils.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/prime_rl/utils/monitor/wandb.py"
+      ],
+      "depends_on": [
+        "src/prime_rl/utils/monitor/wandb.py"
+      ],
+      "description": "wandb.py is likely a typo for wandb (Weights & Biases), a Python library primarily used for experiment tracking, version control, and model backup.",
+      "hash": "",
+      "id": "src/prime_rl/utils/monitor/wandb.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "wandb.py",
+      "rel_path": "src/prime_rl/utils/monitor/wandb.py"
+    },
+    {
+      "abs_path": "",
+      "depended_by": [
+        "src/prime_rl/transport/zmq.py"
+      ],
+      "depends_on": [
+        "src/prime_rl/transport/zmq.py"
+      ],
+      "description": "ZMQ (ZeroMQ) is a lightweight message broker and underlying communication protocol that simplifies inter-process communication by supporting asynchronous messaging via client and server sides in a single library. It is widely used in software development for high-performance, secure, and distributed applications, such as the one referenced in this prompt, to facilitate reliable data exchange across network services.",
+      "hash": "",
+      "id": "src/prime_rl/transport/zmq.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "zmq.py",
+      "rel_path": "src/prime_rl/transport/zmq.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/unit/train/models/test_afmoe.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/unit/train/models/afmoe_hf_modeling/configuration_afmoe.py",
+        "tests/unit/train/models/afmoe_hf_modeling/modeling_afmoe.py"
+      ],
+      "description": "**Tests Unit's PyTorch-based RL model model layer integration and forward pass behavior for the Prime RL framework**\n\n*   Verifies that custom model layers (AFMoeAttention and MLP) are transpiled from Hugging Face implementations to the Prime RL model structure.\n*   Ensures identical forward outputs and gradient behaviors between the native HF model and the converted Prime RL model.\n*   Tests mode-only differences (e.g., disabling specific attention layers) to confirm architectural adaptations.\n*   Validates support for full end-to-end training pipelines, including post-conversion state dictionary equivalence.",
+      "hash": "57547fd21b3416b0f07d6bb8e3356e49",
+      "id": "tests/unit/train/models/test_afmoe.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_afmoe.py",
+      "rel_path": "tests/unit/train/models/test_afmoe.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/nightly/test_wordle.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "**File Purpose**: Automates nightly integration testing for `PRIME-RL` agents to verify RL training success, logging fidelity, and reward accumulation while running on 8x H200 GPUs.\n\n**Key Responsibilities**:\n* **GPU-Specific**: Runs unit tests exclusively on NVIDIA H200s using the `gpu` marker configuration.\n* **Action Simulation**: Regenerates W&B dataset metrics from test run redirects and logs orchestrator stdout to verify integrity.\n* **Reward Verification**: Validates that the high-throughput agent successfully accumulates the required RL rewards.\n* **Quick CI**: Executes the full RL training pipeline in minutes (compared to days for production-only tests) to ensure baseline functionality before nightly full suite runs.",
+      "hash": "4d6ab1071fa06a38bf83ad0819554032",
+      "id": "tests/nightly/test_wordle.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_wordle.py",
+      "rel_path": "tests/nightly/test_wordle.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/nightly/test_reverse_text.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "**run an RL training benchmark for `reverse_text` tasks across all supported GPU architectures**\n\n- Executes comprehensive RL trainings on single-gpu, multi-gpu, and distributed configurations\n- Validates reward improvements and ensures training stability on orchestrator logs\n- Supports diverse test suites including Wordle, Alphabet Sort, and Multi-Run Manager ablations",
+      "hash": "eec95dda48b52e35f0afcc91f67e7765",
+      "id": "tests/nightly/test_reverse_text.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_reverse_text.py",
+      "rel_path": "tests/nightly/test_reverse_text.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/nightly/test_wiki_search.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "**`tests/nightly/test_wiki_search.py`**: Nightly integration tests for the PRIME-RL wiki search environment, validating environment setup, execution success, and reward improvements across different Agentic environments.\n\n- Detects GPU availability and environment prerequisites via `pytest.mark.gpu`.\n- Orchestrates RL setup, configuration (`rl.toml`), and multi-node execution using `uv`.\n- Verifies orchestration logs for errors and ensures reward metrics improve significantly compared to baselines.\n- Utilizes dynamic W&B tagging to track large-scale experiments (e.g., 8x 5090, 8x h200 clusters).\n- Automates benchmark regression and won't fail if code fails or performance drops.\n- Ensures tests run as slow and forced-by-nightly as expected, excluding CPU-only checks.",
+      "hash": "e49ac31ca45bcc295e9959cdee979910",
+      "id": "tests/nightly/test_wiki_search.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_wiki_search.py",
+      "rel_path": "tests/nightly/test_wiki_search.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_rl_moe.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "# **File: `tests/integration/test_rl_moe.py`**\nThis integration test suite validates that the PRIME-RL trainer successfully runs large scale RL experiments using both Hugging Face and custom model implementations on Infinix agents (e.g., INTELLECT-3, High-throughput GLM-5) with AcceleratorFS (FSDP/PEEP) enabled. Key responsibilities include:\n- Running full-scale RL, SFT, and inference pipelines on multi-node clusters with up to 8 GPUs.\n- Verifying asynchronous training semantics with parallelism optimizations (EP/CP) and structured inference costs (FP8/Offload).\n- Ensuring modular extensibility across different model architectures (MoE, dense LMs, VLMs) using external verifiers environments.\n- Defining end-to-end test coverage for asynchronous async RL workflows, checkpointing, and SLURM/K8s deployment scenarios.",
+      "hash": "95c0321736b5836fc9a4c878e2ab6102",
+      "id": "tests/integration/test_rl_moe.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_rl_moe.py",
+      "rel_path": "tests/integration/test_rl_moe.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_rl.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "```markdown\n### Test Suite for Integration of RL Endpoint\nThe unit tests execution for [test_rl.py](file:tests/integration/test_rl.py) encompasses CPU and GPU integration checks to verify end-to-end RL workflow execution.\n\n- Validate that the `rl` unit tests pass with and without resume capability.\n- Confirm a reward value rises above 0.65 during active training runs.\n- Verify the orchestrator log output is clean (no errors) for both initial training and resume scenarios.\n- Enable strict testing modes specifically for GPUs and slow execution environments.\n```",
+      "hash": "8a6193dd828f3529928d4ce1e21d0923",
+      "id": "tests/integration/test_rl.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_rl.py",
+      "rel_path": "tests/integration/test_rl.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_sft_lora.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "# **`tests/integration/test_sft_lora.py`**\n\n**Description:**\nUnit test suite for integration SFT LoRA training tests, validating model fine-tuning workflow resilience and loss decay.\n\n**Responsibilities:**\n- Runs SFT LoRA processes with 2 GPUs as per CI integration specs.\n- Verifies trainer logs show decreasing loss during training steps.\n- Confirms adapter checkpoints are written in standard PEFT-compatible formats.\n- Ensures graceful handling of SFT LoRA resume points.",
+      "hash": "4d60dffbe8015d57c3b748e2fe1fffed",
+      "id": "tests/integration/test_sft_lora.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_sft_lora.py",
+      "rel_path": "tests/integration/test_sft_lora.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_rl_multi_run_lora.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "**Tests integration checks for multi-run RL training with LoRA adapters**\n\n*   Orchestrates simultaneous trainer, inference servers, and config managers across multiple GPU nodes to run end-to-end RL trials.\n*   Manages dynamic orchestration for multiple agent names (alpha, beta, gamma), persisting checkpoint files `STABLE` to verify training completion.\n*   Verifies and validates output logs for key metrics, ensuring that rewards increase and fall within target ranges during strict 5-minute execution timeouts.",
+      "hash": "96f1d96646812df201cfa3abbb6c6ba9",
+      "id": "tests/integration/test_rl_multi_run_lora.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_rl_multi_run_lora.py",
+      "rel_path": "tests/integration/test_rl_multi_run_lora.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/nightly/test_acereason_math.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "```markdown\n**Tests nightly agentic SWE benchmark runs for PRIME-RL**\n\n- Runs agentic RL/benchmarks on `config/ci/nightly/acereason_math.toml`\n- Verifies orchestrator and trainer logs for errors and KL divergence stability\n- Executes on NVIDIA H100 (4xA6000 GPUs) with offload and recompute optimizations\n- Applies pytest markers for GPU and slow environments\n- Captures detailed step metrics and post-training rewards from `orchestrator.log`\n```",
+      "hash": "2d704d41f3ed749c9e85c4ce91831cd2",
+      "id": "tests/nightly/test_acereason_math.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_acereason_math.py",
+      "rel_path": "tests/nightly/test_acereason_math.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_alphabet_sort.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "```markdown\n**Integrates external RL benchmarks (Alphabet Sort) into CI pipelines by executing adaptive team external tests every nightly.**\n\n- Adds nightly integration checks for \"alphabet sort\" benchmarks via LLM-generated team agents.\n- Validates that RL processes run successfully in test environments.\n- Verifies reward gradients increase within defined thresholds.\n- Prevents branching to develop broken RL configurations by catching failures early.\n```",
+      "hash": "8c7fd66d5072d1b5c6ee45245c37bb40",
+      "id": "tests/integration/test_alphabet_sort.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_alphabet_sort.py",
+      "rel_path": "tests/integration/test_alphabet_sort.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_sft.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "**Integrates SFT (`tests/utils.py`)**\n- **Analyzes two Python files** to extract key relationships, responsibilities, and file contents, assembling them into a single Markdown report.\n\n## Responsibilities\n- **Identifies file relationships** and dependencies by analyzing modular references and execution paths.\n- **Extracts key responsibilities** using pre-defined performance markers and content scanning.\n- **Maps code implementation** by parsing logic and output mechanisms from configuration and execution logs.\n- **Generates concise reports** limited to 3-6 lines without fluff or introductory remarks.",
+      "hash": "c0c83d2a7619e85d18d07bce49400355",
+      "id": "tests/integration/test_sft.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_sft.py",
+      "rel_path": "tests/integration/test_sft.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/nightly/test_multimodal_color_codeword.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "`tests/nightly/test_multimodal_color_codeword.py` is a GPU-focused nightly CI integration test that validates end-to-end multimodal training against the Verifiers environment. Key responsibilities include:\n*   Orchestrating RL training runs via a specific TOML configuration file (`configs/ci/nightly/multimodal_color_codeword.toml`).\n*   Aggregating performance metrics and orchestrator logs to verify training stability.\n*   Validating that generated token rewards scale incrementally across training steps.\n*   Ensuring all RL pipelines complete without crashing or critical failures on multi-GPU or high-throughput setups.",
+      "hash": "13c88ef24e24737245cb8bc7763f985d",
+      "id": "tests/nightly/test_multimodal_color_codeword.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_multimodal_color_codeword.py",
+      "rel_path": "tests/nightly/test_multimodal_color_codeword.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/nightly/test_alphabet_sort.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "### File Description\n\nA PyTest fixture suite specifically for validating large-scale RL benchmark runs (Qwen3-0.6B, 1-8 GPUs) against the PRIME-RL RL orchestration pipeline.\n\n**Responsibilities:**\n*   **Setup & Execution**: Orchestrates `rl` command execution via `uv` for nightly CI integration tests on specific model-fork variants.\n*   **Quality Assurance**: Performs lightweight validation by scraping logs to ensure the orchestrator runs without errors and that the final RL reward score exceeds zero.\n*   **Compliance Verification**: Checks against specific benchmark configurations including RL, SFT, and MultiGPU setups on H100/4xH200 clusters.\n*   **Hook Integration**: Defines the `glamshark` hook for nightly pipeline automation and the `run_process` fixture for `uv` wrapper support.",
+      "hash": "7d5eccfc4edcb5fc12acc37bdca93b93",
+      "id": "tests/nightly/test_alphabet_sort.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_alphabet_sort.py",
+      "rel_path": "tests/nightly/test_alphabet_sort.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_benchmark_regression.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py"
+      ],
+      "description": "_Benchmark regression test ensuring that PRIME-RL's large-scale ML benchmarks meet target memory, throughput, and efficiency targets while supporting both single GPU (1-A6000) and multi-GPU (4-A6000) configurations via Flash Attention 2 and Recompute optimization stacks_\n\n*   Validates integrated pipeline stability using 1-A6000 and 4-A6000 Qwen3-0.6B RC-based RL benchmarks\n*   Requires aggressive flash-attention memory reduction (65536 token chunk) to pass tolerance checks\n*   Considers configuration success, metric drop-off, and peak memory overhead as pass/fail criteria",
+      "hash": "cbb621b6756f195f495c776444d4e10d",
+      "id": "tests/integration/test_benchmark_regression.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_benchmark_regression.py",
+      "rel_path": "tests/integration/test_benchmark_regression.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/integration/test_rl_lora.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "`tests/integration/test_rl_lora.py` validates LoRA-based RL training execution, integration, and reward consistency across multiple benchmark configurations. Key responsibilities include:\n\n- Creating integration test fixtures to launch RL training workflows via CLI or resume dependencies.\n- Verifying fundamental RL stability with checks for process completion and no errors.\n- Monitoring reward progression using log files to ensure rewards increase and stay within expected thresholds.\n- Optionally handling multi-stage RL workflows by restarting training when parents complete, ensuring continuous progress.",
+      "hash": "7d030177b52a0fc836492a48d3ef732a",
+      "id": "tests/integration/test_rl_lora.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_rl_lora.py",
+      "rel_path": "tests/integration/test_rl_lora.py"
+    },
+    {
+      "abs_path": "/home/pradheep/Desktop/prime-rl/./tests/nightly/test_hendrycks_sanity.py",
+      "depended_by": [],
+      "depends_on": [
+        "tests/conftest.py",
+        "tests/utils.py"
+      ],
+      "description": "**<details>\n**`tests/nightly/test_hendrycks_sanity.py`**\n**pytest suite script main executing end-to-end RL performance benchmarks against expected performance constraints.**\n*   Installs RL training configurations and pre-curates benchmarks with tuned cost parameters.\n*   Runs RL training on 1-8 GPU configurations while monitoring compliance to optimal step limits (1000 steps), memory usage, and efficiency.\n*   Gain logged metrics only after confirming the trainer handles the problems without crashing or erroring.\n*   Extracts performance logs from trainer and orchestrator logs.\n*   Verifies training completion and correctness by checking reward consistency (SFT/Distillation), Reward statistics, and off-policy RL metrics (KL divergence).\n</details>",
+      "hash": "c2c051d3bad828d4d4b6d98f0d43d764",
+      "id": "tests/nightly/test_hendrycks_sanity.py",
+      "is_file": true,
+      "is_gitignored": false,
+      "name": "test_hendrycks_sanity.py",
+      "rel_path": "tests/nightly/test_hendrycks_sanity.py"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import dependencyGraphContent from "@/docs/dependency-graph.md?raw";
 import fileTreeContent from "@/docs/file-tree.md?raw";
 import importExtractionContent from "@/docs/import-extraction.md?raw";
 import incrementalUpdatesContent from "@/docs/incremental-updates.md?raw";
+import pipPackageContent from "@/docs/pip-package.md?raw";
 
 interface DocInfo {
   id: string;
@@ -48,7 +49,11 @@ const DOCS: DocInfo[] = [
     id: "incremental-updates",
     name: "Incremental Updates",
     description: extractDescription(incrementalUpdatesContent),
-  },
+  }, {
+    id: "pip-package",
+    name: "Pip Package",
+    description: extractDescription(pipPackageContent),
+  }
 ];
 
 export default function DocsPage() {

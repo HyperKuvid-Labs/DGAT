@@ -6,6 +6,7 @@ import dependencyGraphContent from "@/docs/dependency-graph.md?raw";
 import fileTreeContent from "@/docs/file-tree.md?raw";
 import importExtractionContent from "@/docs/import-extraction.md?raw";
 import incrementalUpdatesContent from "@/docs/incremental-updates.md?raw";
+import pipPackageContent from "@/docs/pip-package.md?raw";
 
 const DOC_CONTENT: Record<string, string> = {
   overview: overviewContent,
@@ -13,6 +14,7 @@ const DOC_CONTENT: Record<string, string> = {
   "file-tree": fileTreeContent,
   "import-extraction": importExtractionContent,
   "incremental-updates": incrementalUpdatesContent,
+  "pip-package": pipPackageContent,
 };
 
 const DOC_NAMES: Record<string, string> = {
@@ -21,6 +23,7 @@ const DOC_NAMES: Record<string, string> = {
   "file-tree": "File Tree",
   "import-extraction": "Import Extraction",
   "incremental-updates": "Incremental Updates",
+  "pip-package": "Pip Package",
 };
 
 export default function DocsDetailPage() {

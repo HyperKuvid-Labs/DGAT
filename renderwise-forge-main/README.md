@@ -53,4 +53,15 @@ The `public/examples/` folder contains pre-scanned project outputs you can brows
 - `dgat-self/` — DGAT's own source tree analyzed by itself
 - `hermes-agent/` — a separate project analyzed by DGAT
 
-Each example folder contains `file-tree.json`, `dep_graph.json`, and `dgat_blueprint.md`.
+Each example folder contains `file_tree.json`, `dep_graph.json`, and `dgat_blueprint.md`.
+
+---
+
+## Docs
+
+- [Overview](src/docs/overview.md) — how DGAT works end to end
+- [File Tree](src/docs/file-tree.md) — TreeNode structure, fields, and why each one exists
+- [Dependency Graph](src/docs/dependency-graph.md) — DepNode, DepEdge, DepGraph, and how the graph is built
+- [Incremental Updates](src/docs/incremental-updates.md) — how the diff mode works with XXH3 fingerprints
+- [Import Extraction](src/docs/import-extraction.md) — tree-sitter parsing, regex fallbacks, and path resolution
+- [Python Package](src/docs/pip-package.md) — installing and using DGAT as a pip package

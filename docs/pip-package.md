@@ -1,24 +1,6 @@
-# DGAT - Dependency Graph as a Tool
+# DGAT Python Package
 
-<p align="center">
-
-**Point it at a codebase. Get a fully-described, LLM-annotated dependency graph — instantly.**
-
-[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square&logo=python)](https://pypi.org/project/dgat/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://opensource.org/licenses/MIT)
-[![PyPI](https://img.shields.io/pypi/v/dgat?label=pypi&style=flat-square)](https://pypi.org/project/dgat/)
-
-</p>
-
----
-
-## What is DGAT?
-
-DGAT is a Python package that scans any codebase, uses a locally-hosted LLM to write natural-language descriptions for every file and every import relationship, then serves it all through an interactive three-panel UI. Think of it as a self-generating architectural map — no config files, no annotations, no manual work.
-
-It extracts import relationships across **18+ languages** using tree-sitter grammars for precision (when available) and regex fallbacks for everything else. Every file and dependency edge gets an LLM-generated description explaining what it does and why it matters.
-
----
+ Comprehensive documentation for installing and using DGAT as a pip package.
 
 ## Installation
 
@@ -361,7 +343,6 @@ A synthesized markdown document that provides an architectural overview of the e
 DGAT respects a `.dgatignore` file in the root of the scanned project. It works like `.gitignore` — one glob pattern per line:
 
 ```
-# .dgatignore example
 node_modules/
 *.lock
 vendor/
@@ -370,37 +351,6 @@ build/
 ```
 
 Files matched by `.dgatignore` (and `.gitignore`) are excluded from LLM processing but may still appear in the file tree without descriptions.
-
----
-
-## Architecture
-
-```
-dgat scan [path]
-  |
-  +- 1. Walk directory tree
-  |     Skip .git, build artifacts, .gitignore, .dgatignore
-  |     Build a TreeNode for every file and folder
-  |
-  +- 2. Parse imports (tree-sitter + regex fallback)
-  |     Extract import/require/include/use statements
-  |     Resolve relative paths, path aliases (@/), Python dotted imports
-  |     Build a dependency graph (DepNode + DepEdge)
-  |
-  +- 3. Describe files via LLM (vLLM HTTP API)
-  |     Each file's content + context -> short markdown description
-  |     Runs in parallel across 8 workers
-  |
-  +- 4. Describe dependency edges via LLM
-  |     "What does file A use from file B and why?"
-  |     One tight sentence per edge
-  |
-  +- 5. Generate project blueprint
-  |     All file descriptions -> dgat_blueprint.md
-  |
-  +- 6. Persist state
-        file_tree.json + dep_graph.json -> disk
-```
 
 ---
 
@@ -420,7 +370,6 @@ dgat scan [path]
 ### "Provider connection failed"
 
 ```bash
-# Test your provider
 dgat config test
 ```
 

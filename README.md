@@ -247,6 +247,7 @@ Files already covered by `.gitignore` are automatically excluded from LLM proces
 - [Dependency Graph](docs/dependency-graph.md) — DepNode, DepEdge, DepGraph, and how the graph is built
 - [Incremental Updates](docs/incremental-updates.md) — how the diff mode works with XXH3 fingerprints
 - [Import Extraction](docs/import-extraction.md) — tree-sitter parsing, regex fallbacks, and path resolution
+- [Python Package](docs/pip-package.md) — installing and using DGAT as a pip package
 
 ---
 

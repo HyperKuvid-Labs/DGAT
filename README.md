@@ -1,254 +1,166 @@
-<div align="center">
+# DGAT — Dependency Graph as a Tool
 
-# DGAT
-### Dependency Graph as a Tool
+Point it at any codebase. Get a fully-described, LLM-annotated dependency graph and an interactive 3D UI — no config files, no annotations, no manual work.
 
-*Point it at a codebase. Get a fully-described, LLM-annotated dependency graph — instantly.*
-
-![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square&logo=python)
-![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
-
-</div>
+DGAT uses tree-sitter to extract static imports and an LLM to catch dynamic ones (importlib, conditional imports), then generates plain-English descriptions for every file, every edge, and a full architectural blueprint.
 
 ---
 
-## What is this?
+## Folder structure
 
-DGAT scans any codebase, uses a locally-hosted LLM to write natural-language descriptions for every file and every import relationship, then serves it all through an interactive three-panel UI. Think of it as a self-generating architectural map — no config files, no annotations, no manual work.
-
-**Available as a Python package** — install with `pip install dgat` and you're ready to go.
+```
+DGAT/
+├── dgat.cpp                  # C++ core — file tree, dep graph, LLM calls, HTTP server
+├── CMakeLists.txt            # build config (auto-copies binary to src/dgat/bin/ on build)
+├── queries/                  # tree-sitter .scm query files, one per language
+│   ├── python.scm
+│   ├── javascript.scm
+│   └── ...
+├── src/dgat/
+│   ├── cli.py                # click CLI — scan, backend, config, update
+│   ├── scanner.py            # Python wrapper around the C++ binary
+│   ├── config.py             # ~/.dgat/config.json read/write
+│   ├── server.py             # FastAPI backend for the 3D UI
+│   ├── types.py              # Pydantic models (FileTree, DepGraph, etc.)
+│   ├── ui.html               # self-contained 3D graph UI 
+│   ├── providers/
+│   │   ├── base.py           # BaseProvider interface
+│   │   ├── openrouter.py     # OpenRouter provider
+│   │   └── vllm.py           # vLLM provider (OpenAI-compatible)
+│   └── bin/dgat              # compiled C++ binary (auto-populated by cmake build)
+├── grammars/                 # tree-sitter grammar packages (npm)
+└── model.json                # (optional) per-project provider/model override
+```
 
 ---
 
-## Quick start
+## Prerequisites
 
-### 1. Install DGAT
+You only need to install three things yourself before running setup:
+
+- **Python 3.11+** and pip
+- **Node.js 18+** and npm (needed for tree-sitter grammars)
+- **C++17 compiler** — `clang++` on macOS (`xcode-select --install`), `g++` on Linux (`sudo apt install build-essential`)
+
+Everything else — cmake, OpenSSL, the tree-sitter CLI, all 20 language grammars, and the C++ binary — is downloaded and built automatically by `install.sh`.
+
+**LLM provider — pick one before scanning:**
+
+| Provider | Requirement |
+|----------|-------------|
+| OpenRouter | API key from [openrouter.ai](https://openrouter.ai) |
+| vLLM | vLLM server already running (`vllm serve <model>`) — setup is your own |
+
+---
+
+## Setup
+
+### 1. Clone
 
 ```bash
-pip install dgat
-# requires Python 3.11+
+git clone https://github.com/your-org/DGAT.git
+cd DGAT
 ```
 
-### 2. Configure your LLM provider
+### 2. Run the installer
 
 ```bash
-# Interactive setup
-dgat config init
-
-# Or configure manually (vLLM example)
-dgat config set providers.vllm.endpoint http://localhost:8000
-dgat config set providers.vllm.model Qwen/Qwen3.5-2B
+./install.sh
 ```
 
-**Supported providers:** vLLM, Ollama, OpenAI, Anthropic, OpenRouter (any OpenAI-compatible endpoint)
+This single script handles everything:
+- Installs system packages (`cmake`, `openssl`, etc.) via your OS package manager
+- Downloads and installs the tree-sitter CLI
+- Clones and compiles all 20 language grammar packages
+- Builds the C++ binary and copies it into place
 
-### 3. Start your LLM server
+### 3. Install Python dependencies
 
 ```bash
-# vLLM example
-vllm serve Qwen/Qwen3.5-2B --port 8000
+pip install -e .
 ```
 
-### 4. Run on your project
+Installs `click`, `fastapi`, `uvicorn`, `pydantic`, `rich`, and other Python packages from PyPI.
 
+---
+
+## Configuration
+
+DGAT stores config at `~/.dgat/config.json`. Use `dgat config` to manage it — you only need to set what you want to change.
+
+**Switch to OpenRouter**
 ```bash
-dgat scan /path/to/your/project
-# outputs: file_tree.json, dep_graph.json, dgat_blueprint.md
+dgat config --provider openrouter --api-key sk-xxxxx
 ```
 
----
-
-## CLI commands
-
-| Command | Description |
-|---|---|
-| `dgat scan [path]` | Full codebase scan — builds tree, descriptions, dep graph, blueprint |
-| `dgat update [path]` | Incremental re-scan (changed files only) |
-| `dgat search <query>` | Search files by name or description |
-| `dgat describe <rel_path>` | Get LLM-generated description for a specific file |
-| `dgat deps <rel_path>` | Show files that the given file depends on |
-| `dgat dependents <rel_path>` | Show files that depend on the given file |
-| `dgat blueprint` | Get the architectural blueprint (dgat_blueprint.md) |
-| `dgat mcp` | Start MCP server (stdio mode) |
-| `dgat mcp --http` | Start MCP server (HTTP mode) |
-| `dgat backend` | Start API backend server |
-| `dgat config show` | Show current configuration |
-| `dgat config set <key> <value>` | Set a configuration value |
-| `dgat config test` | Test if the provider API is working |
-
----
-
-## Python API
-
-Import DGAT directly in your Python code:
-
-```python
-from dgat import run_scan, run_update
-from dgat import FileTree, DepGraph
-
-# or from dgat.scanner import search_files
-```
-
----
-
-## MCP server
-
-Use DGAT as a tool in AI coding agents via the Model Context Protocol:
-
+**Switch to vLLM**
 ```bash
-dgat mcp              # stdio mode (for local agents)
-dgat mcp --http       # HTTP mode (for remote agents)
+dgat config --provider vllm
+# endpoint defaults to http://localhost:8000, model to Qwen/Qwen3-2B
 ```
 
-**Available tools:** `scan`, `update`, `describe_file`, `get_dependencies`, `get_dependents`, `get_blueprint`, `search_files`, `get_file_tree`, `get_dep_graph`
+**Change just the model**
+```bash
+dgat config --model google/gemini-pro
+```
 
----
+**Change just the API key**
+```bash
+dgat config --api-key sk-xxxxx
+```
 
-## Architecture
+**View current config**
+```bash
+dgat config
+```
 
-```mermaid
-flowchart TD
-    subgraph CLI ["dgat CLI (Python wrapper)"]
-        A[Walk directory tree] --> B[Fingerprint files\nXXH3-128]
-        B --> C[Parse imports\ntree-sitter + regex fallback]
-        C --> D[Describe files & edges\nvLLM HTTP API]
-        D --> E[Build dependency graph\nDepNode + DepEdge]
-        E --> F[Synthesise blueprint\ndgat_blueprint.md]
-        F --> G[Persist state\nfile_tree.json · dep_graph.json]
-    end
-
-    subgraph MCP ["MCP Server"]
-        H[AI Coding Agent] --> I[DGAT MCP tools]
-        I --> J[scan, update, search,\ndescribe, deps, etc.]
-    end
-
-    subgraph UI ["Renderwise Forge UI"]
-        G --> K[HTTP server :8090]
-        K --> |GET /api/tree| L[File tree JSON]
-        K --> |GET /api/dep-graph| M[Dep graph JSON]
-        K --> |GET /api/blueprint| N[Blueprint markdown]
-        L --> O[Explorer panel\nfile tree]
-        N --> P[Blueprint tab\nrendered markdown]
-        M --> Q[Graph tab\nSigma.js WebGL]
-        O & P & Q --> R[Inspector panel\nnode · edge · dep details]
-    end
-
-    subgraph LLM ["Local vLLM"]
-        D <--> S[Qwen/Qwen3.5-2B\nor any OpenAI-compatible endpoint]
-    end
+**Per-project override** — place a `model.json` in your project root:
+```json
+{
+  "provider": "vllm",
+  "model": "my-finetuned-model",
+  "endpoint": "http://gpu-box:8000"
+}
 ```
 
 ---
 
-## Features
+## Commands
 
-- **Multi-language import extraction** — TypeScript, JavaScript, Python, C/C++, Go, Java, Rust, C#, Ruby, PHP, CUDA, Bash, and more. Tree-sitter grammars for precision, regex fallback for everything else.
-- **LLM-annotated graph** — every file node and every dependency edge gets a concise description generated by a local model. No cloud, no API keys.
-- **Project blueprint** — a synthesised `dgat_blueprint.md` built bottom-up from all file descriptions.
-- **Incremental updates** — `dgat update` re-describes only files whose XXH3 fingerprint changed.
-- **MCP integration** — use DGAT as a tool in AI coding agents via the Model Context Protocol.
-- **Static export** — embed the entire graph into a single self-contained HTML file. Share with anyone, no server required.
-- **Live UI** — auto-refreshes every 30 s. Three-panel layout with file explorer, blueprint/graph tabs, and an inspector.
-
----
-
-## Demo
-
-### 1. Start the vLLM server
-
-Before running DGAT, bring up a local vLLM instance. DGAT uses it to generate descriptions for every file and dependency edge.
-
-![vLLM server running with GPU stats and throughput metrics](images/vllm-server-running.png)
-
----
-
-### 2. Run the scan
-
-Point DGAT at your project. It walks the file tree, fingerprints every file, sends them to vLLM, and builds the dependency graph.
-
-![DGAT CLI scan output showing tree build and description population](images/dgat-scan-cli.png)
-
-Dependency extraction runs in parallel — here's the tail end where import relationships are resolved and edges are formed:
-
-![DGAT CLI output showing dependency graph construction and import resolution](images/dgat-dep-graph-build.png)
-
----
-
-### 3. Open the UI
-
-Start the backend server and the frontend. Three panels: file explorer on the left, blueprint/graph in the middle, inspector on the right.
-
-**Blueprint tab** — a synthesised architectural overview of the whole project, generated bottom-up from individual file descriptions:
-
-![DGAT UI showing the Blueprint tab with the rendered software blueprint](images/ui-blueprint-panel.png)
-
-**File inspector** — click any file in the explorer to see its description, dependencies, and metadata:
-
-![DGAT UI showing file tree selection with description cards in the inspector panel](images/ui-file-inspector.png)
-
-Select a file like `dep_graph.json` to see its role in the project explained inline:
-
-![DGAT UI with dep_graph.json selected showing its description in the inspector](images/ui-dep-graph-file-selected.png)
-
----
-
-### 4. Explore the dependency graph
-
-Switch to the **Graph tab** for an interactive WebGL view of all import relationships. Node size reflects connectivity.
-
-**Single node selected** — click any node to see a full LLM-generated analysis of that file, plus its outgoing/incoming edges at the bottom:
-
-![DGAT graph view with dgat.cpp selected showing node analysis and edge detail](images/ui-graph-node-inspection.png)
-
-**Two nodes selected** — click a second node to inspect the direct edge between them: the import statement, and a plain-English explanation of why one depends on the other:
-
-![DGAT graph view with utils.ts and page.tsx selected showing edge relationship and import details](images/ui-graph-edge-inspection.png)
-
----
-
-## Tech stack
-
-| Layer | Tech |
-|---|---|
-| Package | Python 3.11+ · pip-installable |
-| CLI | Click · Rich (terminal output) |
-| Parsing | tree-sitter (C, C++, Python, TS, Go, Java, Rust, …) |
-| LLM | vLLM · Qwen3.5-2B (any OpenAI-compat endpoint) |
-| MCP | JSON-RPC 2.0 (stdio + HTTP) |
-| Frontend | React · TypeScript · Tailwind CSS · Sigma.js · shadcn/ui |
-
----
-
-## Example output
-
-The [`examples/dgat-self/`](examples/dgat-self/) folder contains the output DGAT produced when pointed at its own source tree — a blueprint, file tree, and dependency graph all generated by **Qwen3.5-2B** running locally via vLLM. Browse it to get a feel for the output format without running a scan yourself.
-
----
-
-## .dgatignore
-
-DGAT respects a `.dgatignore` file in the root of the scanned project. It works like `.gitignore` — one glob pattern per line — and tells DGAT which files and directories to skip during description and graph-building passes (files that match are still shown in the tree but their LLM descriptions and dependency edges are suppressed).
-
-```
-# .dgatignore example
-node_modules/
-*.lock
-vendor/
+**Scan a codebase**
+```bash
+dgat scan                    # scans current directory
+dgat scan /path/to/project   # scans a specific path
+dgat scan --deps-only        # skip LLM descriptions, just build the dep graph
 ```
 
-Files already covered by `.gitignore` are automatically excluded from LLM processing regardless.
+**Open the 3D graph UI**
+```bash
+dgat backend                 # serves UI for current directory
+dgat backend /path/to/project
+```
+
+**Incremental update** (re-scans only changed files)
+```bash
+dgat update
+dgat update /path/to/project
+```
+
+**Typical workflow**
+```bash
+cd my-project
+dgat scan          # builds file_tree.json, dep_graph.json, dgat_blueprint.md
+dgat backend       # opens browser at http://localhost:8090
+```
 
 ---
 
-## Docs
+## Outputs
 
-- [Overview](docs/overview.md) — how DGAT works end to end
-- [File Tree](docs/file-tree.md) — TreeNode structure, fields, and why each one exists
-- [Dependency Graph](docs/dependency-graph.md) — DepNode, DepEdge, DepGraph, and how the graph is built
-- [Incremental Updates](docs/incremental-updates.md) — how the diff mode works with XXH3 fingerprints
-- [Import Extraction](docs/import-extraction.md) — tree-sitter parsing, regex fallbacks, and path resolution
-- [Python Package](docs/pip-package.md) — installing and using DGAT as a pip package
+After `dgat scan`, three files are written to the scanned directory:
 
----
-
-> gonna scavenge some popular repos, and see how my thing behaves with it, and use my populated context for something useful.
+| File | Contents |
+|------|----------|
+| `file_tree.json` | Full file tree with LLM-generated descriptions per file |
+| `dep_graph.json` | Nodes + edges with import statements, edge descriptions, and `source` tag (`static` / `inferred`) |
+| `dgat_blueprint.md` | Architectural summary of the entire project |

@@ -28,6 +28,8 @@ dependencies = [
     "typer>=0.9",
     "rich>=13.0",
     "pydantic>=2.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.23",
 ]
 
 [project.optional-dependencies]
@@ -45,4 +47,4 @@ Issues = "https://github.com/HyperKuvid-Labs/DGAT/issues"
 where = ["src"]
 
 [tool.setuptools.package-data]
-dgat = ["py.typed", "bin/*", "queries/*.scm", "grammars/**"]
+dgat = ["py.typed", "bin/*", "queries/*.scm", "grammars/**", "ui.html"]

@@ -8,6 +8,7 @@ GRAMMARS_DIR="${GRAMMARS_DIR:-$SCRIPT_DIR/grammars}"
 
 TS_VERSION="0.20.8"
 TS_CLI_URL="https://github.com/tree-sitter/tree-sitter/releases/download/v${TS_VERSION}/tree-sitter-linux-x64.gz"
+OS="$(uname -s)"
 
 info() { echo -e "\033[1;34m[INFO]\033[0m $1"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m $1"; }
@@ -22,22 +23,28 @@ check_cmd() {
 install_tree_sitter_cli() {
   info "Installing tree-sitter CLI..."
 
+  if command -v tree-sitter &> /dev/null; then
+    info "tree-sitter already installed: $(tree-sitter --version 2>/dev/null || echo unknown)"
+    return 0
+  fi
+
+  if [ "$OS" = "Darwin" ]; then
+    if ! command -v brew &> /dev/null; then
+      error "Homebrew is required on macOS. Install from https://brew.sh and rerun."
+    fi
+    info "Installing tree-sitter via Homebrew..."
+    brew install tree-sitter
+    info "tree-sitter CLI installed successfully"
+    return 0
+  fi
+
   local ts_bin="$INSTALL_PREFIX/bin/tree-sitter"
   mkdir -p "$INSTALL_PREFIX/bin"
 
+  # Linux fallback installer
+  local current_version=""
   if command -v tree-sitter &> /dev/null; then
-    local current_version
     current_version=$(tree-sitter --version 2>/dev/null | awk '{print $2}')
-    if [ "$current_version" = "$TS_VERSION" ]; then
-      info "tree-sitter CLI $TS_VERSION already installed"
-      return 0
-    fi
-    # Keep newer versions
-    if [ "$(printf '%s\n' "$TS_VERSION" "$current_version" | sort -V | tail -n1)" = "$current_version" ]; then
-      info "Found newer tree-sitter $current_version, keeping it"
-      return 0
-    fi
-    warn "Found tree-sitter $current_version, upgrading to $TS_VERSION"
   fi
 
   local tmp_gz="/tmp/tree-sitter.gz"
@@ -59,6 +66,9 @@ install_tree_sitter_cli() {
 
 install_tree_sitter_grammars() {
   info "Installing tree-sitter grammars..."
+
+  check_cmd npm
+  check_cmd git
 
   mkdir -p "$GRAMMARS_DIR"
   cd "$GRAMMARS_DIR"
@@ -84,7 +94,7 @@ install_tree_sitter_grammars() {
     "tree-sitter-yaml"
     "tree-sitter-toml"
     "tree-sitter-sql"
-    "tree-sitter-markdown",
+    "tree-sitter-markdown"
     "tree-sitter-ipython"
   )
 
@@ -113,6 +123,7 @@ install_tree_sitter_grammars() {
   for grammar in */; do
     if [ -d "$grammar" ] && [ -f "$grammar/package.json" ]; then
       local name=$(basename "$grammar")
+      cd "$grammar"
       if npx tree-sitter generate >/dev/null 2>&1; then
         info "  Compiled $name"
       else
@@ -181,7 +192,10 @@ install_dependencies() {
     info "Using Homebrew..."
     brew install \
       openssl@3 \
-      pkg-config
+      pkg-config \
+      cmake \
+      node \
+      tree
   else
     warn "Package manager not detected. Please install manually:"
     warn "  - GCC/Clang compiler"
@@ -204,7 +218,13 @@ build_dgat() {
     -DGRAMMARS_DIR="$GRAMMARS_DIR"
 
   info "Compiling..."
-  make -j$(nproc)
+  local jobs=4
+  if command -v nproc &> /dev/null; then
+    jobs=$(nproc)
+  elif [ "$OS" = "Darwin" ]; then
+    jobs=$(sysctl -n hw.ncpu)
+  fi
+  make -j"$jobs"
 
   info "DGAT built successfully"
 }

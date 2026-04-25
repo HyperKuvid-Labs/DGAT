@@ -28,6 +28,8 @@
 #include <limits>
 #include <optional>
 #include <variant>
+#include <cstdlib>
+#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "inja.hpp"
 #include "json.hpp"
 #include "httplib.h"
@@ -36,6 +38,192 @@
 using namespace std;
 using json = nlohmann::json;
 namespace fs = std::filesystem;
+
+struct LLMConfig {
+  string provider = "openrouter";
+  string base_url = "https://openrouter.ai/api/v1";
+  string model = "google/gemini-3.1-flash-lite-preview";
+  string api_key;
+};
+
+LLMConfig g_llm_config;
+fs::path g_state_dir = fs::current_path();
+
+string trim_copy(const string& input);
+
+fs::path state_file(const string& name) {
+  return g_state_dir / name;
+}
+
+string get_env_or_empty(const char* key) {
+  const char* v = std::getenv(key);
+  return v ? string(v) : "";
+}
+
+string trim_trailing_slash(const string& input) {
+  if (input.empty()) return input;
+  size_t end = input.size();
+  while (end > 0 && input[end - 1] == '/') end--;
+  return input.substr(0, end);
+}
+
+bool parse_base_url(
+    const string& raw_url,
+    bool& use_https,
+    string& host,
+    int& port,
+    string& base_path
+) {
+  smatch m;
+  regex url_re(R"(^(https?)://([^/:]+)(?::(\d+))?(\/.*)?$)");
+  if (!regex_match(raw_url, m, url_re)) return false;
+
+  string scheme = m[1].str();
+  host = m[2].str();
+  string port_part = m[3].matched ? m[3].str() : "";
+  base_path = m[4].matched ? m[4].str() : "";
+
+  use_https = (scheme == "https");
+  if (port_part.empty()) {
+    port = use_https ? 443 : 80;
+  } else {
+    try {
+      port = stoi(port_part);
+    } catch (...) {
+      return false;
+    }
+  }
+
+  if (!base_path.empty() && base_path.back() == '/') {
+    base_path.pop_back();
+  }
+
+  return true;
+}
+
+// Read ~/.dgat/config.json and return the active provider section as flat fields.
+// Returns false if no config found (caller uses hardcoded defaults).
+bool read_dgat_config(string& out_provider, string& out_model,
+                      string& out_endpoint, string& out_api_key) {
+  const char* home = getenv("HOME");
+  if (!home) return false;
+  fs::path config_path = fs::path(home) / ".dgat" / "config.json";
+  if (!fs::exists(config_path)) return false;
+  try {
+    ifstream f(config_path);
+    json cfg = json::parse(f);
+    out_provider = cfg.value("default_provider", out_provider);
+    if (cfg.contains("providers") && cfg["providers"].is_object()) {
+      auto& providers = cfg["providers"];
+      if (providers.contains(out_provider) && providers[out_provider].is_object()) {
+        auto& p = providers[out_provider];
+        out_endpoint = p.value("endpoint", out_endpoint);
+        out_api_key  = p.value("api_key",  out_api_key);
+        out_model    = p.value("model",    out_model);
+      }
+    }
+    return true;
+  } catch (...) {
+    return false;
+  }
+}
+
+// Read project-level model.json (CWD) — overrides global config.
+void read_model_json(string& provider, string& model,
+                     string& endpoint, string& api_key) {
+  fs::path model_json = fs::current_path() / "model.json";
+  if (!fs::exists(model_json)) return;
+  try {
+    ifstream f(model_json);
+    json mj = json::parse(f);
+    if (mj.contains("provider") && mj["provider"].is_string()) provider = mj["provider"].get<string>();
+    if (mj.contains("model")    && mj["model"].is_string())    model    = mj["model"].get<string>();
+    if (mj.contains("endpoint") && mj["endpoint"].is_string()) endpoint = mj["endpoint"].get<string>();
+    if (mj.contains("api_key")  && mj["api_key"].is_string())  api_key  = mj["api_key"].get<string>();
+    cout << "[DGAT] loaded project model.json" << endl;
+  } catch (...) {}
+}
+
+bool configure_llm(const string& cli_provider, const string& cli_model) {
+  // defaults
+  string provider = "openrouter";
+  string model    = "google/gemini-flash-lite-preview";
+  string endpoint = "";
+  string api_key  = "";
+
+  // layer 1: ~/.dgat/config.json
+  read_dgat_config(provider, model, endpoint, api_key);
+
+  // layer 2: project-level model.json
+  read_model_json(provider, model, endpoint, api_key);
+
+  // layer 3: CLI flags (highest priority)
+  if (!cli_provider.empty()) provider = cli_provider;
+  if (!cli_model.empty())    model    = cli_model;
+
+  LLMConfig cfg;
+  cfg.provider = provider;
+  cfg.model    = model;
+
+  if (provider == "vllm") {
+    cfg.base_url = endpoint.empty() ? "http://localhost:8000/v1" : endpoint;
+    // vLLM: api_key optional, used only if provided
+    cfg.api_key = api_key.empty() ? get_env_or_empty("VLLM_API_KEY") : api_key;
+  } else {
+    // openrouter (default)
+    cfg.base_url = endpoint.empty() ? "https://openrouter.ai/api/v1" : endpoint;
+    cfg.api_key  = api_key.empty() ? get_env_or_empty("OPENROUTER_API_KEY") : api_key;
+    if (cfg.api_key.empty())
+      cerr << "[DGAT] warning: OPENROUTER_API_KEY is not set." << endl;
+  }
+
+  cfg.base_url = trim_trailing_slash(cfg.base_url);
+  g_llm_config = cfg;
+
+  cout << "[DGAT] provider : " << cfg.provider << endl;
+  cout << "[DGAT] model    : " << cfg.model    << endl;
+  cout << "[DGAT] endpoint : " << cfg.base_url << endl;
+  cout << "[DGAT] api key  : " << (cfg.api_key.empty() ? "(not set)" : "(set)") << endl;
+
+  return true;
+}
+
+httplib::Result call_llm_chat(const json& payload) {
+  bool use_https = false;
+  string host;
+  int port = 0;
+  string base_path;
+
+  if (!parse_base_url(g_llm_config.base_url, use_https, host, port, base_path)) {
+    cerr << "[DGAT] invalid llm base_url: " << g_llm_config.base_url << endl;
+    return httplib::Result();
+  }
+
+  string request_path = base_path + "/chat/completions";
+  if (request_path.empty() || request_path[0] != '/') request_path = "/" + request_path;
+
+  httplib::Headers headers = {{"Content-Type", "application/json"}};
+  if (!g_llm_config.api_key.empty()) {
+    headers.emplace("Authorization", "Bearer " + g_llm_config.api_key);
+  }
+  string referer = get_env_or_empty("DGAT_OPENROUTER_SITE_URL");
+  if (!referer.empty()) headers.emplace("HTTP-Referer", referer);
+  headers.emplace("X-Title", "DGAT");
+
+  if (use_https) {
+    httplib::SSLClient cli(host, port);
+    cli.set_connection_timeout(10, 0);
+    cli.set_read_timeout(120, 0);
+    cli.set_write_timeout(120, 0);
+    return cli.Post(request_path.c_str(), headers, payload.dump(), "application/json");
+  } else {
+    httplib::Client cli(host, port);
+    cli.set_connection_timeout(10, 0);
+    cli.set_read_timeout(120, 0);
+    cli.set_write_timeout(120, 0);
+    return cli.Post(request_path.c_str(), headers, payload.dump(), "application/json");
+  }
+}
 
 class ThreadPool {
 private:
@@ -146,6 +334,7 @@ struct TreeNode {
   string description; // extra file context if needed later
   vector<string> depends_on; // files this file depends on
   vector<string> depended_by; // files that depend on this file
+  vector<string> inferred_deps; // raw import strings extracted by LLM (not yet resolved)
 
     TreeNode(const string& name,
              const string& abs_path,
@@ -176,6 +365,8 @@ struct DepEdge {
   string to_path;
   string import_stmt;
   string description;
+  string source; // "static" (tree-sitter) or "inferred" (LLM)
+  DepEdge() : source("static") {}
 };
 
 struct DepGraph {
@@ -595,6 +786,11 @@ vector<string> build_artifacts_to_skip = {
   "Makefile", "GNUmakefile",
   ".cmake", "CMakeError.log", "CMakeOutput.log",
   "compile_commands.json",
+  // package manager install dirs — always skip, they are never source
+  "node_modules", ".pnpm-store", ".yarn", ".npm", "bower_components",
+  "__pycache__", ".venv", "venv", ".env", "env", "site-packages",
+  ".tox", ".mypy_cache", ".pytest_cache", ".ruff_cache",
+  "vendor",  // Go, PHP
 };
 
 unordered_set<string> python_stdlib = {
@@ -800,7 +996,7 @@ DepGraph build_dep_graph(TreeNode* root) {
   vector<future<void>> futures;
 
   for (const auto& [rel_path, content] : contents) {
-    futures.push_back(pool.enqueue([&]() {
+    futures.push_back(pool.enqueue([&, rel_path, content]() {
       string lang = get_language_from_ext(rel_path);
 
       vector<string> imports;
@@ -901,6 +1097,30 @@ DepGraph build_dep_graph(TreeNode* root) {
           }
         }
 
+        // last resort: match by path suffix (handles src/ layout for Python dotted imports)
+        // e.g. "myapp/utils" matches "src/myapp/utils.py"
+        if (!is_internal) {
+          static const vector<string> suffix_exts = {
+            "", ".py", ".tsx", ".ts", ".jsx", ".js", ".css", ".scss", ".h", ".hpp"
+          };
+          for (const auto& ext : suffix_exts) {
+            string candidate = norm + ext;
+            if (candidate.empty()) continue;
+            for (const auto& [file_path, _] : contents) {
+              if (file_path.size() > candidate.size()) {
+                size_t off = file_path.size() - candidate.size();
+                if (file_path[off - 1] == '/' &&
+                    file_path.compare(off, candidate.size(), candidate) == 0) {
+                  norm = file_path;
+                  is_internal = true;
+                  break;
+                }
+              }
+            }
+            if (is_internal) break;
+          }
+        }
+
         // only add edge if file exists in tree - skip external
         if (is_internal) {
           local_edges.emplace_back(norm, imp);
@@ -915,8 +1135,15 @@ DepGraph build_dep_graph(TreeNode* root) {
             DepNode node;
             node.name = fs::path(to_path).filename().string();
             node.rel_path = to_path;
-            node.description = gitignored ? "Gitignored dependency" : "External dependency";
             node.is_gitignored = gitignored;
+            TreeNode* tn = find_node_by_path(root, to_path);
+            if (tn) {
+              node.abs_path = tn->abs_path;
+              node.description = tn->description;
+              node.is_file = tn->is_file;
+            } else {
+              node.description = gitignored ? "Gitignored dependency" : "External dependency";
+            }
             graph.path_to_node[to_path] = graph.nodes.size();
             graph.nodes.push_back(node);
           }
@@ -1017,15 +1244,14 @@ void populate_dependency_descriptions(DepGraph& graph) {
     }
 
     futures.push_back(pool.enqueue([&, i]() {
-      string dep_name = node.name;
+      string dep_name = graph.nodes[i].name;
       string importers_list = "";
-      auto it = importers.find(node.rel_path);
+      auto it = importers.find(graph.nodes[i].rel_path);
       if (it != importers.end() && !it->second.empty()) {
-        for (size_t j = 0; j < it->second.size() && j < 5; j++) {
+        for (size_t j = 0; j < it->second.size(); j++) {
           if (j > 0) importers_list += ", ";
           importers_list += it->second[j];
         }
-        if (it->second.size() > 5) importers_list += " and " + to_string(it->second.size() - 5) + " more";
       }
 
       const string dep_desc_prompt = R"J2(Provide a brief description (1-2 sentences) of the external dependency "{{ dep_name }}" used in software development.
@@ -1045,7 +1271,7 @@ void populate_dependency_descriptions(DepGraph& graph) {
       string rendered_prompt = env.render(dep_desc_prompt, prompt_data);
 
       json request_payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
+        {"model", g_llm_config.model},
         {"messages", {
           {
             {"role", "user"},
@@ -1054,8 +1280,7 @@ void populate_dependency_descriptions(DepGraph& graph) {
         }}
       };
 
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+      auto res = call_llm_chat(request_payload);
 
       {
         lock_guard<mutex> lock(graph_mutex);
@@ -1070,7 +1295,8 @@ void populate_dependency_descriptions(DepGraph& graph) {
             cerr << "Failed to parse dependency description for " << dep_name << ": " << e.what() << endl;
           }
         } else {
-          cerr << "Failed to get description for dependency: " << dep_name << endl;
+          cerr << "Failed to get description for dependency: " << dep_name
+               << " via provider " << g_llm_config.provider << endl;
         }
 
         int count = ++processed;
@@ -1152,12 +1378,11 @@ return only the sentence, no preamble.)J2";
       string rendered = env.render(edge_prompt, prompt_data);
 
       json payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
+        {"model", g_llm_config.model},
         {"messages", {{{"role", "user"}, {"content", rendered}}}}
       };
 
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", payload.dump(), "application/json");
+      auto res = call_llm_chat(payload);
 
       {
         lock_guard<mutex> lock(edge_mutex);
@@ -1210,10 +1435,11 @@ json build_dep_graph_json(const DepGraph& graph) {
 
   for (const auto& edge : graph.edges) {
     json e = {
-      {"from", edge.from_path},
-      {"to", edge.to_path},
+      {"from",        edge.from_path},
+      {"to",          edge.to_path},
       {"import_stmt", edge.import_stmt},
-      {"description", edge.description}
+      {"description", edge.description},
+      {"source",      edge.source.empty() ? "static" : edge.source}
     };
     result["edges"].push_back(e);
   }
@@ -1862,18 +2088,28 @@ vector<string> extract_imports_fallback(const string& content, const string& lan
       if (line.rfind("import ", 0) == 0) {
         size_t from_pos = line.find("from ");
         if (from_pos != string::npos) {
+          char open_q = '"';
           size_t quote_start = line.find('"', from_pos + 5);
+          if (quote_start == string::npos) {
+            quote_start = line.find('\'', from_pos + 5);
+            open_q = '\'';
+          }
           if (quote_start != string::npos) {
-            size_t quote_end = line.find('"', quote_start + 1);
+            size_t quote_end = line.find(open_q, quote_start + 1);
             if (quote_end != string::npos) {
               string module = line.substr(quote_start + 1, quote_end - quote_start - 1);
               if (!module.empty()) add(module);
             }
           }
         } else {
+          char open_q = '"';
           size_t quote_start = line.find('"');
+          if (quote_start == string::npos) {
+            quote_start = line.find('\'');
+            open_q = '\'';
+          }
           if (quote_start != string::npos) {
-            size_t quote_end = line.find('"', quote_start + 1);
+            size_t quote_end = line.find(open_q, quote_start + 1);
             if (quote_end != string::npos) {
               string module = line.substr(quote_start + 1, quote_end - quote_start - 1);
               if (!module.empty()) add(module);
@@ -1968,8 +2204,10 @@ string normalize_import_path(const string& imp, const string& src_file) {
 
   string normalized = imp;
 
-  // strip quotes from local includes like "inja.hpp"
-  if (normalized.front() == '"' && normalized.back() == '"') {
+  // strip quotes from local includes like "inja.hpp" or './utils'
+  if (normalized.size() >= 2 &&
+      ((normalized.front() == '"' && normalized.back() == '"') ||
+       (normalized.front() == '\'' && normalized.back() == '\''))) {
     normalized = normalized.substr(1, normalized.size() - 2);
   }
 
@@ -2054,6 +2292,131 @@ string normalize_import_path(const string& imp, const string& src_file) {
   // collapse ".." and "." so "frontend/src/components/../lib/utils" → "frontend/src/lib/utils"
   fs::path p = fs::path(normalized).lexically_normal();
   return p.generic_string();
+}
+
+void merge_inferred_deps(TreeNode* root, DepGraph& graph) {
+  // build full known-files set from both the graph and the tree
+  unordered_set<string> known_files;
+  for (const auto& node : graph.nodes) known_files.insert(node.rel_path);
+  function<void(TreeNode*)> collect_known = [&](TreeNode* node) {
+    if (!node) return;
+    if (node->is_file) known_files.insert(node->rel_path);
+    for (auto& child : node->children) collect_known(child.get());
+  };
+  collect_known(root);
+
+  // existing edges for dedup
+  unordered_set<string> existing_edges;
+  for (const auto& edge : graph.edges)
+    existing_edges.insert(edge.from_path + "|||" + edge.to_path);
+
+  static const vector<string> try_exts   = { "", ".py", ".tsx", ".ts", ".jsx", ".js", ".css", ".scss", ".h", ".hpp" };
+  static const vector<string> index_exts = { ".tsx", ".ts", ".jsx", ".js" };
+  static const vector<string> init_exts  = { "/__init__.py" };
+
+  int added = 0;
+
+  function<void(TreeNode*)> walk = [&](TreeNode* node) {
+    if (!node) return;
+    if (node->is_file && !node->inferred_deps.empty()) {
+      for (const string& raw_dep : node->inferred_deps) {
+        string norm = normalize_import_path(raw_dep, node->rel_path);
+        if (norm.empty() || norm == node->rel_path) continue;
+
+        bool resolved = false;
+        string resolved_path;
+
+        for (auto& ext : try_exts) {
+          if (known_files.count(norm + ext)) { resolved_path = norm + ext; resolved = true; break; }
+        }
+        if (!resolved) {
+          for (auto& ext : index_exts) {
+            string c = norm + "/index" + ext;
+            if (known_files.count(c)) { resolved_path = c; resolved = true; break; }
+          }
+        }
+        if (!resolved) {
+          for (auto& ext : init_exts) {
+            string c = norm + ext;
+            if (known_files.count(c)) { resolved_path = c; resolved = true; break; }
+          }
+        }
+        if (!resolved) {
+          string imp_name = fs::path(raw_dep).filename().string();
+          for (const auto& fp : known_files) {
+            string fname = fs::path(fp).filename().string();
+            if (fname == imp_name || fname == imp_name + ".h" || fname == imp_name + ".hpp") {
+              resolved_path = fp; resolved = true; break;
+            }
+          }
+        }
+        if (!resolved) {
+          for (auto& ext : try_exts) {
+            string candidate = norm + ext;
+            if (candidate.empty()) continue;
+            for (const auto& fp : known_files) {
+              if (fp.size() > candidate.size()) {
+                size_t off = fp.size() - candidate.size();
+                if (fp[off - 1] == '/' && fp.compare(off, candidate.size(), candidate) == 0) {
+                  resolved_path = fp; resolved = true; break;
+                }
+              }
+            }
+            if (resolved) break;
+          }
+        }
+
+        if (!resolved || resolved_path == node->rel_path) continue;
+
+        string edge_key = node->rel_path + "|||" + resolved_path;
+        if (existing_edges.count(edge_key)) continue; // already found by tree-sitter
+
+        DepEdge edge;
+        edge.from_path  = node->rel_path;
+        edge.to_path    = resolved_path;
+        edge.import_stmt = raw_dep;
+        edge.source     = "inferred";
+        graph.edges.push_back(edge);
+        existing_edges.insert(edge_key);
+        added++;
+
+        // ensure to-node exists in graph
+        if (!graph.path_to_node.count(resolved_path)) {
+          DepNode dn;
+          dn.name = fs::path(resolved_path).filename().string();
+          dn.rel_path = resolved_path;
+          dn.is_gitignored = false;
+          TreeNode* tn = find_node_by_path(root, resolved_path);
+          if (tn) { dn.abs_path = tn->abs_path; dn.description = tn->description; dn.is_file = tn->is_file; }
+          graph.path_to_node[resolved_path] = graph.nodes.size();
+          graph.nodes.push_back(dn);
+        }
+        // ensure from-node exists
+        if (!graph.path_to_node.count(node->rel_path)) {
+          DepNode dn;
+          dn.name = node->name; dn.rel_path = node->rel_path;
+          dn.abs_path = node->abs_path; dn.description = node->description;
+          dn.is_file = true; dn.is_gitignored = false;
+          graph.path_to_node[node->rel_path] = graph.nodes.size();
+          graph.nodes.push_back(dn);
+        }
+      }
+    }
+    for (auto& child : node->children) walk(child.get());
+  };
+  walk(root);
+
+  // rebuild depends_on / depended_by to include inferred edges
+  for (auto& n : graph.nodes) { n.depends_on.clear(); n.depended_by.clear(); }
+  for (const auto& edge : graph.edges) {
+    if (graph.path_to_node.count(edge.from_path))
+      graph.nodes[graph.path_to_node[edge.from_path]].depends_on.push_back(edge.to_path);
+    if (graph.path_to_node.count(edge.to_path))
+      graph.nodes[graph.path_to_node[edge.to_path]].depended_by.push_back(edge.from_path);
+  }
+
+  if (added > 0)
+    cout << "[DGAT] merged " << added << " inferred edge(s) from LLM analysis" << endl;
 }
 
 string extract_fenced_block_or_raw(const string& input) {
@@ -2290,35 +2653,90 @@ string load_tree_gui_html() {
 )HTML";
 }
 
+string load_graph_html() {
+  vector<fs::path> candidates;
+
+  const char* env_html = getenv("DGAT_GRAPH_HTML");
+  if (env_html && *env_html) {
+    candidates.emplace_back(env_html);
+  }
+
+  candidates.emplace_back("dgat_graph.html");
+  candidates.emplace_back("assets/dgat_graph.html");
+  candidates.emplace_back("../dgat_graph.html");
+  candidates.emplace_back("../assets/dgat_graph.html");
+  candidates.emplace_back("/usr/local/share/dgat/dgat_graph.html");
+  candidates.emplace_back("/usr/share/dgat/dgat_graph.html");
+
+  string html;
+  for (const auto& path : candidates) {
+    if (read_text_file(path, html)) {
+      return html;
+    }
+  }
+
+  // inline fallback — minimal redirect to the main GUI
+  return R"HTML(<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DGAT — Graph View</title>
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; padding: 24px;
+           background: #0b0f1a; color: #e2eaf8; }
+    .box { max-width: 600px; margin: 60px auto; padding: 24px;
+           border: 1px solid #1e2d50; border-radius: 12px; background: #0f1629; }
+    code { color: #4d9fff; }
+    a { color: #4d9fff; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>DGAT Graph View</h2>
+    <p>Could not load <code>dgat_graph.html</code>. Place it in the working directory
+       or set <code>DGAT_GRAPH_HTML</code> to a valid path.</p>
+    <p><a href="/">← Back to main view</a></p>
+  </div>
+</body>
+</html>
+)HTML";
+}
+
 // write file_tree.json and dep_graph.json to disk so we can reload them later
 void save_state(const json& tree_json, const json& dep_graph_json) {
   {
-    ofstream f("file_tree.json");
-    if (!f.is_open()) { cerr << "[DGAT] failed to write file_tree.json" << endl; return; }
+    fs::path p = state_file("file_tree.json");
+    ofstream f(p);
+    if (!f.is_open()) { cerr << "[DGAT] failed to write " << p << endl; return; }
     f << tree_json.dump(2);
   }
   {
-    ofstream f("dep_graph.json");
-    if (!f.is_open()) { cerr << "[DGAT] failed to write dep_graph.json" << endl; return; }
+    fs::path p = state_file("dep_graph.json");
+    ofstream f(p);
+    if (!f.is_open()) { cerr << "[DGAT] failed to write " << p << endl; return; }
     f << dep_graph_json.dump(2);
   }
-  cout << "[DGAT] state saved to file_tree.json and dep_graph.json" << endl;
+  cout << "[DGAT] state saved to " << state_file("file_tree.json")
+       << " and " << state_file("dep_graph.json") << endl;
 }
 
 // load both state files — returns false if either is missing
 bool load_state(json& tree_json, json& dep_graph_json) {
   {
-    ifstream f("file_tree.json");
-    if (!f.is_open()) { cerr << "[DGAT] file_tree.json not found — run dgat [path] first" << endl; return false; }
+    fs::path p = state_file("file_tree.json");
+    ifstream f(p);
+    if (!f.is_open()) { cerr << "[DGAT] " << p << " not found — run dgat [path] first" << endl; return false; }
     try { tree_json = json::parse(f); } catch (const exception& e) {
-      cerr << "[DGAT] failed to parse file_tree.json: " << e.what() << endl; return false;
+      cerr << "[DGAT] failed to parse " << p << ": " << e.what() << endl; return false;
     }
   }
   {
-    ifstream f("dep_graph.json");
-    if (!f.is_open()) { cerr << "[DGAT] dep_graph.json not found — run dgat [path] first" << endl; return false; }
+    fs::path p = state_file("dep_graph.json");
+    ifstream f(p);
+    if (!f.is_open()) { cerr << "[DGAT] " << p << " not found — run dgat [path] first" << endl; return false; }
     try { dep_graph_json = json::parse(f); } catch (const exception& e) {
-      cerr << "[DGAT] failed to parse dep_graph.json: " << e.what() << endl; return false;
+      cerr << "[DGAT] failed to parse " << p << ": " << e.what() << endl; return false;
     }
   }
   return true;
@@ -2334,14 +2752,35 @@ void ensure_dgatignore(const fs::path& root) {
 
   f << "# .dgatignore — files and dirs to exclude from dgat analysis\n";
   f << "# syntax is the same as .gitignore\n";
-  f << "#\n";
-  f << "# examples:\n";
-  f << "#   node_modules/\n";
-  f << "#   *.min.js\n";
-  f << "#   build/\n";
-  f << "#   dist/\n";
   f << "\n";
-  f << "# auto-generated dgat output files — skip these during analysis\n";
+  f << "# package manager install dirs\n";
+  f << "node_modules/\n";
+  f << ".pnpm-store/\n";
+  f << ".yarn/\n";
+  f << "bower_components/\n";
+  f << "vendor/\n";
+  f << "\n";
+  f << "# Python virtualenvs and caches\n";
+  f << "__pycache__/\n";
+  f << ".venv/\n";
+  f << "venv/\n";
+  f << ".tox/\n";
+  f << ".mypy_cache/\n";
+  f << ".pytest_cache/\n";
+  f << ".ruff_cache/\n";
+  f << "\n";
+  f << "# build outputs\n";
+  f << "dist/\n";
+  f << "build/\n";
+  f << "out/\n";
+  f << ".next/\n";
+  f << "\n";
+  f << "# minified / generated assets\n";
+  f << "*.min.js\n";
+  f << "*.min.css\n";
+  f << "*.tsbuildinfo\n";
+  f << "\n";
+  f << "# auto-generated dgat output files\n";
   f << "file_tree.json\n";
   f << "dep_graph.json\n";
   f << "dgat_blueprint.md\n";
@@ -2398,11 +2837,10 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
   {{ file_content }}
   {% endif %}
 
-  Return a JSON object with a single key `file_description` whose value is a compact markdown string. Analyse the filename too. Rules:
-  - 3-6 lines max, no fluff
-  - Start with one bold sentence saying what the file does (description of the file's purpose, analyzing the filename and content together).
-  - Use a tight bullet list for key responsibilities (3-5 bullets max)
-  - No intro text, no closing remarks, just the markdown)J2";
+  Return a JSON object with exactly these two keys:
+  - `file_description`: compact markdown string describing the file. Rules: 3-6 lines max, start with one bold sentence on what the file does, then a tight bullet list of 3-5 key responsibilities, no intro or closing text, just markdown.
+  - `local_dependencies`: array of import/require paths that reference other files within this project only. Do NOT include third-party packages or stdlib. If none, return an empty array.
+  Analyse the filename too. Return only the JSON object, no extra text.)J2";
 
   json blueprint_json;
   try {
@@ -2448,15 +2886,6 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
           buffer << infile.rdbuf();
           file_content = buffer.str();
           file_content = sanitize_utf8(file_content);
-
-          size_t blueprint_tokens = estimate_tokens(rc);
-          size_t folder_tokens = estimate_tokens(folder_structure);
-          size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
-
-          if (available_tokens > 20000) available_tokens = 20000;
-          if (available_tokens < 1000) available_tokens = 3000;
-
-          file_content = chunk_content(file_content, available_tokens);
         }
       }
 
@@ -2474,7 +2903,7 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
       string rendered_prompt = env.render(file_descriptor_prompt_template, prompt_data);
 
       json request_payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
+        {"model", g_llm_config.model},
         {"messages", {
           {
             {"role", "user"},
@@ -2483,8 +2912,7 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
         }}
       };
 
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+      auto res = call_llm_chat(request_payload);
 
       lock_guard<mutex> lock(tree_mutex);
 
@@ -2501,6 +2929,12 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
             try {
               json descriptor_json = json::parse(json_candidate);
               node->description = descriptor_json.value("file_description", assistant_text);
+              if (descriptor_json.contains("local_dependencies") && descriptor_json["local_dependencies"].is_array()) {
+                for (const auto& dep : descriptor_json["local_dependencies"]) {
+                  if (dep.is_string() && !dep.get<string>().empty())
+                    node->inferred_deps.push_back(dep.get<string>());
+                }
+              }
             } catch (...) {
               node->description = assistant_text;
             }
@@ -2509,7 +2943,7 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
           cerr << "failed to parse response for file: " << node->rel_path << ". error: " << e.what() << endl;
         }
       } else {
-        cerr << "response from vllm failed for file: " << node->rel_path << endl;
+        cerr << "response from provider failed for file: " << node->rel_path << endl;
         if (res) cerr << "status code: " << res->status << endl;
       }
 
@@ -2528,7 +2962,8 @@ void populate_descriptions_selective(vector<TreeNode*>& nodes) {
 
 void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
   httplib::Server server;
-  const string html = load_tree_gui_html();
+  const string html       = load_tree_gui_html();
+  const string graph_html = load_graph_html();
   const json tree_json = tree_to_json(root);
 
   const json dep_graph_json = build_dep_graph_json(dep_graph);
@@ -2551,6 +2986,11 @@ void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
     response.set_content(html, "text/html; charset=UTF-8");
   });
 
+  server.Get("/graph", [graph_html, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.set_content(graph_html, "text/html; charset=UTF-8");
+  });
+
   server.Get("/api/tree", [tree_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
     response.set_content(tree_json.dump(), "application/json; charset=UTF-8");
@@ -2566,10 +3006,15 @@ void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
     response.set_content("ok", "text/plain; charset=UTF-8");
   });
 
+  server.Get("/favicon.ico", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.status = 204; // no content — suppresses browser 404 noise
+  });
+
   // serve the blueprint markdown — frontend can render it in a panel
   server.Get("/api/blueprint", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
-    ifstream f("dgat_blueprint.md");
+    ifstream f(state_file("dgat_blueprint.md"));
     if (!f.is_open()) {
       response.status = 404;
       response.set_content("blueprint not found", "text/plain; charset=UTF-8");
@@ -2580,7 +3025,8 @@ void run_tree_gui_server(TreeNode* root, const DepGraph& dep_graph, int port) {
     response.set_content(buf.str(), "text/plain; charset=UTF-8");
   });
 
-  cout << "Interactive GUI running at: http://localhost:" << port << endl;
+  cout << "Interactive GUI:  http://localhost:" << port << endl;
+  cout << "Graph view:      http://localhost:" << port << "/graph" << endl;
   cout << "Press Ctrl+C to stop." << endl;
 
   if (!server.listen("0.0.0.0", port)) {
@@ -2625,8 +3071,9 @@ bool export_tree_as_dot(TreeNode* root, const string& output_path) {
 string read_readme_content() {
   vector<string> readme_names = {"README.md", "README.txt", "README"};
   for (const auto& name : readme_names) {
-    if (fs::exists(name) && fs::is_regular_file(name)) {
-      ifstream infile(name);
+    fs::path p = g_state_dir / name;
+    if (fs::exists(p) && fs::is_regular_file(p)) {
+      ifstream infile(p);
       if (infile.is_open()) {
         stringstream buffer;
         buffer << infile.rdbuf();
@@ -2641,7 +3088,8 @@ string extract_folder_structure() {
   // for now we can just run the tree command and capture its output as a string
   // this is a quick and dirty way to get a textual representation of the folder structure
   // later we can derive it from the tree we have constructed if needed, but this is good enough for now
-  string cmd = "tree -a -I '.git|node_modules|__pycache__' -L 3"; // ignore common large folders and limit depth for readability
+  string root = g_state_dir.string();
+  string cmd = "tree -a -I '.git|node_modules|__pycache__' -L 3 \"" + root + "\""; // ignore common large folders and limit depth for readability
   array<char, 128> buffer;
   string result;
 
@@ -2735,11 +3183,10 @@ void populate_descriptions(TreeNode* root) {
   {{ file_content }}
   {% endif %}
 
-  Return a JSON object with a single key `file_description` whose value is a compact markdown string. Analyse the filename too. Rules:
-  - 3-6 lines max, no fluff
-  - Start with one bold sentence saying what the file does (description of the file's purpose, analyzing the filename and content together).
-  - Use a tight bullet list for key responsibilities (3-5 bullets max)
-  - No intro text, no closing remarks, just the markdown)J2";
+  Return a JSON object with exactly these two keys:
+  - `file_description`: compact markdown string describing the file. Rules: 3-6 lines max, start with one bold sentence on what the file does, then a tight bullet list of 3-5 key responsibilities, no intro or closing text, just markdown.
+  - `local_dependencies`: array of import/require paths that reference other files within this project only. Do NOT include third-party packages or stdlib. If none, return an empty array.
+  Analyse the filename too. Return only the JSON object, no extra text.)J2";
 
   json blueprint_json;
   try {
@@ -2785,15 +3232,6 @@ void populate_descriptions(TreeNode* root) {
           buffer << infile.rdbuf();
           file_content = buffer.str();
           file_content = sanitize_utf8(file_content);
-
-          size_t blueprint_tokens = estimate_tokens(rc);
-          size_t folder_tokens = estimate_tokens(folder_structure);
-          size_t available_tokens = MAX_CONTEXT_TOKENS - PROMPT_TOKEN_ESTIMATE - blueprint_tokens - folder_tokens - RESPONSE_TOKEN_BUFFER;
-
-          if (available_tokens > 20000) available_tokens = 20000;
-          if (available_tokens < 1000) available_tokens = 3000;
-
-          file_content = chunk_content(file_content, available_tokens);
         }
       }
 
@@ -2811,7 +3249,7 @@ void populate_descriptions(TreeNode* root) {
       string rendered_prompt = env.render(file_descriptor_prompt_template, prompt_data);
 
       json request_payload = {
-        {"model", "Qwen/Qwen3.5-2B"},
+        {"model", g_llm_config.model},
         {"messages", {
           {
             {"role", "user"},
@@ -2820,8 +3258,7 @@ void populate_descriptions(TreeNode* root) {
         }}
       };
 
-      httplib::Client cli("localhost", 8000);
-      auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+      auto res = call_llm_chat(request_payload);
 
       lock_guard<mutex> lock(tree_mutex);
 
@@ -2838,6 +3275,12 @@ void populate_descriptions(TreeNode* root) {
             try {
               json descriptor_json = json::parse(json_candidate);
               node->description = descriptor_json.value("file_description", assistant_text);
+              if (descriptor_json.contains("local_dependencies") && descriptor_json["local_dependencies"].is_array()) {
+                for (const auto& dep : descriptor_json["local_dependencies"]) {
+                  if (dep.is_string() && !dep.get<string>().empty())
+                    node->inferred_deps.push_back(dep.get<string>());
+                }
+              }
             } catch (...) {
               node->description = assistant_text;
             }
@@ -2846,7 +3289,7 @@ void populate_descriptions(TreeNode* root) {
           cerr << "Failed to parse response for file: " << node->rel_path << ". Error: " << e.what() << endl;
         }
       } else {
-        cerr << "response from vllm failed for file: " << node->rel_path << endl;
+        cerr << "response from provider failed for file: " << node->rel_path << endl;
         if (res) {
           cerr << "status code: " << res->status << endl;
         }
@@ -2915,16 +3358,7 @@ void create_dgat_blueprint(TreeNode* root){
 
   collect_descriptors(root);
 
-  // Limit file descriptors to prevent token overflow
-  const size_t MAX_DESCRIPTORS = 50;
-  string descriptors_str;
-  if (file_descriptors.size() > MAX_DESCRIPTORS) {
-    vector<json> limited_descriptors(file_descriptors.begin(), file_descriptors.begin() + MAX_DESCRIPTORS);
-    descriptors_str = json(limited_descriptors).dump(2);
-    descriptors_str += "\n\n[... and " + to_string(file_descriptors.size() - MAX_DESCRIPTORS) + " more files ...]";
-  } else {
-    descriptors_str = json(file_descriptors).dump(2);
-  }
+  string descriptors_str = json(file_descriptors).dump(2);
 
   json prompt_data = {
     {"folder_structure", extract_folder_structure()},
@@ -2934,9 +3368,9 @@ void create_dgat_blueprint(TreeNode* root){
   inja::Environment env;
   string rendered_prompt = env.render(blueprint_prompt_template, prompt_data);
 
-  // now we'll make request to vllm with this rendered prompt and get the response
+  // request provider with this rendered prompt and get the response
   json request_payload = {
-    {"model", "Qwen/Qwen3.5-2B"},
+    {"model", g_llm_config.model},
     {"messages", {
       {
         {"role", "user"},
@@ -2945,14 +3379,13 @@ void create_dgat_blueprint(TreeNode* root){
     }
   }};
 
-  httplib::Client cli("localhost", 8000);
-  auto res = cli.Post("/v1/chat/completions", request_payload.dump(), "application/json");
+  auto res = call_llm_chat(request_payload);
 
   if(res && res->status == 200){
-    cout<<"response from vllm successful for blueprint generation"<<endl;
+    cout<<"response from provider successful for blueprint generation"<<endl;
     cout<<"response body: "<<res->body<<endl;
   }else{
-    cerr<<"response from vllm failed for blueprint generation"<<endl;
+    cerr<<"response from provider failed for blueprint generation"<<endl;
     if(res){
       cerr<<"status code: "<<res->status<<endl;
       cerr<<"response body: "<<res->body<<endl;
@@ -2963,10 +3396,10 @@ void create_dgat_blueprint(TreeNode* root){
 
   if (!(res && res->status == 200)) return;
 
-  string file_name = "dgat_blueprint.md";
-  ofstream outfile(file_name);
+  fs::path file_path = state_file("dgat_blueprint.md");
+  ofstream outfile(file_path);
   if(!outfile.is_open()){
-    cerr<<"Failed to write DGAT blueprint to file: "<<file_name<<endl;
+    cerr<<"Failed to write DGAT blueprint to file: "<<file_path<<endl;
     return;
   }
 
@@ -2990,7 +3423,7 @@ void create_dgat_blueprint(TreeNode* root){
 
   outfile << markdown_output;
   outfile.close();
-  cout<<"DGAT blueprint written to: "<<file_name<<endl;
+  cout<<"DGAT blueprint written to: "<<file_path<<endl;
 }
 
 // backend mode — load state from disk and start the server, no llm calls
@@ -3003,7 +3436,8 @@ void run_backend_mode(int port) {
   // instead of threading through a full TreeNode tree, we use a json-only server path
 
   httplib::Server server;
-  const string html = load_tree_gui_html();
+  const string html       = load_tree_gui_html();
+  const string graph_html = load_graph_html();
 
   auto set_cors_headers = [](httplib::Response& response) {
     response.set_header("Access-Control-Allow-Origin", "*");
@@ -3023,6 +3457,11 @@ void run_backend_mode(int port) {
     response.set_content(html, "text/html; charset=UTF-8");
   });
 
+  server.Get("/graph", [graph_html, set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.set_content(graph_html, "text/html; charset=UTF-8");
+  });
+
   server.Get("/api/tree", [tree_json, set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
     response.set_content(tree_json.dump(), "application/json; charset=UTF-8");
@@ -3038,9 +3477,14 @@ void run_backend_mode(int port) {
     response.set_content("ok", "text/plain; charset=UTF-8");
   });
 
+  server.Get("/favicon.ico", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
+    set_cors_headers(response);
+    response.status = 204; // no content — suppresses browser 404 noise
+  });
+
   server.Get("/api/blueprint", [set_cors_headers](const httplib::Request&, httplib::Response& response) {
     set_cors_headers(response);
-    ifstream f("dgat_blueprint.md");
+    ifstream f(state_file("dgat_blueprint.md"));
     if (!f.is_open()) {
       response.status = 404;
       response.set_content("blueprint not found", "text/plain; charset=UTF-8");
@@ -3051,7 +3495,8 @@ void run_backend_mode(int port) {
     response.set_content(buf.str(), "text/plain; charset=UTF-8");
   });
 
-  cout << "Interactive GUI running at: http://localhost:" << port << endl;
+  cout << "Interactive GUI:  http://localhost:" << port << endl;
+  cout << "Graph view:      http://localhost:" << port << "/graph" << endl;
   cout << "Press Ctrl+C to stop." << endl;
 
   if (!server.listen("0.0.0.0", port)) {
@@ -3089,7 +3534,7 @@ void run_update_mode(const fs::path& root_path) {
 
   // build fresh tree from filesystem
   cout << "[DGAT] building new file tree..." << endl;
-  load_tsconfig_aliases(fs::current_path());
+  load_tsconfig_aliases(root_path);
   auto root = build_tree(root_path, root_path);
   if (!root) { cerr << "[DGAT] failed to build tree" << endl; return; }
 
@@ -3150,22 +3595,28 @@ void run_update_mode(const fs::path& root_path) {
     }
   }
 
+  // merge LLM-inferred deps from the re-described changed nodes
+  merge_inferred_deps(root.get(), dep_graph);
+
   // re-describe only dep nodes that are external/gitignored AND were not already described above
   // (populate_dependency_descriptions already skips non-placeholder descs)
   populate_dependency_descriptions(dep_graph);
 
   // for edges: re-describe only where from or to is in changed set, copy old otherwise
   unordered_map<string, string> old_edge_desc;
+  unordered_map<string, string> old_edge_source;
   for (const auto& e : old_dep_graph_json.value("edges", json::array())) {
     string key = e.value("from", "") + "|||" + e.value("to", "");
-    old_edge_desc[key] = e.value("description", "");
+    old_edge_desc[key]   = e.value("description", "");
+    old_edge_source[key] = e.value("source", "static");
   }
-  // first restore old descriptions for untouched edges
+  // first restore old descriptions and source tags for untouched edges
   for (auto& edge : dep_graph.edges) {
     bool touches_changed = changed_paths.count(edge.from_path) || changed_paths.count(edge.to_path);
     if (!touches_changed) {
       string key = edge.from_path + "|||" + edge.to_path;
-      if (old_edge_desc.count(key)) edge.description = old_edge_desc[key];
+      if (old_edge_desc.count(key))   edge.description = old_edge_desc[key];
+      if (old_edge_source.count(key)) edge.source      = old_edge_source[key];
     }
   }
   // now only re-describe edges touching changed files (we temporarily set a marker so the function skips the rest)
@@ -3195,9 +3646,8 @@ int main(int argc, char** argv){
   bool update_mode  = false;
   bool deps_only    = false;
   int  port = 8090;
-
-  string provider = "vllm"; // default provider for llm calls
-  string model = "Qwen/Qwen3.5-2B"; // default model
+  string cli_provider;
+  string cli_model;
 
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
@@ -3208,6 +3658,10 @@ int main(int argc, char** argv){
       deps_only = true;
     } else if (arg == "update") {
       update_mode = true;
+    } else if (arg.rfind("--provider=", 0) == 0) {
+      cli_provider = arg.substr(11);
+    } else if (arg.rfind("--model=", 0) == 0) {
+      cli_model = arg.substr(8);
     } else if (arg == "--port" && i + 1 < argc) {
       try {
         port = stoi(argv[++i]);
@@ -3223,7 +3677,6 @@ int main(int argc, char** argv){
         return 1;
       }
     } else if (arg.front() != '-') {
-      // non-flag, non-keyword arg is the root path
       root_path = arg;
     }
   }
@@ -3232,11 +3685,16 @@ int main(int argc, char** argv){
   cout << "   DGAT - Dependency Graph as a Tool   " << endl;
   cout << "========================================" << endl;
 
+  g_state_dir = fs::absolute(root_path);
+  cout << "[DGAT] state directory: " << g_state_dir << endl;
+
   if (backend_mode) {
     cout << "[DGAT] backend mode — loading state and starting server on port " << port << endl;
     run_backend_mode(port);
     return 0;
   }
+
+  configure_llm(cli_provider, cli_model);
 
   if (update_mode) {
     cout << "[DGAT] update mode" << endl;
@@ -3259,7 +3717,7 @@ int main(int argc, char** argv){
   cout << "[DGAT] file tree built successfully." << endl;
 
   if (!deps_only) {
-    cout << "[DGAT] populating file descriptions via vllm..." << endl;
+    cout << "[DGAT] populating file descriptions via provider..." << endl;
     populate_descriptions(root.get());
     create_dgat_blueprint(root.get());
     cout << "[DGAT] file descriptions populated." << endl;
@@ -3268,17 +3726,20 @@ int main(int argc, char** argv){
   }
 
   // load tsconfig path aliases so "@/..." imports resolve to real paths
-  load_tsconfig_aliases(fs::current_path());
+  load_tsconfig_aliases(root_path);
 
   cout << "[DGAT] building dependency graph..." << endl;
   DepGraph dep_graph = build_dep_graph(root.get());
   cout << "[DGAT] dependency graph built: " << dep_graph.nodes.size() << " nodes, " << dep_graph.edges.size() << " edges" << endl;
 
   if (!deps_only) {
-    cout << "[DGAT] populating dependency descriptions via vllm..." << endl;
+    cout << "[DGAT] merging LLM-inferred dependencies..." << endl;
+    merge_inferred_deps(root.get(), dep_graph);
+
+    cout << "[DGAT] populating dependency descriptions via provider..." << endl;
     populate_dependency_descriptions(dep_graph);
 
-    cout << "[DGAT] populating edge descriptions via vllm..." << endl;
+    cout << "[DGAT] populating edge descriptions via provider..." << endl;
     populate_edge_descriptions(dep_graph);
   }
 
@@ -3298,6 +3759,7 @@ int main(int argc, char** argv){
   json dep_j  = build_dep_graph_json(dep_graph);
   save_state(tree_j, dep_j);
 
-  cout << "[DGAT] scan complete. run 'dgat --backend' to start the server." << endl;
+  cout << "[DGAT] scan complete. Starting server..." << endl;
+  run_tree_gui_server(root.get(), dep_graph, port);
   return 0;
 }

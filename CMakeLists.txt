@@ -27,9 +27,9 @@ else()
     if(XXHASH_LIBRARY)
         message(STATUS "Found xxhash: ${XXHASH_LIBRARY}")
     else()
-        message(WARNING "xxhash library not found, using header-only mode")
+        message(WARNING "xxhash library not found, using header-only mode (XXH_INLINE_ALL)")
         set(XXHASH_LIBRARY "")
-        add_definitions(-DXXH_STATIC_LINKING)
+        add_definitions(-DXXH_INLINE_ALL)
     endif()
 endif()
 
@@ -62,6 +62,12 @@ target_link_libraries(dgat
     OpenSSL::Crypto
 )
 
+if(APPLE)
+    find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
+    find_library(SECURITY_FRAMEWORK Security REQUIRED)
+    target_link_libraries(dgat PRIVATE ${COREFOUNDATION_FRAMEWORK} ${SECURITY_FRAMEWORK})
+endif()
+
 if(XXHASH_LIBRARY)
     target_link_libraries(dgat PRIVATE ${XXHASH_LIBRARY})
 endif()
@@ -89,6 +95,13 @@ endif()
 
 install(TARGETS dgat
     RUNTIME DESTINATION bin
+)
+
+# Auto-copy built binary into the Python package so `pip install -e .` picks it up.
+add_custom_command(TARGET dgat POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/src/dgat/bin
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:dgat> ${CMAKE_SOURCE_DIR}/src/dgat/bin/dgat
+    COMMENT "Copying dgat binary → src/dgat/bin/dgat"
 )
 
 install(DIRECTORY queries/

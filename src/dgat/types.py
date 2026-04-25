@@ -50,6 +50,7 @@ class DepNode(BaseModel):
 class DepEdge(BaseModel):
     from_node: str = Field(validation_alias="from")
     to_node: str = Field(validation_alias="to")
+    import_stmt: Optional[str] = None
     description: Optional[str] = None
 
 

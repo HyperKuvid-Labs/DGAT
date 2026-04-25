@@ -19,13 +19,19 @@ class DGATConfig(BaseModel):
 
 
 DEFAULT_CONFIG = DGATConfig(
-    default_provider="vllm",
+    default_provider="openrouter",
     providers={
-        "vllm": ProviderConfig(endpoint="http://localhost:8000"),
+        "openrouter": ProviderConfig(
+            endpoint="https://openrouter.ai/api/v1",
+            model="google/gemini-flash-lite-preview",
+        ),
+        "vllm": ProviderConfig(
+            endpoint="http://localhost:8000",
+            model="Qwen/Qwen3-2B",
+        ),
         "ollama": ProviderConfig(endpoint="http://localhost:11434"),
         "openai": ProviderConfig(endpoint="https://api.openai.com/v1"),
         "anthropic": ProviderConfig(),
-        "openrouter": ProviderConfig(endpoint="https://openrouter.ai/api"),
     },
 )
 
@@ -46,7 +52,23 @@ def load_config() -> DGATConfig:
         try:
             with open(config_path) as f:
                 data = json.load(f)
-            return DGATConfig(**data)
+            # merge saved config on top of defaults so providers not yet
+            # touched by the user still have their default model/endpoint
+            merged = DEFAULT_CONFIG.model_copy(deep=True)
+            if "default_provider" in data:
+                merged.default_provider = data["default_provider"]
+            for name, vals in data.get("providers", {}).items():
+                if name in merged.providers:
+                    saved = ProviderConfig(**vals)
+                    existing = merged.providers[name]
+                    merged.providers[name] = ProviderConfig(
+                        endpoint=saved.endpoint or existing.endpoint,
+                        api_key=saved.api_key or existing.api_key,
+                        model=saved.model or existing.model,
+                    )
+                else:
+                    merged.providers[name] = ProviderConfig(**vals)
+            return merged
         except Exception:
             pass
     return DEFAULT_CONFIG

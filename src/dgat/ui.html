@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DGAT — Dependency Graph</title>
+<link rel="preconnect" href="https://unpkg.com" />
+<style>
+  :root {
+    --bg:         #07070c;
+    --bg-1:       #0c0c14;
+    --bg-2:       #12121c;
+    --panel:      #14141f;
+    --panel-hi:   #1b1b28;
+    --border:     #242435;
+    --text:       #e5e7f1;
+    --text-dim:   #8e90a8;
+    --text-mute:  #55576b;
+    --accent:     #a78bfa;
+    --accent-2:   #22d3ee;
+    --green:      #34d399;
+    --amber:      #fbbf24;
+    --red:        #f87171;
+    --ring:       rgba(167,139,250,.35);
+    --shadow:     0 20px 40px -20px rgba(0,0,0,.8);
+    --mono:       ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans:       -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    background: radial-gradient(ellipse at top, #0d0d18 0%, var(--bg) 60%);
+    overflow: hidden;
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2f2f45; }
+
+  /* ---- Layout ---- */
+  .app {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 340px;
+    grid-template-rows: 48px 1fr;
+    grid-template-areas:
+      "top top top"
+      "side main detail";
+    height: 100vh;
+    width: 100vw;
+    transition: grid-template-columns .22s ease;
+  }
+  .app.side-hidden {
+    grid-template-columns: 0 minmax(0, 1fr) 340px;
+  }
+  .app.detail-hidden {
+    grid-template-columns: 260px minmax(0, 1fr) 0;
+  }
+  .app.side-hidden.detail-hidden {
+    grid-template-columns: 0 minmax(0, 1fr) 0;
+  }
+  .app.detail-hidden .detail {
+    opacity: 0;
+    pointer-events: none;
+    border-color: transparent;
+    overflow: hidden;
+  }
+  .side {
+    transition: opacity .2s ease, padding .2s ease, border-color .2s ease;
+  }
+  .app.side-hidden .side {
+    opacity: 0;
+    padding: 0;
+    border-color: transparent;
+    pointer-events: none;
+  }
+  @media (max-width: 1080px) {
+    .app {
+      grid-template-columns: 240px minmax(0, 1fr);
+      grid-template-areas:
+        "top top"
+        "side main";
+    }
+    .app.side-hidden {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
+    .detail {
+      position: fixed;
+      top: 48px;
+      right: 0;
+      width: min(300px, 48vw);
+      height: calc(100vh - 48px);
+      transform: translateX(105%);
+      transition: transform .2s ease;
+      box-shadow: -20px 0 40px -10px rgba(0,0,0,.6);
+      z-index: 40;
+      /* Semi-transparent with blur so the graph remains visible behind the panel. */
+      background: rgba(10, 10, 16, 0.55);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border-left: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .detail.open { transform: translateX(0); }
+  }
+  @media (max-width: 560px) {
+    .app {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "top"
+        "main";
+    }
+    .side {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      width: min(260px, 80vw);
+      height: calc(100vh - 48px);
+      transform: translateX(-105%);
+      transition: transform .2s ease;
+      z-index: 40;
+      box-shadow: 20px 0 40px -10px rgba(0,0,0,.6);
+    }
+    .side.open { transform: translateX(0); }
+  }
+  .burger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+  }
+  .burger:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ---- Top bar ---- */
+  .top {
+    grid-area: top;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    background: rgba(12,12,20,.7);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+  .brand {
+    font-weight: 700;
+    letter-spacing: .06em;
+    font-size: 13px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .tabs { display: flex; gap: 4px; }
+  .tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .tab:hover { color: var(--text); background: var(--panel); }
+  .tab.active {
+    color: var(--text);
+    background: var(--panel-hi);
+    border-color: var(--border);
+  }
+  .spacer { flex: 1; }
+  .stats {
+    display: flex; gap: 14px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .stats b { color: var(--text); font-weight: 600; margin-right: 4px; }
+
+  /* ---- Sidebar (folder tree) ---- */
+  .side {
+    grid-area: side;
+    background: var(--bg-1);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px 8px 24px;
+  }
+  .side-header {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text-mute);
+    padding: 4px 8px 10px;
+    font-weight: 600;
+  }
+  .tree {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .tree-node {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-dim);
+    white-space: nowrap;
+    user-select: none;
+  }
+  .tree-node:hover {
+    background: var(--panel);
+    color: var(--text);
+  }
+  .tree-node.selected {
+    background: var(--panel-hi);
+    color: var(--text);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .tree-node .caret {
+    display: inline-block;
+    width: 12px;
+    color: var(--text-mute);
+    font-size: 9px;
+    text-align: center;
+  }
+  .tree-node .icon {
+    font-size: 11px;
+    width: 14px;
+    color: var(--text-mute);
+  }
+  .tree-node.dir .name { color: var(--text); font-weight: 500; }
+  .tree-children { margin-left: 10px; border-left: 1px dashed var(--border); padding-left: 6px; }
+  .tree-children.collapsed { display: none; }
+
+  /* ---- Main canvas ---- */
+  .main {
+    grid-area: main;
+    position: relative;
+    background: radial-gradient(ellipse at center, #0b0b16 0%, #050509 100%);
+    overflow: hidden;
+  }
+  #graph { width: 100%; height: 100%; position: relative; }
+  #blueprint-view {
+    display: none;
+    width: 100%; height: 100%;
+    overflow-y: auto;
+    padding: 32px 48px 64px;
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.65;
+  }
+  #blueprint-view h1, #blueprint-view h2, #blueprint-view h3, #blueprint-view h4 {
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  #blueprint-view h1 { font-size: 24px; }
+  #blueprint-view h2 { font-size: 19px; margin-top: 28px; }
+  #blueprint-view h3 { font-size: 16px; }
+  #blueprint-view code {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 1px 5px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--accent-2);
+  }
+  #blueprint-view pre {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    overflow-x: auto;
+  }
+  #blueprint-view pre code { border: 0; padding: 0; background: transparent; color: var(--text); }
+  #blueprint-view a { color: var(--accent); }
+  #blueprint-view ul, #blueprint-view ol { padding-left: 22px; }
+
+  /* ---- Detail drawer (right) ---- */
+  .detail {
+    grid-area: detail;
+    background: var(--bg-1);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .detail-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-dim);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: block;
+    z-index: 2;
+  }
+  .detail-close:hover { color: var(--text); border-color: var(--accent); }
+  .detail-empty {
+    padding: 40px 20px;
+    color: var(--text-mute);
+    font-size: 12px;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .detail-empty .big {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: .4;
+  }
+  .detail-content { padding: 18px 18px 32px; }
+  .detail-path {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-mute);
+    word-break: break-all;
+    margin-bottom: 6px;
+  }
+  .detail-name {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    word-break: break-all;
+    margin-bottom: 4px;
+  }
+  .detail-kind {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  .detail-section {
+    margin-top: 18px;
+  }
+  .detail-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .detail-desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .md-desc { font-size: 12.5px; line-height: 1.6; color: var(--text); }
+  .md-desc p { margin: 0 0 8px; }
+  .md-desc p:last-child { margin-bottom: 0; }
+  .md-desc ul, .md-desc ol { padding-left: 18px; margin: 4px 0 8px; }
+  .md-desc li { margin-bottom: 3px; }
+  .md-desc strong { color: var(--accent-2); font-weight: 600; }
+  .md-desc code { font-family: var(--mono); font-size: 11px; padding: 1px 4px; background: var(--panel); border: 1px solid var(--border); border-radius: 3px; color: var(--accent); }
+
+  .chip-list { display: flex; flex-direction: column; gap: 4px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer;
+    word-break: break-all;
+    transition: all .12s ease;
+  }
+  .chip:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: var(--panel-hi);
+  }
+
+  /* ---- Floating controls ---- */
+  .controls {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 5;
+  }
+  .ctrl-btn {
+    background: rgba(20,20,31,.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: all .12s ease;
+  }
+  .ctrl-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .legend {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(20,20,31,.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    z-index: 5;
+    max-height: 60vh;
+    overflow-y: auto;
+    font-size: 11px;
+  }
+  .legend-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 2px 0;
+    color: var(--text-dim);
+  }
+  .legend-swatch {
+    width: 10px; height: 10px; border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  /* ---- Loading / empty states ---- */
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--text-dim);
+    background: rgba(5,5,10,.6);
+    z-index: 20;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .spinner {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app detail-hidden">
+  <!-- Top bar -->
+  <div class="top">
+    <button class="burger" id="burger" aria-label="Toggle sidebar">☰</button>
+    <div class="brand"><span class="dot"></span> DGAT</div>
+    <div class="tabs">
+      <button class="tab active" data-view="graph">Graph</button>
+      <button class="tab" data-view="blueprint">Blueprint</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="burger" id="detail-toggle" aria-label="Toggle detail panel" title="Toggle detail panel">⊞</button>
+    <div class="stats" id="stats">
+      <span><b id="stat-nodes">–</b>nodes</span>
+      <span><b id="stat-edges">–</b>edges</span>
+      <span><b id="stat-dirs">–</b>dirs</span>
+    </div>
+  </div>
+
+  <!-- Sidebar: folder tree -->
+  <aside class="side">
+    <div class="side-header">Folder structure</div>
+    <div class="tree" id="tree"></div>
+  </aside>
+
+  <!-- Main: graph / blueprint -->
+  <main class="main">
+    <div id="graph"></div>
+    <div id="blueprint-view"></div>
+
+    <div class="controls" id="controls">
+      <button class="ctrl-btn" id="btn-reset">reset camera</button>
+      <button class="ctrl-btn" id="btn-spin">toggle spin</button>
+    </div>
+
+    <div class="legend" id="legend">
+      <div class="legend-title">Clusters</div>
+      <div id="legend-items"></div>
+    </div>
+
+    <div class="overlay" id="loading">
+      <div class="spinner"></div>
+      <div>loading scan data…</div>
+    </div>
+  </main>
+
+  <!-- Right drawer: file detail -->
+  <aside class="detail" id="detail">
+    <button class="detail-close" id="detail-close" aria-label="Close">×</button>
+    <div class="detail-empty" id="detail-empty">
+      <span class="big">◉</span>
+      Click a node in the graph, or a file in the sidebar, to see what it's about.
+    </div>
+    <div class="detail-content hidden" id="detail-content"></div>
+  </aside>
+</div>
+
+<script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
+<script src="https://unpkg.com/marked@12.0.2/marked.min.js"></script>
+<script>
+
+// ---------- State ----------
+const state = {
+  tree: null,
+  graph: null,
+  blueprint: null,
+  clusters: {},  // top-level dir -> color
+  fg: null,
+  spinning: false,
+  currentView: 'graph',
+};
+
+// ---------- Color palette (muted, darker vibe) ----------
+const PALETTE = [
+  '#a78bfa', // violet
+  '#22d3ee', // cyan
+  '#34d399', // emerald
+  '#fbbf24', // amber
+  '#f472b6', // pink
+  '#60a5fa', // blue
+  '#f87171', // red
+  '#a3e635', // lime
+  '#e879f9', // fuchsia
+  '#fb923c', // orange
+  '#94a3b8', // slate
+  '#2dd4bf', // teal
+];
+
+function clusterKey(relPath) {
+  if (!relPath) return '(root)';
+  const parts = relPath.split('/');
+  if (parts.length === 1) return '(root)';
+  return parts[0];
+}
+
+function ensureClusterColor(key) {
+  if (state.clusters[key]) return state.clusters[key];
+  const idx = Object.keys(state.clusters).length % PALETTE.length;
+  state.clusters[key] = PALETTE[idx];
+  return state.clusters[key];
+}
+
+// ---------- Fetch ----------
+async function fetchAll() {
+  const [treeRes, graphRes, bpRes] = await Promise.all([
+    fetch('/api/tree').then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('/api/dep-graph').then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('/api/blueprint').then(r => r.ok ? r.text() : null).catch(() => null),
+  ]);
+  state.tree = treeRes;
+  state.graph = graphRes;
+  state.blueprint = bpRes;
+}
+
+// ---------- Render: sidebar tree ----------
+function renderTree() {
+  const root = document.getElementById('tree');
+  root.innerHTML = '';
+  if (!state.tree) {
+    root.innerHTML = '<div style="color:var(--text-mute);padding:8px;">No scan data.</div>';
+    return;
+  }
+  root.appendChild(renderNode(state.tree, 0));
+}
+
+function renderNode(node, depth) {
+  const wrap = document.createElement('div');
+  const isDir = node.is_dir || (node.children && node.children.length > 0);
+  const row = document.createElement('div');
+  row.className = 'tree-node' + (isDir ? ' dir' : ' file');
+  row.dataset.relPath = node.rel_path || '';
+
+  const caret = document.createElement('span');
+  caret.className = 'caret';
+  caret.textContent = isDir ? (depth < 2 ? '▾' : '▸') : ' ';
+  row.appendChild(caret);
+
+  const icon = document.createElement('span');
+  icon.className = 'icon';
+  icon.textContent = isDir ? '▪' : '·';
+  row.appendChild(icon);
+
+  const name = document.createElement('span');
+  name.className = 'name';
+  name.textContent = node.name || node.rel_path || '/';
+  row.appendChild(name);
+
+  wrap.appendChild(row);
+
+  if (isDir && node.children && node.children.length) {
+    const kids = document.createElement('div');
+    kids.className = 'tree-children' + (depth >= 2 ? ' collapsed' : '');
+    node.children
+      .slice()
+      .sort((a, b) => {
+        const ad = (a.is_dir || (a.children||[]).length) ? 0 : 1;
+        const bd = (b.is_dir || (b.children||[]).length) ? 0 : 1;
+        if (ad !== bd) return ad - bd;
+        return (a.name || '').localeCompare(b.name || '');
+      })
+      .forEach(c => kids.appendChild(renderNode(c, depth + 1)));
+    wrap.appendChild(kids);
+
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      kids.classList.toggle('collapsed');
+      caret.textContent = kids.classList.contains('collapsed') ? '▸' : '▾';
+    });
+  } else {
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectFile(node.rel_path, node);
+    });
+  }
+
+  return wrap;
+}
+
+// ---------- Render: graph ----------
+function buildGraphData() {
+  if (!state.graph || !state.graph.nodes) return { nodes: [], links: [] };
+  const nodes = state.graph.nodes.map(n => {
+    const ck = clusterKey(n.rel_path);
+    const color = ensureClusterColor(ck);
+    const val = 1 + (n.depended_by || []).length * 0.7 + (n.depends_on || []).length * 0.3;
+    return {
+      id: n.rel_path,
+      name: n.name || n.rel_path.split('/').pop(),
+      cluster: ck,
+      color,
+      val,
+      description: n.description,
+      depends_on: n.depends_on || [],
+      depended_by: n.depended_by || [],
+    };
+  });
+  const nodeIds = new Set(nodes.map(n => n.id));
+  const links = (state.graph.edges || [])
+    .filter(e => nodeIds.has(e.from) && nodeIds.has(e.to))
+    .map(e => ({
+      source: e.from,
+      target: e.to,
+      import_stmt: e.import_stmt,
+      edge_source: e.source || 'static',
+    }));
+  return { nodes, links };
+}
+
+function renderGraph() {
+  const data = buildGraphData();
+  const el = document.getElementById('graph');
+  if (!state.fg) {
+    state.fg = ForceGraph3D()(el)
+      .backgroundColor('#05050a')
+      .nodeRelSize(4)
+      .nodeVal('val')
+      .nodeColor('color')
+      .nodeLabel(n => `<div style="font-family:var(--mono);font-size:11px;padding:4px 8px;background:#14141f;border:1px solid #242435;border-radius:4px;color:#e5e7f1;">${n.name}<br/><span style="color:#8e90a8;">${n.id}</span></div>`)
+      .nodeOpacity(0.92)
+      .linkColor(l => l.__hovered ? 'rgba(167,139,250,0.95)' : 'rgba(160,140,255,0.65)')
+      .linkWidth(l => l.__hovered ? 2.5 : 1.5)
+      .linkDirectionalParticles(4)
+      .linkDirectionalParticleWidth(2)
+      .linkDirectionalParticleColor(() => 'rgba(167,139,250,0.95)')
+      .linkDirectionalParticleSpeed(0.006)
+      .linkDirectionalArrowLength(6)
+      .linkDirectionalArrowColor(() => 'rgba(167,139,250,0.9)')
+      .linkDirectionalArrowRelPos(1)
+      .showNavInfo(false)
+      .onNodeClick(node => {
+        selectFile(node.id, node);
+      });
+  }
+  state.fg.graphData(data);
+  // Spread nodes further apart so labels don't cluster
+  state.fg.d3Force('charge').strength(-180);
+  state.fg.d3Force('link').distance(60);
+  if (!_lc) initLabelCanvas();
+
+  // Wait for the simulation to settle, then frame the graph with generous padding.
+  // Small graphs otherwise zoom so close a single node fills the viewport.
+  const n = data.nodes.length;
+  const padding = n < 10 ? 260 : n < 50 ? 140 : 80;
+  const holdMs = Math.min(2000, 300 + n * 8);
+  setTimeout(() => {
+    try {
+      state.fg.zoomToFit(800, padding);
+    } catch {
+      state.fg.cameraPosition({ z: Math.max(300, 80 + 12 * Math.sqrt(Math.max(n, 1))) });
+    }
+  }, holdMs);
+}
+
+function focusOnNode(node, distance = 40) {
+  if (!state.fg || node.x == null) return;
+  const mag = Math.hypot(node.x, node.y, node.z) || 1;
+  const distRatio = 1 + distance / mag;
+  state.fg.cameraPosition(
+    { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+    node,
+    800
+  );
+}
+
+// ---------- Detail drawer ----------
+async function selectFile(relPath, nodeHint) {
+  if (!relPath) return;
+  highlightTree(relPath);
+
+  // Try graph-node data first (already in memory), fall back to API
+  let info = null;
+  if (state.graph && state.graph.nodes) {
+    const n = state.graph.nodes.find(x => x.rel_path === relPath);
+    if (n) {
+      info = {
+        rel_path: relPath,
+        name: n.name || relPath.split('/').pop(),
+        description: n.description || (nodeHint && nodeHint.description),
+        depends_on: n.depends_on || [],
+        depended_by: n.depended_by || [],
+      };
+    }
+  }
+  if (!info) {
+    try {
+      info = await fetch('/api/file?path=' + encodeURIComponent(relPath)).then(r => r.json());
+    } catch {
+      info = { rel_path: relPath, name: relPath.split('/').pop(), description: null, depends_on: [], depended_by: [] };
+    }
+  }
+  if (nodeHint && !info.description && nodeHint.description) info.description = nodeHint.description;
+
+  renderDetail(info, nodeHint);
+
+  // Stop spin and focus the node in the graph
+  if (state.spinning) {
+    state.spinning = false;
+    clearInterval(state._spinInterval);
+  }
+  setView('graph');
+  if (state.fg) {
+    const data = state.fg.graphData();
+    const match = data.nodes.find(n => n.id === relPath);
+    if (match) focusOnNode(match);
+  }
+}
+
+function renderDetail(info, nodeHint) {
+  document.getElementById('detail-empty').classList.add('hidden');
+  const el = document.getElementById('detail-content');
+  el.classList.remove('hidden');
+  document.getElementById('detail').classList.add('open');
+  document.querySelector('.app').classList.remove('detail-hidden');
+
+  const isDir = nodeHint && (nodeHint.is_dir || (nodeHint.children && nodeHint.children.length));
+  const kind = isDir ? 'Directory' : 'File';
+
+  const depsOn = info.depends_on || [];
+  const depsBy = info.depended_by || [];
+
+  el.innerHTML = `
+    <div class="detail-path">${escapeHtml(info.rel_path || '')}</div>
+    <div class="detail-name">${escapeHtml(info.name || '')}</div>
+    <div class="detail-kind">${kind}</div>
+    <div class="detail-section">
+      <div class="detail-section-label">Description</div>
+      <div class="detail-desc">${renderDescription(info.description)}</div>
+    </div>
+    ${depsOn.length ? `
+      <div class="detail-section">
+        <div class="detail-section-label">Depends on (${depsOn.length})</div>
+        <div class="chip-list">
+          ${depsOn.map(d => `<div class="chip" data-path="${escapeHtml(d)}">${escapeHtml(d)}</div>`).join('')}
+        </div>
+      </div>` : ''}
+    ${depsBy.length ? `
+      <div class="detail-section">
+        <div class="detail-section-label">Depended on by (${depsBy.length})</div>
+        <div class="chip-list">
+          ${depsBy.map(d => `<div class="chip" data-path="${escapeHtml(d)}">${escapeHtml(d)}</div>`).join('')}
+        </div>
+      </div>` : ''}
+  `;
+
+  el.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => selectFile(chip.dataset.path));
+  });
+}
+
+function highlightTree(relPath) {
+  document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('selected'));
+  const target = document.querySelector(`.tree-node[data-rel-path="${CSS.escape(relPath)}"]`);
+  if (target) {
+    target.classList.add('selected');
+    // expand ancestor collapsed groups
+    let parent = target.parentElement;
+    while (parent) {
+      if (parent.classList && parent.classList.contains('tree-children')) {
+        parent.classList.remove('collapsed');
+        const prevRow = parent.previousElementSibling;
+        if (prevRow && prevRow.classList.contains('tree-node')) {
+          const caret = prevRow.querySelector('.caret');
+          if (caret) caret.textContent = '▾';
+        }
+      }
+      parent = parent.parentElement;
+    }
+    target.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+// ---------- Blueprint view ----------
+function renderBlueprint() {
+  const el = document.getElementById('blueprint-view');
+  if (!state.blueprint) {
+    el.innerHTML = '<div style="color:var(--text-mute);">No blueprint found. Run <code>dgat scan</code> with an LLM provider configured.</div>';
+    return;
+  }
+  el.innerHTML = marked.parse(state.blueprint);
+}
+
+// ---------- View switching ----------
+function setView(view) {
+  state.currentView = view;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  const graph = document.getElementById('graph');
+  const bp = document.getElementById('blueprint-view');
+  const controls = document.getElementById('controls');
+  const legend = document.getElementById('legend');
+  if (view === 'graph') {
+    graph.style.display = '';
+    bp.style.display = 'none';
+    controls.style.display = '';
+    legend.style.display = '';
+  } else {
+    graph.style.display = 'none';
+    bp.style.display = 'block';
+    controls.style.display = 'none';
+    legend.style.display = 'none';
+  }
+}
+
+// ---------- Stats + legend ----------
+function renderStats() {
+  const nodes = (state.graph && state.graph.nodes) ? state.graph.nodes.length : 0;
+  const edges = (state.graph && state.graph.edges) ? state.graph.edges.length : 0;
+  const dirs = Object.keys(state.clusters).length;
+  document.getElementById('stat-nodes').textContent = nodes;
+  document.getElementById('stat-edges').textContent = edges;
+  document.getElementById('stat-dirs').textContent = dirs;
+}
+
+function renderLegend() {
+  const el = document.getElementById('legend-items');
+  const entries = Object.entries(state.clusters);
+  if (!entries.length) {
+    document.getElementById('legend').style.display = 'none';
+    return;
+  }
+  el.innerHTML = entries
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, color]) => `
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:${color};color:${color};"></div>
+        <span>${escapeHtml(key)}</span>
+      </div>`)
+    .join('');
+}
+
+// ---------- Node name label overlay (canvas, no THREE conflict) ----------
+let _lc = null, _lctx = null;
+
+function initLabelCanvas() {
+  const container = document.getElementById('graph');
+  _lc = document.createElement('canvas');
+  _lc.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;';
+  container.appendChild(_lc);
+  _lctx = _lc.getContext('2d');
+  (function loop() { requestAnimationFrame(loop); paintLabels(); })();
+}
+
+function paintLabels() {
+  if (!_lctx || !state.fg || state.currentView !== 'graph') return;
+  const el = document.getElementById('graph');
+  const w = el.clientWidth, h = el.clientHeight;
+  if (!w || !h) return;
+  if (_lc.width !== w || _lc.height !== h) { _lc.width = w; _lc.height = h; }
+  _lctx.clearRect(0, 0, w, h);
+  const { nodes } = state.fg.graphData();
+  _lctx.textAlign = 'center';
+  _lctx.textBaseline = 'top';
+
+  const occupied = [];
+
+  nodes.forEach(node => {
+    if (node.x == null) return;
+    const sc = state.fg.graph2ScreenCoords(node.x, node.y || 0, node.z || 0);
+    if (!sc) return;
+    const { x, y } = sc;
+    if (x < -20 || x > w + 20 || y < -20 || y > h + 20) return;
+    const label = (node.name || node.id || '').split('/').pop();
+    if (!label) return;
+
+    const r = Math.max(6, (node.val || 1) * 2.5);
+    const ly = y + r + 4;
+
+    _lctx.font = '600 10.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
+    const tw = _lctx.measureText(label).width;
+    const pw = tw + 10, ph = 15;
+
+    // skip if this rect overlaps an already-drawn label
+    const rx1 = x - pw / 2 - 2, ry1 = ly - 2, rx2 = x + pw / 2 + 2, ry2 = ly + ph + 2;
+    if (occupied.some(o => rx1 < o.x2 && rx2 > o.x1 && ry1 < o.y2 && ry2 > o.y1)) return;
+    occupied.push({ x1: rx1, y1: ry1, x2: rx2, y2: ry2 });
+
+    // pill background
+    _lctx.save();
+    _lctx.globalAlpha = 0.82;
+    _lctx.fillStyle = '#0d0d18';
+    const px = x - pw / 2, py = ly - 1;
+    const pr = 4;
+    _lctx.beginPath();
+    _lctx.moveTo(px + pr, py);
+    _lctx.lineTo(px + pw - pr, py);
+    _lctx.quadraticCurveTo(px + pw, py, px + pw, py + pr);
+    _lctx.lineTo(px + pw, py + ph - pr);
+    _lctx.quadraticCurveTo(px + pw, py + ph, px + pw - pr, py + ph);
+    _lctx.lineTo(px + pr, py + ph);
+    _lctx.quadraticCurveTo(px, py + ph, px, py + ph - pr);
+    _lctx.lineTo(px, py + pr);
+    _lctx.quadraticCurveTo(px, py, px + pr, py);
+    _lctx.closePath();
+    _lctx.fill();
+    _lctx.restore();
+
+    // label text with glow
+    _lctx.save();
+    _lctx.globalAlpha = 1;
+    _lctx.shadowColor = node.color || '#a78bfa';
+    _lctx.shadowBlur = 8;
+    _lctx.fillStyle = '#e5e7f1';
+    _lctx.fillText(label, x, ly + 2);
+    _lctx.shadowBlur = 0;
+    _lctx.restore();
+  });
+}
+
+// ---------- Utils ----------
+function renderDescription(desc) {
+  if (!desc || desc.trim() === '' || desc.trim().toLowerCase() === 'external dependency') {
+    return '<span style="color:var(--text-mute);font-style:italic;">No description — run scan with an LLM API key configured.</span>';
+  }
+  try {
+    return `<div class="md-desc">${marked.parse(desc)}</div>`;
+  } catch {
+    return escapeHtml(desc);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// ---------- Controls ----------
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (state.fg) state.fg.zoomToFit(800, 50);
+});
+document.getElementById('btn-spin').addEventListener('click', () => {
+  if (!state.fg) return;
+  state.spinning = !state.spinning;
+  if (state.spinning) {
+    state._spinStart = Date.now();
+    state._spinRadius = Math.max(200, state.fg.cameraPosition().z || 300);
+    state._spinInterval = setInterval(() => {
+      const t = (Date.now() - state._spinStart) / 30000;
+      const angle = t * Math.PI * 2;
+      state.fg.cameraPosition({
+        x: state._spinRadius * Math.sin(angle),
+        z: state._spinRadius * Math.cos(angle),
+      });
+    }, 30);
+  } else {
+    clearInterval(state._spinInterval);
+  }
+});
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => setView(t.dataset.view));
+});
+document.getElementById('detail-close').addEventListener('click', () => {
+  document.getElementById('detail').classList.remove('open');
+  document.querySelector('.app').classList.add('detail-hidden');
+});
+document.getElementById('detail-toggle').addEventListener('click', () => {
+  document.querySelector('.app').classList.toggle('detail-hidden');
+});
+document.getElementById('burger').addEventListener('click', () => {
+  // At narrow widths the sidebar is an overlay — toggle its .open state.
+  // At wider widths the sidebar is a grid column — collapse it via .side-hidden.
+  const app = document.querySelector('.app');
+  const side = document.querySelector('.side');
+  if (window.innerWidth <= 560) {
+    side.classList.toggle('open');
+  } else {
+    app.classList.toggle('side-hidden');
+  }
+  // Re-fit the WebGL renderer after the column width changes.
+  setTimeout(() => {
+    if (!state.fg) return;
+    const el = document.getElementById('graph');
+    state.fg.width(el.clientWidth).height(el.clientHeight);
+  }, 240);
+});
+// Re-size the graph canvas on viewport changes so the WebGL renderer keeps up.
+window.addEventListener('resize', () => {
+  if (!state.fg) return;
+  const el = document.getElementById('graph');
+  state.fg.width(el.clientWidth).height(el.clientHeight);
+});
+
+// ---------- Boot ----------
+(async function boot() {
+  await fetchAll();
+  document.getElementById('loading').classList.add('hidden');
+  renderTree();
+  renderGraph();
+  renderStats();
+  renderLegend();
+  renderBlueprint();
+})();
+</script>
+</body>
+</html>

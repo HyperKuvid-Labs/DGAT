@@ -6,7 +6,6 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
-from dgat.config import load_config, get_provider_config
 from dgat.types import FileTree, DepGraph, ScanResult, BlueprintResult, SearchResult
 
 
@@ -60,57 +59,90 @@ def find_data_files(
     )
 
 
+def _parse_stats(output_lines: list[str]) -> tuple[int, int]:
+    """Extract (files_scanned, edges) from C++ binary stdout."""
+    files_scanned = 0
+    edges = 0
+    for line in output_lines:
+        if "dependency graph built" in line.lower():
+            parts = line.split(":")
+            if len(parts) > 1:
+                stats = parts[1].strip()
+                for part in stats.split(","):
+                    if "node" in part.lower():
+                        try:
+                            files_scanned = int(part.strip().split()[0])
+                        except Exception:
+                            pass
+                    if "edge" in part.lower():
+                        try:
+                            edges = int(part.strip().split()[0])
+                        except Exception:
+                            pass
+    return files_scanned, edges
+
+
+# Marker emitted by the C++ binary after save_state() completes and just
+# before it spawns its internal httplib server. We terminate at this point
+# because the Python backend owns the HTTP surface now.
+_SCAN_DONE_MARKER = "scan complete. starting server"
+
+
 def run_scan(
     path: str,
     provider: Optional[str] = None,
     model: Optional[str] = None,
     deps_only: bool = False,
-    port: int = 8090,
 ) -> ScanResult:
-    """Run a DGAT scan on the given path"""
+    """Run a DGAT scan on the given path.
+
+    Runs the C++ scanner to completion (it writes file_tree.json /
+    dep_graph.json / dgat_blueprint.md), then terminates it before it
+    starts its own HTTP server — the Python backend (dgat backend) owns
+    serving now.
+    """
     binary = get_binary_path()
 
     cmd = [str(binary), path]
-
     if provider:
-        cmd.extend([f"--provider={provider}"])
+        cmd.append(f"--provider={provider}")
     if model:
-        cmd.extend([f"--model={model}"])
+        cmd.append(f"--model={model}")
     if deps_only:
         cmd.append("--deps-only")
 
+    env = os.environ.copy()
+
     try:
-        result = subprocess.run(
+        process = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
+            env=env,
         )
 
-        if result.returncode == 0:
-            # Parse output for stats
-            files_scanned = 0
-            edges = 0
-            for line in result.stdout.split("\n"):
-                if "file tree built" in line.lower():
-                    files_scanned = 1  # We don't have exact count easily
-                if "dependency graph built" in line.lower():
-                    # Try to extract numbers
-                    parts = line.split(":")
-                    if len(parts) > 1:
-                        stats = parts[1].strip()
-                        # Parse "X nodes, Y edges"
-                        for part in stats.split(","):
-                            if "node" in part.lower():
-                                try:
-                                    files_scanned = int(part.strip().split()[0])
-                                except:
-                                    pass
-                            if "edge" in part.lower():
-                                try:
-                                    edges = int(part.strip().split()[0])
-                                except:
-                                    pass
+        output_lines: list[str] = []
+        scan_finished = False
+        for line in process.stdout or []:
+            print(line, end="", flush=True)
+            output_lines.append(line)
+            if _SCAN_DONE_MARKER in line.lower():
+                scan_finished = True
+                # JSONs + blueprint already on disk at this point.
+                # Kill the server startup so control returns to CLI.
+                try:
+                    process.terminate()
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+                break
 
+        process.wait()
+
+        if scan_finished or process.returncode == 0:
+            files_scanned, edges = _parse_stats(output_lines)
             return ScanResult(
                 success=True,
                 path=path,
@@ -118,14 +150,13 @@ def run_scan(
                 edges=edges,
                 message="Scan completed successfully",
             )
-        else:
-            return ScanResult(
-                success=False,
-                path=path,
-                files_scanned=0,
-                edges=0,
-                message=result.stderr or "Scan failed",
-            )
+        return ScanResult(
+            success=False,
+            path=path,
+            files_scanned=0,
+            edges=0,
+            message="Scan failed",
+        )
     except subprocess.TimeoutExpired:
         return ScanResult(
             success=False,
@@ -175,7 +206,7 @@ def run_update(path: str) -> ScanResult:
         )
 
 
-def load_file_tree(path: Path = None) -> Optional[FileTree]:
+def load_file_tree(path: Optional[Path] = None) -> Optional[FileTree]:
     """Load file tree from JSON"""
     if path is None:
         tree_file, _, _ = find_data_files()
@@ -191,7 +222,7 @@ def load_file_tree(path: Path = None) -> Optional[FileTree]:
     return FileTree(**data)
 
 
-def load_dep_graph(path: Path = None) -> Optional[DepGraph]:
+def load_dep_graph(path: Optional[Path] = None) -> Optional[DepGraph]:
     """Load dependency graph from JSON"""
     if path is None:
         _, dep_file, _ = find_data_files()
@@ -207,7 +238,7 @@ def load_dep_graph(path: Path = None) -> Optional[DepGraph]:
     return DepGraph(**data)
 
 
-def load_blueprint(path: Path = None) -> Optional[BlueprintResult]:
+def load_blueprint(path: Optional[Path] = None) -> Optional[BlueprintResult]:
     """Load blueprint markdown"""
     if path is None:
         _, _, blueprint_file = find_data_files()
@@ -223,7 +254,7 @@ def load_blueprint(path: Path = None) -> Optional[BlueprintResult]:
     return BlueprintResult(success=True, content=content)
 
 
-def get_file_description(rel_path: str, path: Path = None) -> Optional[str]:
+def get_file_description(rel_path: str, path: Optional[Path] = None) -> Optional[str]:
     """Get description for a specific file"""
     tree = load_file_tree(path)
     if tree is None:
@@ -243,7 +274,7 @@ def get_file_description(rel_path: str, path: Path = None) -> Optional[str]:
     return node.description if node else None
 
 
-def get_dependencies(rel_path: str, path: Path = None) -> list[str]:
+def get_dependencies(rel_path: str, path: Optional[Path] = None) -> list[str]:
     """Get files that the given file depends on"""
     graph = load_dep_graph(path)
     if graph is None:
@@ -256,7 +287,7 @@ def get_dependencies(rel_path: str, path: Path = None) -> list[str]:
     return []
 
 
-def get_dependents(rel_path: str, path: Path = None) -> list[str]:
+def get_dependents(rel_path: str, path: Optional[Path] = None) -> list[str]:
     """Get files that depend on the given file"""
     graph = load_dep_graph(path)
     if graph is None:
@@ -269,7 +300,7 @@ def get_dependents(rel_path: str, path: Path = None) -> list[str]:
     return []
 
 
-def search_files(query: str, path: Path = None, limit: int = 10) -> list[SearchResult]:
+def search_files(query: str, path: Optional[Path] = None, limit: int = 10) -> list[SearchResult]:
     """Search files by name or description"""
     tree = load_file_tree(path)
     if tree is None:
@@ -314,7 +345,7 @@ def search_files(query: str, path: Path = None, limit: int = 10) -> list[SearchR
 
 def search_files_llm(
     query: str,
-    path: Path = None,
+    path: Optional[Path] = None,
     provider: Optional[str] = None,
     model: Optional[str] = None,
     limit: int = 10,

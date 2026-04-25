@@ -10,7 +10,9 @@ src/dgat/cli.py
 src/dgat/config.py
 src/dgat/mcp.py
 src/dgat/scanner.py
+src/dgat/server.py
 src/dgat/types.py
+src/dgat/ui.html
 src/dgat.egg-info/PKG-INFO
 src/dgat.egg-info/SOURCES.txt
 src/dgat.egg-info/dependency_links.txt
@@ -37,3 +39,4 @@ src/dgat/queries/php.scm
 src/dgat/queries/python.scm
 src/dgat/queries/ruby.scm
 src/dgat/queries/rust.scm
+tests/test_dep_smoke.py

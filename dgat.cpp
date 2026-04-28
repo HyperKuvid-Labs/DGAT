@@ -791,6 +791,7 @@ vector<string> build_artifacts_to_skip = {
   "__pycache__", ".venv", "venv", ".env", "env", "site-packages",
   ".tox", ".mypy_cache", ".pytest_cache", ".ruff_cache",
   "vendor",  // Go, PHP
+  ".alphastack",
 };
 
 unordered_set<string> python_stdlib = {
